@@ -34,6 +34,11 @@ class UsuarioService {
     return response.data || null;
   }
 
+  async getAll(): Promise<User[]> {
+    const response: ApiResponse<User[]> = await apiService.get(`/usuario/all`);
+    return response.data || [];
+  }
+
   async update(id: string, dto: UsuarioUpdateDto): Promise<User> {
     const response: ApiResponse<User> = await apiService.patch(`/usuario/${id}`, dto);
     return response.data!;

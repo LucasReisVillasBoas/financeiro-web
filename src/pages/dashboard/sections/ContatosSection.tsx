@@ -1,54 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { FiEdit, FiTrash2, FiLock, FiUserCheck } from 'react-icons/fi';
-import { usuarioService } from '../../../services/usuario.service';
-import type { User } from '../../../types/api.types';
+import type { Contato } from '../../../types/api.types';
+import { contatoService } from '../../../services/contato.service';
 
-export const UsuariosSection: React.FC = () => {
-  const [usuarios, setUsuarios] = useState<User[]>([]);
+export const ContatosSection: React.FC = () => {
+  const [contatos, setContatos] = useState<Contato[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchUsuarios = async () => {
+    const fetchContatos = async () => {
       try {
-        const usuariosData = await usuarioService.getAll();
-        if (usuariosData.length === 0) {
-          setUsuarios([]);
+        const contatosData = await contatoService.findAll();
+        if (contatosData.length === 0) {
+          setContatos([]);
         } else {
-          setUsuarios(usuariosData);
+          setContatos(contatosData);
         }
       } catch (err) {
-        setError('Erro ao carregar usuários');
-        console.error('Erro ao buscar usuários:', err);
+        setError('Erro ao carregar contatos');
+        console.error('Erro ao buscar contatos:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUsuarios();
+    fetchContatos();
   }, []);
 
-  const getStatus = (usuario: User) => {
-    return usuario.deleted_at ? 'Inativo' : 'Ativo';
+  const getStatus = (contato: Contato) => {
+    return contato.deletadoEm ? 'Inativo' : 'Ativo';
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Gerenciar Usuários</h2>
+        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Gerenciar Contatos</h2>
         <button className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors">
-          Novo Usuário
+          Novo Contato
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="p-4 bg-[var(--color-surface)] rounded-md shadow">
           <div className="flex items-center justify-between">
-            <span className="text-[var(--color-text-secondary)]">Total Usuários</span>
+            <span className="text-[var(--color-text-secondary)]">Total Contatos</span>
             <FiUserCheck className="text-[var(--color-primary)]" />
           </div>
           <p className="text-2xl font-bold text-[var(--color-text-primary)] mt-2">
-            {usuarios.length}
+            {contatos.length}
           </p>
         </div>
       </div>
@@ -61,7 +61,7 @@ export const UsuariosSection: React.FC = () => {
 
       {loading ? (
         <div className="text-center py-8 text-[var(--color-text-secondary)]">
-          Carregando usuários...
+          Carregando contatos...
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -69,37 +69,39 @@ export const UsuariosSection: React.FC = () => {
             <thead>
               <tr className="border-b border-[var(--color-border)]">
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Nome</th>
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">E-mail</th>
+                <th className="text-left p-4 text-[var(--color-text-secondary)]">Função</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Telefone</th>
+                <th className="text-left p-4 text-[var(--color-text-secondary)]">Celular</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Status</th>
                 <th className="text-center p-4 text-[var(--color-text-secondary)]">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {usuarios.length === 0 ? (
+              {contatos.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-8 text-center text-[var(--color-text-secondary)]">
-                    Nenhum usuário cadastrado
+                    Nenhum contato cadastrado
                   </td>
                 </tr>
               ) : (
-                usuarios.map(usuario => (
+                contatos.map(contato => (
                   <tr
-                    key={usuario.id}
+                    key={contato.id}
                     className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]"
                   >
-                    <td className="p-4 text-[var(--color-text)]">{usuario.nome}</td>
-                    <td className="p-4 text-[var(--color-text)]">{usuario.email}</td>
-                    <td className="p-4 text-[var(--color-text)]">{usuario.telefone || '-'}</td>
+                    <td className="p-4 text-[var(--color-text)]">{contato.nome}</td>
+                    <td className="p-4 text-[var(--color-text)]">{contato.funcao}</td>
+                    <td className="p-4 text-[var(--color-text)]">{contato.telefone || '-'}</td>
+                    <td className="p-4 text-[var(--color-text)]">{contato.celular || '-'}</td>
                     <td className="p-4">
                       <span
                         className={`px-2 py-1 rounded text-sm ${
-                          getStatus(usuario) === 'Ativo'
+                          getStatus(contato) === 'Ativo'
                             ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
                             : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
                         }`}
                       >
-                        {getStatus(usuario)}
+                        {getStatus(contato)}
                       </span>
                     </td>
                     <td className="p-4">

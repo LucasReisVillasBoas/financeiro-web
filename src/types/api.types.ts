@@ -17,7 +17,7 @@ export interface User {
   id: string;
   nome: string;
   email: string;
-  cpf?: string;
+  telefone?: string;
   cargo?: string;
   data_nascimento?: string;
   deleted_at?: string;
@@ -116,6 +116,7 @@ export interface Contato {
   nome: string;
   email: string;
   telefone: string;
+  deletadoEm?: string;
 }
 
 export interface CreateContatoDto {
