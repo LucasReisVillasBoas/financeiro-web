@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { FiEdit, FiTrash2, FiEye } from "react-icons/fi";
-import { empresaService } from "../../../services/empresa.service";
-import { Empresa } from "../../../types/api.types";
-import { useAuth } from "../../../context/AuthContext";
+import React, { useState, useEffect } from 'react';
+import { FiEdit, FiTrash2, FiEye } from 'react-icons/fi';
+import { empresaService } from '../../../services/empresa.service';
+import type { Empresa } from '../../../types/api.types';
+import { useAuth } from '../../../context/AuthContext';
 
 export const EmpresasListSection: React.FC = () => {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const { getClienteId } = useAuth();
 
   useEffect(() => {
@@ -20,32 +20,32 @@ export const EmpresasListSection: React.FC = () => {
       const clienteId = getClienteId();
 
       if (!clienteId) {
-        setError("Erro ao obter informações do usuário");
+        setError('Erro ao obter informações do usuário');
         return;
       }
 
       const data = await empresaService.findByCliente(clienteId);
       setEmpresas(data);
     } catch (err: any) {
-      setError(err.message || "Erro ao carregar empresas");
+      setError(err.message || 'Erro ao carregar empresas');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Deseja realmente excluir esta empresa?")) return;
+    if (!confirm('Deseja realmente excluir esta empresa?')) return;
 
     try {
       await empresaService.delete(id);
-      setEmpresas(empresas.filter((e) => e.id !== id));
+      setEmpresas(empresas.filter(e => e.id !== id));
     } catch (err: any) {
-      alert(err.message || "Erro ao excluir empresa");
+      alert(err.message || 'Erro ao excluir empresa');
     }
   };
 
   const getStatus = (empresa: Empresa) => {
-    return empresa.deleted_at ? "Inativa" : "Ativa";
+    return empresa.deleted_at ? 'Inativa' : 'Ativa';
   };
 
   return (
@@ -89,17 +89,22 @@ export const EmpresasListSection: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                empresas.map((empresa) => (
-                  <tr key={empresa.id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]">
+                empresas.map(empresa => (
+                  <tr
+                    key={empresa.id}
+                    className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]"
+                  >
                     <td className="p-4 text-[var(--color-text)]">{empresa.razao_social}</td>
                     <td className="p-4 text-[var(--color-text)]">{empresa.nome_fantasia}</td>
                     <td className="p-4 text-[var(--color-text)]">{empresa.cnpj_cpf}</td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded text-sm ${
-                        getStatus(empresa) === "Ativa"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                          : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
-                      }`}>
+                      <span
+                        className={`px-2 py-1 rounded text-sm ${
+                          getStatus(empresa) === 'Ativa'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+                        }`}
+                      >
                         {getStatus(empresa)}
                       </span>
                     </td>

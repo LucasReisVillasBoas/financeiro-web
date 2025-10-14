@@ -1,4 +1,3 @@
-import React from "react";
 import { useTheme } from "../providers/ThemeProvider";
 
 export default function Home() {

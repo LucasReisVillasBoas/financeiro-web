@@ -1,5 +1,5 @@
 import { apiService } from './api.service';
-import {
+import type {
   Empresa,
   CreateEmpresaDto,
   UpdateEmpresaDto,
