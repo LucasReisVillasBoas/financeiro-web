@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { authService } from "../services/auth.service";
-import { getUserDataFromToken } from "../utils/jwt.utils";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authService } from '../services/auth.service';
+import { getUserDataFromToken } from '../utils/jwt.utils';
 
 interface User {
   id: string;
@@ -32,13 +32,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (userData && userData.id && userData.email) {
         const user: User = {
           id: userData.id,
-          name: userData.name || userData.email.split("@")[0],
+          name: userData.name || userData.email.split('@')[0],
           email: userData.email,
           clienteId: userData.clienteId || undefined,
         };
         setUser(user);
-        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem('user', JSON.stringify(user));
+      } else {
+        console.log('userData inválido ou incompleto');
       }
+    } else {
+      console.log('Nenhum token encontrado');
     }
     setLoading(false);
   }, []);
@@ -47,23 +51,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await authService.login({ email, password });
 
-      // Decodificar JWT e extrair dados do usuário
       const token = authService.getToken();
       if (token) {
         const userData = getUserDataFromToken(token);
         if (userData && userData.id && userData.email) {
           const user: User = {
             id: userData.id,
-            name: userData.name || email.split("@")[0],
+            name: userData.name || email.split('@')[0],
             email: userData.email,
             clienteId: userData.clienteId || undefined,
           };
           setUser(user);
-          localStorage.setItem("user", JSON.stringify(user));
+          localStorage.setItem('user', JSON.stringify(user));
+        } else {
+          console.log('userData inválido após login');
         }
+      } else {
+        console.log('Token não encontrado após login');
       }
     } catch (error) {
-      console.error("Erro no login:", error);
+      console.error('Erro no login:', error);
       throw error;
     }
   };
@@ -94,6 +101,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { InputField } from "../../../components/InputField";
 import { empresaService } from "../../../services/empresa.service";
-import { CreateEmpresaDto } from "../../../types/api.types";
+import type { CreateEmpresaDto } from "../../../types/api.types";
 import { useAuth } from "../../../context/AuthContext";
 
 export const NovaEmpresaSection: React.FC = () => {

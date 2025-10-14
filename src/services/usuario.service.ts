@@ -1,5 +1,5 @@
 import { apiService } from './api.service';
-import {
+import type {
   User,
   ApiResponse,
   UsuarioEmpresaFilial,
@@ -25,18 +25,17 @@ export interface UsuarioUpdateDto {
 
 class UsuarioService {
   async create(dto: UsuarioCreateDto): Promise<User> {
-    const response: ApiResponse<User> = await apiService.post(
-      '/usuario/cadastro',
-      dto
-    );
+    const response: ApiResponse<User> = await apiService.post('/usuario/cadastro', dto);
     return response.data!;
   }
 
+  async getById(): Promise<User | null> {
+    const response: ApiResponse<User> = await apiService.get(`/usuario`);
+    return response.data || null;
+  }
+
   async update(id: string, dto: UsuarioUpdateDto): Promise<User> {
-    const response: ApiResponse<User> = await apiService.patch(
-      `/usuario/${id}`,
-      dto
-    );
+    const response: ApiResponse<User> = await apiService.patch(`/usuario/${id}`, dto);
     return response.data!;
   }
 
@@ -58,10 +57,7 @@ class UsuarioService {
     return response.data || [];
   }
 
-  async removerAssociacao(
-    usuarioId: string,
-    assocId: string
-  ): Promise<void> {
+  async removerAssociacao(usuarioId: string, assocId: string): Promise<void> {
     await apiService.delete(`/usuario/${usuarioId}/empresas/${assocId}`);
   }
 }

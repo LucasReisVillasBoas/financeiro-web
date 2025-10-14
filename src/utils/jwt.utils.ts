@@ -15,7 +15,7 @@ export function decodeJWT(token: string): JwtPayload | null {
     const jsonPayload = decodeURIComponent(
       atob(base64)
         .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
         .join('')
     );
 
@@ -32,14 +32,7 @@ export function getClienteIdFromToken(token: string | null): string | null {
   const payload = decodeJWT(token);
   if (!payload) return null;
 
-  // Tenta diferentes chaves comuns para cliente_id
-  return (
-    payload.clienteId ||
-    payload.cliente ||
-    payload.cliente_id ||
-    payload.sub ||
-    null
-  );
+  return payload.sub || null;
 }
 
 export function getUserDataFromToken(token: string | null): {
@@ -54,9 +47,8 @@ export function getUserDataFromToken(token: string | null): {
   if (!payload) return null;
 
   return {
-    id: payload.sub || payload.id || null,
-    email: payload.email || null,
+    id: payload.sub || null,
+    email: payload.username || null,
     clienteId: getClienteIdFromToken(token),
-    name: payload.name || payload.nome || undefined,
   };
 }

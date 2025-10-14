@@ -1,18 +1,19 @@
 import { apiService } from './api.service';
-import { LoginRequest, LoginResponse, ApiResponse } from '../types/api.types';
+import type { LoginRequest, LoginResponse, ApiResponse } from '../types/api.types';
 
 class AuthService {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const response: ApiResponse<LoginResponse> = await apiService.post(
-      '/auth/login',
-      credentials
-    );
+    const response: ApiResponse<LoginResponse> = await apiService.post('/auth/login', credentials);
 
-    if (response.data?.token) {
-      localStorage.setItem('token', response.data.token);
+    const token = (response as any).token || response.data?.token;
+
+    if (token) {
+      localStorage.setItem('token', token);
+    } else {
+      console.log('Nenhum token recebido da API');
     }
 
-    return response.data!;
+    return (response as any).token ? (response as any) : response.data!;
   }
 
   logout(): void {

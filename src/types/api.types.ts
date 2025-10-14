@@ -18,6 +18,7 @@ export interface User {
   nome: string;
   email: string;
   cpf?: string;
+  cargo?: string;
   data_nascimento?: string;
   deleted_at?: string;
 }
@@ -108,20 +109,49 @@ export interface UpdateFilialDto extends Partial<CreateFilialDto> {}
 
 export interface Contato {
   id: string;
-  clienteId: string;
+  clienteId?: string;
+  filialId?: string;
+  funcao: string;
+  celular: string;
   nome: string;
-  email?: string;
-  telefone?: string;
-  deleted_at?: string;
+  email: string;
+  telefone: string;
 }
 
 export interface CreateContatoDto {
+  clienteId?: string;
+  filialId?: string;
+  funcao: string;
+  celular: string;
   nome: string;
-  email?: string;
-  telefone?: string;
+  email: string;
+  telefone: string;
 }
 
 export interface UpdateContatoDto extends Partial<CreateContatoDto> {}
+
+export interface Cidade {
+  id: string;
+  clienteId: string;
+  filialId: string;
+  nome: string;
+  codigoIbge: string;
+  uf: string;
+  pais: string;
+  codigoBacen?: string;
+}
+
+export interface CreateCidadeDto {
+  clienteId?: string;
+  filialId?: string;
+  codigoIbge: string;
+  uf: string;
+  pais: string;
+  nome: string;
+  codigoBacen?: string;
+}
+
+export interface UpdateCidadeDto extends Partial<CreateCidadeDto> {}
 
 export interface UsuarioEmpresaFilial {
   id: string;
@@ -132,6 +162,15 @@ export interface UsuarioEmpresaFilial {
 }
 
 export interface AssociarEmpresaFilialDto {
-  empresa_id?: string;
-  filial_id?: string;
+  empresaId?: string;
+  filialId?: string;
+}
+
+export interface Perfil {
+  id: string;
+  clienteId: string;
+  nome: string;
+  permissoes: Record<string, string[]>;
+  ativo: boolean;
+  deleted_at?: string;
 }
