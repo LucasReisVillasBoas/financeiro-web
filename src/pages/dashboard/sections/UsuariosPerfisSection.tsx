@@ -1,54 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import { FiEdit, FiTrash2, FiLock, FiUserCheck } from 'react-icons/fi';
-import { usuarioService } from '../../../services/usuario.service';
-import type { User } from '../../../types/api.types';
+import type { Perfil } from '../../../types/api.types';
+import { perfilService } from '../../../services/perfil.service';
+import { useAuth } from '../../../context/AuthContext';
 
-export const UsuariosSection: React.FC = () => {
-  const [usuarios, setUsuarios] = useState<User[]>([]);
+export const UsuariosPerfisSection: React.FC = () => {
+  const [perfis, setPerfis] = useState<Perfil[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { getClienteId } = useAuth();
 
+  const clienteId = getClienteId();
+  if (!clienteId) {
+    setError('Erro ao obter informações do usuário. Faça login novamente.');
+    setLoading(false);
+    return;
+  }
   useEffect(() => {
-    const fetchUsuarios = async () => {
+    const fetchPerfis = async () => {
       try {
-        const usuariosData = await usuarioService.getAll();
-        if (usuariosData.length === 0) {
-          setUsuarios([]);
+        const perfisData = await perfilService.findAll(clienteId);
+        if (perfisData.length === 0) {
+          setPerfis([]);
         } else {
-          setUsuarios(usuariosData);
+          setPerfis(perfisData);
         }
       } catch (err) {
-        setError('Erro ao carregar usuários');
-        console.error('Erro ao buscar usuários:', err);
+        setError('Erro ao carregar perfis');
+        console.error('Erro ao buscar perfis:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUsuarios();
+    fetchPerfis();
   }, []);
 
-  const getStatus = (usuario: User) => {
-    return usuario.deleted_at ? 'Inativo' : 'Ativo';
+  const getStatus = (usuario: Perfil) => {
+    return usuario.ativo ? 'Ativo' : 'Inativo';
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Gerenciar Usuários</h2>
+        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Gerenciar Perfis</h2>
         <button className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors">
-          Novo Usuário
+          Novo Perfil
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="p-4 bg-[var(--color-surface)] rounded-md shadow">
           <div className="flex items-center justify-between">
-            <span className="text-[var(--color-text-secondary)]">Total Usuários</span>
+            <span className="text-[var(--color-text-secondary)]">Total Perfis</span>
             <FiUserCheck className="text-[var(--color-primary)]" />
           </div>
           <p className="text-2xl font-bold text-[var(--color-text-primary)] mt-2">
-            {usuarios.length}
+            {perfis.length}
           </p>
         </div>
       </div>
@@ -69,39 +77,33 @@ export const UsuariosSection: React.FC = () => {
             <thead>
               <tr className="border-b border-[var(--color-border)]">
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Nome</th>
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">Cargo</th>
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">E-mail</th>
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">Telefone</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Status</th>
                 <th className="text-center p-4 text-[var(--color-text-secondary)]">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {usuarios.length === 0 ? (
+              {perfis.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-8 text-center text-[var(--color-text-secondary)]">
-                    Nenhum usuário cadastrado
+                    Nenhum perfil cadastrado
                   </td>
                 </tr>
               ) : (
-                usuarios.map(usuario => (
+                perfis.map(perfil => (
                   <tr
-                    key={usuario.id}
+                    key={perfil.id}
                     className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]"
                   >
-                    <td className="p-4 text-[var(--color-text)]">{usuario.nome}</td>
-                    <td className="p-4 text-[var(--color-text)]">{usuario.cargo}</td>
-                    <td className="p-4 text-[var(--color-text)]">{usuario.email}</td>
-                    <td className="p-4 text-[var(--color-text)]">{usuario.telefone || '-'}</td>
+                    <td className="p-4 text-[var(--color-text)]">{perfil.nome}</td>
                     <td className="p-4">
                       <span
                         className={`px-2 py-1 rounded text-sm ${
-                          getStatus(usuario) === 'Ativo'
+                          getStatus(perfil) === 'Ativo'
                             ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
                             : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
                         }`}
                       >
-                        {getStatus(usuario)}
+                        {getStatus(perfil)}
                       </span>
                     </td>
                     <td className="p-4">
