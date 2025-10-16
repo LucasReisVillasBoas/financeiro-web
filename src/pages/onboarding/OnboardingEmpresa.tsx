@@ -30,6 +30,7 @@ export const OnboardingEmpresa: React.FC = () => {
     cidade: '',
     uf: '',
     telefone: '',
+    celular: '',
     email: '',
   });
 
@@ -310,6 +311,14 @@ export const OnboardingEmpresa: React.FC = () => {
                     type="tel"
                     placeholder="(00) 0000-0000"
                     value={formData.telefone}
+                    onChange={handleChange}
+                  />
+                  <InputField
+                    id="celular"
+                    label="Celular"
+                    type="tel"
+                    placeholder="(00) 0000-0000"
+                    value={formData.celular}
                     onChange={handleChange}
                   />
                   <InputField

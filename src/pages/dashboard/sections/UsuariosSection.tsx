@@ -69,6 +69,7 @@ export const UsuariosSection: React.FC = () => {
             <thead>
               <tr className="border-b border-[var(--color-border)]">
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Nome</th>
+                <th className="text-left p-4 text-[var(--color-text-secondary)]">Cargo</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">E-mail</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Telefone</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Status</th>
@@ -89,6 +90,7 @@ export const UsuariosSection: React.FC = () => {
                     className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]"
                   >
                     <td className="p-4 text-[var(--color-text)]">{usuario.nome}</td>
+                    <td className="p-4 text-[var(--color-text)]">{usuario.cargo}</td>
                     <td className="p-4 text-[var(--color-text)]">{usuario.email}</td>
                     <td className="p-4 text-[var(--color-text)]">{usuario.telefone || '-'}</td>
                     <td className="p-4">

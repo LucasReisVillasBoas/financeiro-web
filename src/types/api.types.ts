@@ -26,6 +26,7 @@ export interface User {
 export interface Empresa {
   id: string;
   cliente_id: string;
+  sede?: string;
   razao_social: string;
   nome_fantasia: string;
   cnpj_cpf: string;
@@ -90,19 +91,24 @@ export interface Filial {
 
 export interface CreateFilialDto {
   empresa_id: string;
+  cliente_id: string;
   razao_social: string;
   nome_fantasia: string;
   cnpj_cpf: string;
   inscricao_estadual?: string;
+  inscricao_municipal?: string;
   cep?: string;
   logradouro?: string;
   numero?: string;
   bairro?: string;
   complemento?: string;
   cidade?: string;
+  codigo_ibge?: string;
   uf?: string;
   telefone?: string;
+  celular?: string;
   email?: string;
+  data_abertura?: Date;
 }
 
 export interface UpdateFilialDto extends Partial<CreateFilialDto> {}

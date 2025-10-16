@@ -72,6 +72,7 @@ export const ContatosSection: React.FC = () => {
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Função</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Telefone</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Celular</th>
+                <th className="text-left p-4 text-[var(--color-text-secondary)]">E-mail</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Status</th>
                 <th className="text-center p-4 text-[var(--color-text-secondary)]">Ações</th>
               </tr>
@@ -93,6 +94,7 @@ export const ContatosSection: React.FC = () => {
                     <td className="p-4 text-[var(--color-text)]">{contato.funcao}</td>
                     <td className="p-4 text-[var(--color-text)]">{contato.telefone || '-'}</td>
                     <td className="p-4 text-[var(--color-text)]">{contato.celular || '-'}</td>
+                    <td className="p-4 text-[var(--color-text)]">{contato.email || '-'}</td>
                     <td className="p-4">
                       <span
                         className={`px-2 py-1 rounded text-sm ${

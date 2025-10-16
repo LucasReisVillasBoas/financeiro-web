@@ -4,7 +4,11 @@ import { empresaService } from '../../../services/empresa.service';
 import type { Empresa } from '../../../types/api.types';
 import { useAuth } from '../../../context/AuthContext';
 
-export const EmpresasListSection: React.FC = () => {
+interface EmpresasListSectionProps {
+  onNavigate: (sectionId: string) => void;
+}
+
+export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavigate }) => {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -44,6 +48,10 @@ export const EmpresasListSection: React.FC = () => {
     }
   };
 
+  const handleCreate = () => {
+    onNavigate('empresas-nova');
+  };
+
   const getStatus = (empresa: Empresa) => {
     return empresa.deleted_at ? 'Inativa' : 'Ativa';
   };
@@ -54,7 +62,10 @@ export const EmpresasListSection: React.FC = () => {
         <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
           Empresas Cadastradas
         </h2>
-        <button className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors">
+        <button
+          className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors"
+          onClick={() => handleCreate()}
+        >
           Nova Empresa
         </button>
       </div>
@@ -98,15 +109,22 @@ export const EmpresasListSection: React.FC = () => {
                     <td className="p-4 text-[var(--color-text)]">{empresa.nome_fantasia}</td>
                     <td className="p-4 text-[var(--color-text)]">{empresa.cnpj_cpf}</td>
                     <td className="p-4">
-                      <span
-                        className={`px-2 py-1 rounded text-sm ${
-                          getStatus(empresa) === 'Ativa'
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
-                        }`}
-                      >
-                        {getStatus(empresa)}
-                      </span>
+                      <div className="flex flex-col gap-2">
+                        <span
+                          className={`px-2 py-1 rounded text-sm text-center ${
+                            getStatus(empresa) === 'Ativa'
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+                          }`}
+                        >
+                          {getStatus(empresa)}
+                        </span>
+                        {!empresa.sede && (
+                          <span className="px-2 py-1 rounded text-sm text-center bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                            Sede
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4">
                       <div className="flex justify-center gap-2">

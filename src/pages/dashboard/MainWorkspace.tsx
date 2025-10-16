@@ -44,7 +44,7 @@ export const MainWorkspace: React.FC = () => {
       case 'dashboard':
         return <DashboardSection />;
       case 'empresas-listar':
-        return <EmpresasListSection />;
+        return <EmpresasListSection onNavigate={setActiveSection} />;
       case 'empresas-nova':
         return <NovaEmpresaSection />;
       case 'financeiro-pagar':
