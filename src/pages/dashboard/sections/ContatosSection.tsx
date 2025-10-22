@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiEdit, FiTrash2, FiLock, FiUserCheck } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiUserCheck } from 'react-icons/fi';
 import type { Contato } from '../../../types/api.types';
 import { contatoService } from '../../../services/contato.service';
 
@@ -27,6 +27,23 @@ export const ContatosSection: React.FC = () => {
 
     fetchContatos();
   }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja realmente excluir este contato? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await contatoService.delete(id);
+      setContatos(contatos.filter(c => c.id !== id));
+    } catch (err: any) {
+      setError(err.message || 'Erro ao excluir contato');
+      console.error('Erro ao deletar contato:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatus = (contato: Contato) => {
     return contato.deletadoEm ? 'Inativo' : 'Ativo';
@@ -115,14 +132,9 @@ export const ContatosSection: React.FC = () => {
                           <FiEdit size={18} />
                         </button>
                         <button
-                          className="p-2 hover:bg-[var(--color-primary-hover)] rounded transition-colors"
-                          title="Resetar Senha"
-                        >
-                          <FiLock size={18} />
-                        </button>
-                        <button
                           className="p-2 hover:bg-red-100 dark:hover:bg-red-900 rounded transition-colors text-red-600"
                           title="Excluir"
+                          onClick={() => handleDelete(contato.id)}
                         >
                           <FiTrash2 size={18} />
                         </button>
