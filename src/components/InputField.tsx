@@ -7,8 +7,10 @@ interface InputFieldProps {
   id: string;
   name?: string;
   value?: string;
+  defaultValue?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
+  disabled?: boolean;
 }
 
 export const InputField: React.FC<InputFieldProps> = ({
@@ -18,8 +20,10 @@ export const InputField: React.FC<InputFieldProps> = ({
   id,
   name,
   value,
+  defaultValue,
   onChange,
   required = false,
+  disabled = false,
 }) => {
   return (
     <div>
@@ -35,8 +39,10 @@ export const InputField: React.FC<InputFieldProps> = ({
         type={type}
         placeholder={placeholder}
         value={value}
+        defaultValue={defaultValue}
         onChange={onChange}
         required={required}
+        disabled={disabled}
         className="w-full px-4 py-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder-[var(--color-placeholder)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition"
       />
     </div>

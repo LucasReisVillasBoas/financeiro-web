@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { InputField } from "../../../components/InputField";
-import { empresaService } from "../../../services/empresa.service";
-import { CreateFilialDto } from "../../../types/api.types";
+import React, { useState } from 'react';
+import { InputField } from '../../../components/InputField';
+import { empresaService } from '../../../services/empresa.service';
+import type { CreateFilialDto } from '../../../types/api.types';
 
 interface NovaFilialSectionProps {
   empresaId: string;
@@ -9,41 +9,42 @@ interface NovaFilialSectionProps {
 
 export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ empresaId }) => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
+    setError('');
+    setSuccess('');
     setLoading(true);
 
     const form = e.currentTarget;
     const formData = new FormData(form);
 
     const dto: CreateFilialDto = {
+      cliente_id: '',
       empresa_id: empresaId,
-      razao_social: formData.get("razao-social") as string,
-      nome_fantasia: formData.get("nome-fantasia") as string,
-      cnpj_cpf: formData.get("cnpj") as string,
-      inscricao_estadual: formData.get("inscricao-estadual") as string,
-      cep: formData.get("cep") as string,
-      logradouro: formData.get("logradouro") as string,
-      numero: formData.get("numero") as string,
-      complemento: formData.get("complemento") as string,
-      bairro: formData.get("bairro") as string,
-      cidade: formData.get("cidade") as string,
-      uf: formData.get("estado") as string,
-      telefone: formData.get("telefone") as string,
-      email: formData.get("email") as string,
+      razao_social: formData.get('razao-social') as string,
+      nome_fantasia: formData.get('nome-fantasia') as string,
+      cnpj_cpf: formData.get('cnpj') as string,
+      inscricao_estadual: formData.get('inscricao-estadual') as string,
+      cep: formData.get('cep') as string,
+      logradouro: formData.get('logradouro') as string,
+      numero: formData.get('numero') as string,
+      complemento: formData.get('complemento') as string,
+      bairro: formData.get('bairro') as string,
+      cidade: formData.get('cidade') as string,
+      uf: formData.get('estado') as string,
+      telefone: formData.get('telefone') as string,
+      email: formData.get('email') as string,
     };
 
     try {
       await empresaService.createFilial(empresaId, dto);
-      setSuccess("Filial cadastrada com sucesso!");
+      setSuccess('Filial cadastrada com sucesso!');
       form.reset();
     } catch (err: any) {
-      setError(err.message || "Erro ao cadastrar filial");
+      setError(err.message || 'Erro ao cadastrar filial');
     } finally {
       setLoading(false);
     }
@@ -67,7 +68,10 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ empresaId 
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-[var(--color-surface)] p-6 rounded-md shadow">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 bg-[var(--color-surface)] p-6 rounded-md shadow"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <InputField
             id="razao-social"
@@ -99,72 +103,33 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ empresaId 
         </div>
 
         <div className="border-t border-[var(--color-border)] pt-6">
-          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
-            Endereço
-          </h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Endereço</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InputField
-              id="cep"
-              label="CEP"
-              type="text"
-              placeholder="00000-000"
-            />
+            <InputField id="cep" label="CEP" type="text" placeholder="00000-000" />
             <InputField
               id="logradouro"
               label="Logradouro"
               type="text"
               placeholder="Rua, Avenida..."
             />
-            <InputField
-              id="numero"
-              label="Número"
-              type="text"
-              placeholder="Nº"
-            />
+            <InputField id="numero" label="Número" type="text" placeholder="Nº" />
             <InputField
               id="complemento"
               label="Complemento"
               type="text"
               placeholder="Apto, Sala..."
             />
-            <InputField
-              id="bairro"
-              label="Bairro"
-              type="text"
-              placeholder="Digite o bairro"
-            />
-            <InputField
-              id="cidade"
-              label="Cidade"
-              type="text"
-              placeholder="Digite a cidade"
-            />
-            <InputField
-              id="estado"
-              label="Estado"
-              type="text"
-              placeholder="UF"
-            />
+            <InputField id="bairro" label="Bairro" type="text" placeholder="Digite o bairro" />
+            <InputField id="cidade" label="Cidade" type="text" placeholder="Digite a cidade" />
+            <InputField id="estado" label="Estado" type="text" placeholder="UF" />
           </div>
         </div>
 
         <div className="border-t border-[var(--color-border)] pt-6">
-          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
-            Contato
-          </h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Contato</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InputField
-              id="telefone"
-              label="Telefone"
-              type="tel"
-              placeholder="(00) 0000-0000"
-            />
-            <InputField
-              id="email"
-              label="E-mail"
-              type="email"
-              placeholder="filial@email.com"
-            />
+            <InputField id="telefone" label="Telefone" type="tel" placeholder="(00) 0000-0000" />
+            <InputField id="email" label="E-mail" type="email" placeholder="filial@email.com" />
           </div>
         </div>
 
@@ -180,7 +145,7 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ empresaId 
             disabled={loading}
             className="px-6 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Cadastrando..." : "Cadastrar"}
+            {loading ? 'Cadastrando...' : 'Cadastrar'}
           </button>
         </div>
       </form>

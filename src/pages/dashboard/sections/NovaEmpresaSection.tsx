@@ -8,13 +8,20 @@ import { cidadeService } from '../../../services/cidade.service';
 import { usuarioService } from '../../../services/usuario.service';
 import { perfilService } from '../../../services/perfil.service';
 
-export const NovaEmpresaSection: React.FC = () => {
+interface NovaEmpresaSectionProps {
+  onNavigate: (section: string) => void;
+}
+
+export const NovaEmpresaSection: React.FC<NovaEmpresaSectionProps> = ({ onNavigate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [ibge, setIbge] = useState('');
   const [bacen, setBacen] = useState('');
   const { getClienteId } = useAuth();
+
+  const handleCancel = () => {
+    onNavigate('empresas-listar');
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -54,6 +61,7 @@ export const NovaEmpresaSection: React.FC = () => {
       telefone: formData.get('telefone') as string,
       celular: formData.get('celular') as string,
       email: formData.get('email') as string,
+      codigo_ibge: formData.get('ibge') as string,
     };
 
     try {
@@ -87,7 +95,7 @@ export const NovaEmpresaSection: React.FC = () => {
       await cidadeService.create({
         clienteId: clienteId,
         filialId: empresa.id,
-        codigoIbge: ibge || '',
+        codigoIbge: formData.get('ibge') as string,
         uf: dto.uf || '',
         pais: 'Brasil',
         nome: dto.cidade || '',
@@ -98,17 +106,12 @@ export const NovaEmpresaSection: React.FC = () => {
       });
       setSuccess('Filial cadastrada com sucesso!');
       setBacen('');
-      setIbge('');
       form.reset();
     } catch (err: any) {
       setError(err.message || 'Erro ao cadastrar filial');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleIbgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIbge(e.target.value);
   };
 
   const handleBacenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,7 +121,7 @@ export const NovaEmpresaSection: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-6">
-        Cadastrar Nova Filial
+        Cadastrar Nova Empresa
       </h2>
 
       {error && (
@@ -179,13 +182,7 @@ export const NovaEmpresaSection: React.FC = () => {
             <InputField id="bairro" label="Bairro" type="text" placeholder="Digite o bairro" />
             <InputField id="cidade" label="Cidade" type="text" placeholder="Digite a cidade" />
             <InputField id="estado" label="Estado" type="text" placeholder="UF" />
-            <InputField
-              id="codigo-ibge"
-              label="Código IBGE"
-              placeholder="Digite o código IBGE"
-              value={ibge}
-              onChange={handleIbgeChange}
-            />
+            <InputField id="ibge" label="Código IBGE" placeholder="Digite o código IBGE" />
 
             <InputField
               id="codigo-bacen"
@@ -210,6 +207,7 @@ export const NovaEmpresaSection: React.FC = () => {
           <button
             type="button"
             className="px-6 py-2 border border-[var(--color-border)] text-[var(--color-text)] rounded-md hover:bg-[var(--color-bg)] transition-colors"
+            onClick={handleCancel}
           >
             Cancelar
           </button>

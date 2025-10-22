@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { FiEdit, FiTrash2, FiEye } from 'react-icons/fi';
 import { empresaService } from '../../../services/empresa.service';
-import type { Empresa } from '../../../types/api.types';
+import { contatoService } from '../../../services/contato.service';
+import { cidadeService } from '../../../services/cidade.service';
+import { usuarioService } from '../../../services/usuario.service';
+import type { Empresa, UsuarioEmpresaFilial } from '../../../types/api.types';
 import { useAuth } from '../../../context/AuthContext';
+import { EmpresaViewModal } from '../modals/EmpresaViewModal';
 
 interface EmpresasListSectionProps {
-  onNavigate: (sectionId: string) => void;
+  onNavigate: (sectionId: string, params?: Record<string, any>) => void;
 }
 
 export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavigate }) => {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | null>(null);
   const { getClienteId } = useAuth();
 
   useEffect(() => {
@@ -38,15 +44,76 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Deseja realmente excluir esta empresa?')) return;
+    if (!confirm('Deseja realmente excluir esta empresa? Todos os dados relacionados (contatos, cidades, associações) também serão removidos.')) return;
 
     try {
+      setLoading(true);
+
+      const clienteId = getClienteId();
+
+      try {
+        const allContatos = await contatoService.findAll();
+        const contatosEmpresa = allContatos.filter(c => c.filialId === id);
+
+        for (const contato of contatosEmpresa) {
+          await contatoService.delete(contato.id);
+        }
+      } catch (error) {
+        console.warn('Erro ao deletar contatos:', error);
+      }
+
+      try {
+        const allCidades = await cidadeService.findAll();
+        const cidadesEmpresa = allCidades.filter(c => c.filialId === id);
+
+        for (const cidade of cidadesEmpresa) {
+          await cidadeService.delete(cidade.id);
+        }
+      } catch (error) {
+        console.warn('Erro ao deletar cidades:', error);
+      }
+
+      if (clienteId) {
+        try {
+          const associacoes = await usuarioService.listarAssociacoes(clienteId);
+          const associacoesEmpresa = associacoes.filter(
+            (a: UsuarioEmpresaFilial) => a.empresa_id === id || a.filial_id === id
+          );
+
+          for (const associacao of associacoesEmpresa) {
+            await usuarioService.removerAssociacao(clienteId, associacao.id);
+          }
+        } catch (error) {
+          console.warn('Erro ao desassociar usuários:', error);
+        }
+      }
+
       await empresaService.delete(id);
+
       setEmpresas(empresas.filter(e => e.id !== id));
+
     } catch (err: any) {
       alert(err.message || 'Erro ao excluir empresa');
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleVisualizar = (id: string) => {
+    setSelectedEmpresaId(id);
+    setShowModal(true);
+  };
+
+  const handleEditar = (id: string) => {
+    onNavigate('empresas-editar', { empresaId: id });
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedEmpresaId(null);
+  };
+
+  const selectedEmpresa = empresas.find(e => e.id === selectedEmpresaId);
 
   const handleCreate = () => {
     onNavigate('empresas-nova');
@@ -130,12 +197,14 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
                       <div className="flex justify-center gap-2">
                         <button
                           className="p-2 hover:bg-[var(--color-primary-hover)] rounded transition-colors"
+                          onClick={() => handleVisualizar(empresa.id)}
                           title="Visualizar"
                         >
                           <FiEye size={18} />
                         </button>
                         <button
                           className="p-2 hover:bg-[var(--color-primary-hover)] rounded transition-colors"
+                          onClick={() => handleEditar(empresa.id)}
                           title="Editar"
                         >
                           <FiEdit size={18} />
@@ -155,6 +224,9 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
             </tbody>
           </table>
         </div>
+      )}
+      {showModal && selectedEmpresa && (
+        <EmpresaViewModal empresa={selectedEmpresa} onClose={handleCloseModal} />
       )}
     </div>
   );

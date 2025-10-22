@@ -11,11 +11,13 @@ import { UsuariosSection } from './sections/UsuariosSection';
 import { useAuth } from '../../context/AuthContext';
 import { UsuariosPerfisSection } from './sections/UsuariosPerfisSection';
 import { ContatosSection } from './sections/ContatosSection';
+import { EditarEmpresaSection } from './sections/EditarEmpresaSection';
 
 const sectionTitles: Record<string, string> = {
   dashboard: 'Dashboard',
   'empresas-listar': 'Listar Empresas',
   'empresas-nova': 'Nova Empresa',
+  'empresas-editar': 'Editar Empresa',
   'usuarios-listar': 'Usuários',
   'usuarios-perfis': 'Perfis de Acesso',
   'auxiliares-contatos': 'Contatos',
@@ -29,6 +31,7 @@ const sectionTitles: Record<string, string> = {
 
 export const MainWorkspace: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>('dashboard');
+  const [sectionParams, setSectionParams] = useState<Record<string, any>>({});
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -39,14 +42,27 @@ export const MainWorkspace: React.FC = () => {
     }
   }, [activeSection, logout, navigate]);
 
+  const handleNavigate = (section: string, params?: Record<string, any>) => {
+    setActiveSection(section);
+    if (params) {
+      setSectionParams(params);
+    } else {
+      setSectionParams({});
+    }
+  };
+
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard':
         return <DashboardSection />;
       case 'empresas-listar':
-        return <EmpresasListSection onNavigate={setActiveSection} />;
+        return <EmpresasListSection onNavigate={handleNavigate} />;
       case 'empresas-nova':
-        return <NovaEmpresaSection />;
+        return <NovaEmpresaSection onNavigate={handleNavigate} />;
+      case 'empresas-editar':
+        return (
+          <EditarEmpresaSection empresaId={sectionParams.empresaId} onNavigate={handleNavigate} />
+        );
       case 'financeiro-pagar':
         return <ContasPagarSection />;
       case 'financeiro-receber':

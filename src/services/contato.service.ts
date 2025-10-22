@@ -17,6 +17,11 @@ class ContatoService {
     return response.data!;
   }
 
+  async findOneByTelefone(telefone: string): Promise<Contato> {
+    const response: ApiResponse<Contato> = await apiService.get(`/contatos/telefone/${telefone}`);
+    return response.data!;
+  }
+
   async update(id: string, dto: UpdateContatoDto): Promise<Contato> {
     const response: ApiResponse<Contato> = await apiService.patch(`/contatos/${id}`, dto);
     return response.data!;

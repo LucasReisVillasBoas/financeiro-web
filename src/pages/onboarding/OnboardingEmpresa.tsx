@@ -32,9 +32,9 @@ export const OnboardingEmpresa: React.FC = () => {
     telefone: '',
     celular: '',
     email: '',
+    codigo_ibge: '',
   });
 
-  const [ibge, setIbge] = useState('');
   const [bacen, setBacen] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,6 +46,7 @@ export const OnboardingEmpresa: React.FC = () => {
       cnpj: 'cnpj_cpf',
       'inscricao-estadual': 'inscricao_estadual',
       estado: 'uf',
+      ibge: 'codigo_ibge',
     };
 
     const dtoKey = keyMap[id] || (id as keyof EmpresaFormData);
@@ -54,10 +55,6 @@ export const OnboardingEmpresa: React.FC = () => {
       ...prev,
       [dtoKey]: value,
     }));
-  };
-
-  const handleIbgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIbge(e.target.value);
   };
 
   const handleBacenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,7 +104,7 @@ export const OnboardingEmpresa: React.FC = () => {
       await cidadeService.create({
         clienteId: clienteId,
         filialId: empresa.id,
-        codigoIbge: ibge || '',
+        codigoIbge: formData.codigo_ibge || '',
         uf: dto.uf || '',
         pais: 'Brasil',
         nome: dto.cidade || '',
@@ -267,11 +264,11 @@ export const OnboardingEmpresa: React.FC = () => {
                   />
 
                   <InputField
-                    id="codigo-ibge"
+                    id="ibge"
                     label="Código IBGE"
                     placeholder=""
-                    value={ibge}
-                    onChange={handleIbgeChange}
+                    value={formData.codigo_ibge}
+                    onChange={handleChange}
                   />
 
                   <InputField
