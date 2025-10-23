@@ -17,6 +17,7 @@ import {
 import { GiMoneyStack, GiBank } from "react-icons/gi";
 import { MdOutlineDashboard } from "react-icons/md";
 import { RiBuilding4Line } from "react-icons/ri";
+import { useUserEmpresas } from "../../hooks/useUserEmpresas";
 
 interface MenuItem {
   label: string;
@@ -125,10 +126,38 @@ const menuItems: MenuItem[] = [
 
 export const Sidebar: React.FC = () => {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+  const { hasEmpresas, loading } = useUserEmpresas();
 
   const toggleMenu = (label: string) => {
     setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
   };
+
+  // Filtrar itens do menu de empresas
+  const getFilteredMenuItems = () => {
+    return menuItems.map((item) => {
+      if (item.label === "Empresas" && item.children) {
+        // Se o usuário já tem empresas, remover "Nova Empresa"
+        if (hasEmpresas) {
+          return {
+            ...item,
+            children: item.children.filter(
+              (child) => child.label !== "Nova Empresa"
+            ),
+          };
+        }
+        // Se não tem empresas, remover "Listar Empresas"
+        return {
+          ...item,
+          children: item.children.filter(
+            (child) => child.label !== "Listar Empresas"
+          ),
+        };
+      }
+      return item;
+    });
+  };
+
+  const filteredMenuItems = loading ? menuItems : getFilteredMenuItems();
 
   return (
     <aside className="w-64 h-screen bg-[var(--color-surface)] dark:bg-[var(--color-bg)] shadow-md flex flex-col">
@@ -137,7 +166,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       <nav className="flex flex-col">
-        {menuItems.map((item) => (
+        {filteredMenuItems.map((item) => (
           <div key={item.label} className="relative">
             {/* Item Pai */}
             <button

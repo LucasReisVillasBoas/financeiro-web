@@ -16,6 +16,7 @@ import {
 import { GiMoneyStack, GiBank } from 'react-icons/gi';
 import { MdOutlineDashboard } from 'react-icons/md';
 import { RiBuilding4Line } from 'react-icons/ri';
+import { useUserEmpresas } from '../../hooks/useUserEmpresas';
 
 export interface MenuItem {
   id: string;
@@ -137,6 +138,7 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
   onItemSelect,
 }) => {
   const [openMenus, setOpenMenus] = React.useState<Record<string, boolean>>({});
+  const { hasEmpresas, loading } = useUserEmpresas();
 
   const toggleMenu = (itemId: string) => {
     setOpenMenus(prev => ({ ...prev, [itemId]: !prev[itemId] }));
@@ -150,12 +152,35 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
     }
   };
 
+  // Filtrar itens do menu de empresas
+  const getFilteredMenuItems = () => {
+    return menuItems.map(item => {
+      if (item.id === 'empresas' && item.children) {
+        // Se o usuário já tem empresas, remover "Nova Empresa"
+        if (hasEmpresas) {
+          return {
+            ...item,
+            children: item.children.filter(child => child.id !== 'empresas-nova'),
+          };
+        }
+        // Se não tem empresas, remover "Listar Empresas"
+        return {
+          ...item,
+          children: item.children.filter(child => child.id !== 'empresas-listar'),
+        };
+      }
+      return item;
+    });
+  };
+
+  const filteredMenuItems = loading ? menuItems : getFilteredMenuItems();
+
   return (
     <aside className="w-64 h-screen bg-[var(--color-surface)] dark:bg-[var(--color-bg)] shadow-md flex flex-col">
       <div className="p-6 font-bold text-xl text-[var(--color-text-primary)]">FinSys</div>
 
       <nav className="flex flex-col">
-        {menuItems.map(item => (
+        {filteredMenuItems.map(item => (
           <div key={item.id} className="relative">
             <button
               className={`w-full flex items-center justify-between gap-3 px-4 py-4 rounded-md text-[var(--color-text)] hover:bg-[var(--color-primary-hover)] border-b border-b-[var(--color-border)] transition-colors duration-200 ${

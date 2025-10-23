@@ -19,7 +19,6 @@ const DashboardHome: React.FC = () => {
   };
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {/* Cartão Recebível */}
       <div className="p-4 bg-[var(--color-surface)] dark:bg-[var(--color-bg)] rounded-md shadow flex flex-col">
         <span className="text-[var(--color-text-secondary)]">Total Recebível</span>
         <span className="mt-2 text-[var(--color-receivable)] font-bold text-xl">
@@ -27,7 +26,6 @@ const DashboardHome: React.FC = () => {
         </span>
       </div>
 
-      {/* Cartão a Pagar */}
       <div className="p-4 bg-[var(--color-surface)] dark:bg-[var(--color-bg)] rounded-md shadow flex flex-col">
         <span className="text-[var(--color-text-secondary)]">Total a Pagar</span>
         <span className="mt-2 text-[var(--color-payable)] font-bold text-xl">
@@ -35,7 +33,6 @@ const DashboardHome: React.FC = () => {
         </span>
       </div>
 
-      {/* Cartão Contas Quitadas */}
       <div className="p-4 bg-[var(--color-surface)] dark:bg-[var(--color-bg)] rounded-md shadow flex flex-col">
         <span className="text-[var(--color-text-secondary)]">Contas Quitadas</span>
         <span className="mt-2 text-[var(--color-settled)] font-bold text-xl">
@@ -51,13 +48,9 @@ const DashboardHome: React.FC = () => {
         </span>
       </div>
 
-      {/* Cartão Informações */}
       <div className="p-4 bg-[var(--color-surface)] dark:bg-[var(--color-bg)] rounded-md shadow flex flex-col">
         <span className="text-[var(--color-text-secondary)]">Informações</span>
-        <span className="mt-2 text-[var(--color-info)] font-bold text-xl">
-          {/* TODO: alterar depois que tiver essa feture no backend */}
-          {formatInfo(null)}
-        </span>
+        <span className="mt-2 text-[var(--color-info)] font-bold text-xl">{formatInfo(null)}</span>
       </div>
     </div>
   );
