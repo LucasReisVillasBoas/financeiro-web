@@ -44,12 +44,16 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
   };
 
   const handleDelete = async (id: string) => {
-    if (
-      !confirm(
-        'Deseja realmente excluir esta empresa? Todos os dados relacionados (contatos, cidades, associações) também serão removidos.'
-      )
-    )
-      return;
+    const empresa = empresas.find(e => e.id === id);
+    const isSede = empresa && !empresa.sede;
+
+    let mensagem = 'Deseja realmente excluir esta empresa?';
+    if (isSede) {
+      mensagem =
+        'Deseja realmente excluir esta SEDE? ATENÇÃO: Todas as filiais vinculadas também serão excluídas automaticamente.';
+    }
+
+    if (!confirm(mensagem)) return;
 
     try {
       setLoading(true);
@@ -95,7 +99,8 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
 
       await empresaService.delete(id);
 
-      setEmpresas(empresas.filter(e => e.id !== id));
+      // Recarregar lista completa para refletir exclusões em cascata
+      await loadEmpresas();
     } catch (err: any) {
       alert(err.message || 'Erro ao excluir empresa');
     } finally {
