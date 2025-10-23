@@ -33,6 +33,7 @@ export const OnboardingEmpresa: React.FC = () => {
     celular: '',
     email: '',
     codigo_ibge: '',
+    data_abertura: undefined,
   });
 
   const [bacen, setBacen] = useState('');
@@ -47,6 +48,7 @@ export const OnboardingEmpresa: React.FC = () => {
       'inscricao-estadual': 'inscricao_estadual',
       estado: 'uf',
       ibge: 'codigo_ibge',
+      'data-abertura': 'data_abertura',
     };
 
     const dtoKey = keyMap[id] || (id as keyof EmpresaFormData);
@@ -194,6 +196,14 @@ export const OnboardingEmpresa: React.FC = () => {
                     label="Inscrição Estadual"
                     placeholder="Digite a IE (opcional)"
                     value={formData.inscricao_estadual}
+                    onChange={handleChange}
+                  />
+                  <InputField
+                    id="data-abertura"
+                    label="Data de Abertura"
+                    type="date"
+                    placeholder=""
+                    value={formData.data_abertura ? new Date(formData.data_abertura).toISOString().split('T')[0] : ''}
                     onChange={handleChange}
                   />
                 </div>

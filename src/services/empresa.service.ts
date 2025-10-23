@@ -11,32 +11,27 @@ import type {
 
 class EmpresaService {
   async create(dto: CreateEmpresaDto): Promise<Empresa> {
-    const response: ApiResponse<Empresa> = await apiService.post(
-      '/empresas',
-      dto
-    );
+    const response: ApiResponse<Empresa> = await apiService.post('/empresas', dto);
     return response.data!;
   }
 
   async findByCliente(clienteId: string): Promise<Empresa[]> {
-    const response: ApiResponse<Empresa[]> = await apiService.get(
-      `/empresas/cliente/${clienteId}`
-    );
+    const response: ApiResponse<Empresa[]> = await apiService.get(`/empresas/cliente/${clienteId}`);
     return response.data || [];
   }
 
   async findOne(id: string): Promise<Empresa> {
-    const response: ApiResponse<Empresa> = await apiService.get(
-      `/empresas/${id}`
-    );
+    const response: ApiResponse<Empresa> = await apiService.get(`/empresas/${id}`);
+    return response.data!;
+  }
+
+  async findByDocument(cnpj: string): Promise<Empresa> {
+    const response: ApiResponse<Empresa> = await apiService.get(`/empresas/document/${cnpj}`);
     return response.data!;
   }
 
   async update(id: string, dto: UpdateEmpresaDto): Promise<Empresa> {
-    const response: ApiResponse<Empresa> = await apiService.put(
-      `/empresas/${id}`,
-      dto
-    );
+    const response: ApiResponse<Empresa> = await apiService.put(`/empresas/${id}`, dto);
     return response.data!;
   }
 
@@ -54,9 +49,7 @@ class EmpresaService {
   }
 
   async listFiliais(empresaId: string): Promise<Filial[]> {
-    const response: ApiResponse<Filial[]> = await apiService.get(
-      `/empresas/${empresaId}/filiais`
-    );
+    const response: ApiResponse<Filial[]> = await apiService.get(`/empresas/${empresaId}/filiais`);
     return response.data || [];
   }
 

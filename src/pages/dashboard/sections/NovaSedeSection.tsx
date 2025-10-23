@@ -56,6 +56,9 @@ export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) =
       celular: formData.get('celular') as string,
       email: formData.get('email') as string,
       codigo_ibge: formData.get('ibge') as string,
+      data_abertura: formData.get('data-abertura')
+        ? new Date(formData.get('data-abertura') as string)
+        : undefined,
     };
 
     try {
@@ -168,6 +171,12 @@ export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) =
             type="text"
             placeholder="Digite a IE"
           />
+          <InputField
+            id="data-abertura"
+            label="Data de Abertura"
+            type="date"
+            placeholder="dd/mm/aaaa"
+          />
         </div>
 
         <div className="border-t border-[var(--color-border)] pt-6">
@@ -224,7 +233,7 @@ export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) =
             disabled={loading}
             className="px-6 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Cadastrando...' : 'Cadastrar SEDE'}
+            {loading ? 'Cadastrando...' : 'Cadastrar Sede'}
           </button>
         </div>
       </form>
