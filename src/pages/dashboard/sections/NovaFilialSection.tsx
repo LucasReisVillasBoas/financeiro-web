@@ -39,13 +39,12 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
       return;
     }
 
-    const empresas = await empresaService.findByCliente(clienteId);
-    const sede = empresas.find(e => e.sede === null);
-    const empresaId = sede ? sede.id : '';
+    const cnpjSede = formData.get('cnpj-sede') as string;
+    const sede = await empresaService.findByDocument(cnpjSede);
 
     const dto: CreateFilialDto = {
       cliente_id: clienteId,
-      empresa_id: empresaId,
+      empresa_id: sede.id,
       razao_social: formData.get('razao-social') as string,
       nome_fantasia: formData.get('nome-fantasia') as string,
       cnpj_cpf: formData.get('cnpj') as string,
@@ -61,6 +60,9 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
       celular: formData.get('celular') as string,
       email: formData.get('email') as string,
       codigo_ibge: formData.get('ibge') as string,
+      data_abertura: formData.get('data-abertura')
+        ? new Date(formData.get('data-abertura') as string)
+        : undefined,
     };
 
     try {
@@ -81,7 +83,7 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
           },
         });
       }
-      const empresa = await empresaService.createFilial(empresaId, dto);
+      const empresa = await empresaService.createFilial(sede.id, dto);
       await contatoService.create({
         clienteId: clienteId,
         filialId: empresa.id,
@@ -137,6 +139,12 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <InputField
+            id="cnpj-sede"
+            label="CNPJ Sede"
+            type="text"
+            placeholder="00.000.000/0000-00"
+          />
+          <InputField
             id="razao-social"
             label="Razão Social"
             type="text"
@@ -155,6 +163,7 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
             type="text"
             placeholder="Digite a IE"
           />
+          <InputField id="data-abertura" label="Data de Abertura" type="date" placeholder="" />
         </div>
 
         <div className="border-t border-[var(--color-border)] pt-6">

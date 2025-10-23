@@ -217,6 +217,14 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
             placeholder="Digite a IE"
             defaultValue={empresaData?.inscricao_estadual || ''}
           />
+          <InputField
+            id="data-abertura"
+            label="Data de Abertura"
+            type="date"
+            disabled={true}
+            placeholder=""
+            defaultValue={empresaData?.data_abertura ? new Date(empresaData.data_abertura).toISOString().split('T')[0] : ''}
+          />
         </div>
 
         <div className="border-t border-[var(--color-border)] pt-6">
