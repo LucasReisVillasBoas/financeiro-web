@@ -17,6 +17,7 @@ export interface User {
   id: string;
   nome: string;
   email: string;
+  login?: string;
   telefone?: string;
   cargo?: string;
   data_nascimento?: string;

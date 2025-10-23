@@ -30,7 +30,6 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
 
       try {
         const data = await empresaService.findOne(empresaId);
-        console.log('Dados da empresa:', data);
         setEmpresaData(data);
 
         if (data.telefone) {
@@ -169,8 +168,6 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-6">Editar Empresa</h2>
-
       {error && (
         <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md">
           {error}

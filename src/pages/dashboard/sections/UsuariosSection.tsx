@@ -2,11 +2,46 @@ import React, { useState, useEffect } from 'react';
 import { FiEdit, FiTrash2, FiLock, FiUserCheck } from 'react-icons/fi';
 import { usuarioService } from '../../../services/usuario.service';
 import type { User } from '../../../types/api.types';
+import { perfilService } from '../../../services/perfil.service';
 
-export const UsuariosSection: React.FC = () => {
+interface UsuariosSectionProps {
+  onNavigate: (section: string, params?: Record<string, any>) => void;
+}
+
+export const UsuariosSection: React.FC<UsuariosSectionProps> = ({ onNavigate }) => {
   const [usuarios, setUsuarios] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const handleDelete = async (usuarioId: string) => {
+    const usuario = usuarios.find(u => u.id === usuarioId);
+    if (usuario?.cargo === 'Proprietário') {
+      alert('Não é permitido excluir o usuário Proprietário.');
+      return;
+    } else {
+      const confirmDelete = window.confirm('Tem certeza que deseja excluir este usuário?');
+      if (!confirmDelete) return;
+
+      try {
+        setLoading(true);
+
+        try {
+          const perfils = await perfilService.findAll(usuarioId);
+          await Promise.all(perfils.map(p => perfilService.remove(usuarioId, p.id)));
+        } catch (error) {
+          console.warn('Erro ao deletar perfis:', error);
+        }
+
+        await usuarioService.update(usuarioId, { ativo: false });
+        setUsuarios(prevUsuarios => prevUsuarios.filter(u => u.id !== usuarioId));
+      } catch (error) {
+        setError('Erro ao excluir usuário');
+        console.error('Erro ao excluir usuário:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchUsuarios = async () => {
@@ -35,8 +70,10 @@ export const UsuariosSection: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Gerenciar Usuários</h2>
-        <button className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors">
+        <button
+          onClick={() => onNavigate('usuarios-novo')}
+          className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors"
+        >
           Novo Usuário
         </button>
       </div>
@@ -107,12 +144,16 @@ export const UsuariosSection: React.FC = () => {
                     <td className="p-4">
                       <div className="flex justify-center gap-2">
                         <button
+                          onClick={() => onNavigate('usuarios-editar', { usuarioId: usuario.id })}
                           className="p-2 hover:bg-[var(--color-primary-hover)] rounded transition-colors"
                           title="Editar"
                         >
                           <FiEdit size={18} />
                         </button>
                         <button
+                          onClick={() =>
+                            onNavigate('usuarios-resetar-senha', { usuarioId: usuario.id })
+                          }
                           className="p-2 hover:bg-[var(--color-primary-hover)] rounded transition-colors"
                           title="Resetar Senha"
                         >
@@ -121,6 +162,7 @@ export const UsuariosSection: React.FC = () => {
                         <button
                           className="p-2 hover:bg-red-100 dark:hover:bg-red-900 rounded transition-colors text-red-600"
                           title="Excluir"
+                          onClick={() => handleDelete(usuario.id)}
                         >
                           <FiTrash2 size={18} />
                         </button>

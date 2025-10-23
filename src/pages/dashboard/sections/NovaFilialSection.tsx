@@ -2,15 +2,26 @@ import React, { useState } from 'react';
 import { InputField } from '../../../components/InputField';
 import { empresaService } from '../../../services/empresa.service';
 import type { CreateFilialDto } from '../../../types/api.types';
+import { useAuth } from '../../../context/AuthContext';
+import { contatoService } from '../../../services/contato.service';
+import { cidadeService } from '../../../services/cidade.service';
+import { usuarioService } from '../../../services/usuario.service';
+import { perfilService } from '../../../services/perfil.service';
 
 interface NovaFilialSectionProps {
-  empresaId: string;
+  onNavigate: (section: string) => void;
 }
 
-export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ empresaId }) => {
+export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [bacen, setBacen] = useState('');
+  const { getClienteId } = useAuth();
+
+  const handleCancel = () => {
+    onNavigate('empresas-listar');
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -21,8 +32,19 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ empresaId 
     const form = e.currentTarget;
     const formData = new FormData(form);
 
+    const clienteId = getClienteId();
+    if (!clienteId) {
+      setError('Erro ao obter informações do usuário. Faça login novamente.');
+      setLoading(false);
+      return;
+    }
+
+    const empresas = await empresaService.findByCliente(clienteId);
+    const sede = empresas.find(e => e.sede === null);
+    const empresaId = sede ? sede.id : '';
+
     const dto: CreateFilialDto = {
-      cliente_id: '',
+      cliente_id: clienteId,
       empresa_id: empresaId,
       razao_social: formData.get('razao-social') as string,
       nome_fantasia: formData.get('nome-fantasia') as string,
@@ -36,12 +58,53 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ empresaId 
       cidade: formData.get('cidade') as string,
       uf: formData.get('estado') as string,
       telefone: formData.get('telefone') as string,
+      celular: formData.get('celular') as string,
       email: formData.get('email') as string,
+      codigo_ibge: formData.get('ibge') as string,
     };
 
     try {
-      await empresaService.createFilial(empresaId, dto);
+      const perfil = await perfilService.findAll(clienteId);
+      if (perfil.length !== 0 && perfil.map(p => p.nome).includes('Administrador') === false) {
+        setError('Perfil "Administrador" não encontrado. Contate o suporte.');
+        setLoading(false);
+        return;
+      }
+      if (perfil.length === 0) {
+        await perfilService.create({
+          clienteId: clienteId,
+          nome: 'Administrador',
+          permissoes: {
+            usuarios: ['criar', 'editar', 'listar'],
+            relatorios: ['criar', 'editar', 'listar'],
+            empresas: ['criar', 'editar', 'listar'],
+          },
+        });
+      }
+      const empresa = await empresaService.createFilial(empresaId, dto);
+      await contatoService.create({
+        clienteId: clienteId,
+        filialId: empresa.id,
+        funcao: 'Contato Principal',
+        celular: dto.celular || '',
+        nome: dto.nome_fantasia,
+        email: dto.email || '',
+        telefone: dto.telefone || '',
+      });
+      await cidadeService.create({
+        clienteId: clienteId,
+        filialId: empresa.id,
+        codigoIbge: formData.get('ibge') as string,
+        uf: dto.uf || '',
+        pais: 'Brasil',
+        nome: dto.cidade || '',
+        codigoBacen: bacen || '',
+      });
+      await usuarioService.associarEmpresaFilial(clienteId, {
+        filialId: empresa.id,
+      });
       setSuccess('Filial cadastrada com sucesso!');
+      setBacen('');
       form.reset();
     } catch (err: any) {
       setError(err.message || 'Erro ao cadastrar filial');
@@ -50,12 +113,12 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ empresaId 
     }
   };
 
+  const handleBacenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBacen(e.target.value);
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-6">
-        Cadastrar Nova Filial
-      </h2>
-
       {error && (
         <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md">
           {error}
@@ -78,22 +141,14 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ empresaId 
             label="Razão Social"
             type="text"
             placeholder="Digite a razão social"
-            required
           />
           <InputField
             id="nome-fantasia"
             label="Nome Fantasia"
             type="text"
             placeholder="Digite o nome fantasia"
-            required
           />
-          <InputField
-            id="cnpj"
-            label="CNPJ"
-            type="text"
-            placeholder="00.000.000/0000-00"
-            required
-          />
+          <InputField id="cnpj" label="CNPJ" type="text" placeholder="00.000.000/0000-00" />
           <InputField
             id="inscricao-estadual"
             label="Inscrição Estadual"
@@ -122,6 +177,15 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ empresaId 
             <InputField id="bairro" label="Bairro" type="text" placeholder="Digite o bairro" />
             <InputField id="cidade" label="Cidade" type="text" placeholder="Digite a cidade" />
             <InputField id="estado" label="Estado" type="text" placeholder="UF" />
+            <InputField id="ibge" label="Código IBGE" placeholder="Digite o código IBGE" />
+
+            <InputField
+              id="codigo-bacen"
+              label="Código BACEN"
+              placeholder="Digite o código BACEN"
+              value={bacen}
+              onChange={handleBacenChange}
+            />
           </div>
         </div>
 
@@ -129,7 +193,8 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ empresaId 
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Contato</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <InputField id="telefone" label="Telefone" type="tel" placeholder="(00) 0000-0000" />
-            <InputField id="email" label="E-mail" type="email" placeholder="filial@email.com" />
+            <InputField id="celular" label="Celular" type="tel" placeholder="(00) 0000-0000" />
+            <InputField id="email" label="E-mail" type="email" placeholder="empresa@email.com" />
           </div>
         </div>
 
@@ -137,6 +202,7 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ empresaId 
           <button
             type="button"
             className="px-6 py-2 border border-[var(--color-border)] text-[var(--color-text)] rounded-md hover:bg-[var(--color-bg)] transition-colors"
+            onClick={handleCancel}
           >
             Cancelar
           </button>
@@ -145,7 +211,7 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ empresaId 
             disabled={loading}
             className="px-6 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Cadastrando...' : 'Cadastrar'}
+            {loading ? 'Cadastrando...' : 'Cadastrar Filial'}
           </button>
         </div>
       </form>

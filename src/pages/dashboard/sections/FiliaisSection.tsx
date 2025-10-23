@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FiEdit, FiTrash2, FiPlus } from "react-icons/fi";
 import { empresaService } from "../../../services/empresa.service";
-import { Filial } from "../../../types/api.types";
+import type { Filial } from "../../../types/api.types";
 
 interface FiliaisSectionProps {
   empresaId: string;
@@ -48,9 +48,6 @@ export const FiliaisSection: React.FC<FiliaisSectionProps> = ({ empresaId }) => 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
-          Filiais da Empresa
-        </h2>
         <button className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors flex items-center gap-2">
           <FiPlus size={18} />
           Nova Filial
