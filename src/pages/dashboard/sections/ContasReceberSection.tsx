@@ -40,9 +40,6 @@ export const ContasReceberSection: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
-          Contas a Receber
-        </h2>
         <button className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors">
           Nova Receita
         </button>

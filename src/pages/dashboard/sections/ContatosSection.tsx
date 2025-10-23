@@ -3,7 +3,11 @@ import { FiEdit, FiTrash2, FiUserCheck } from 'react-icons/fi';
 import type { Contato } from '../../../types/api.types';
 import { contatoService } from '../../../services/contato.service';
 
-export const ContatosSection: React.FC = () => {
+interface ContatosSectionProps {
+  onNavigate: (section: string, params?: Record<string, any>) => void;
+}
+
+export const ContatosSection: React.FC<ContatosSectionProps> = ({ onNavigate }) => {
   const [contatos, setContatos] = useState<Contato[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -52,8 +56,10 @@ export const ContatosSection: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Gerenciar Contatos</h2>
-        <button className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors">
+        <button
+          onClick={() => onNavigate('auxiliares-contatos-novo')}
+          className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors"
+        >
           Novo Contato
         </button>
       </div>
@@ -126,6 +132,9 @@ export const ContatosSection: React.FC = () => {
                     <td className="p-4">
                       <div className="flex justify-center gap-2">
                         <button
+                          onClick={() =>
+                            onNavigate('auxiliares-contatos-editar', { contatoId: contato.id })
+                          }
                           className="p-2 hover:bg-[var(--color-primary-hover)] rounded transition-colors"
                           title="Editar"
                         >

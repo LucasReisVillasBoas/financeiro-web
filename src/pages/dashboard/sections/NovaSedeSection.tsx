@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { InputField } from '../../../components/InputField';
 import { empresaService } from '../../../services/empresa.service';
-import type { CreateFilialDto } from '../../../types/api.types';
+import type { CreateEmpresaDto } from '../../../types/api.types';
 import { useAuth } from '../../../context/AuthContext';
 import { contatoService } from '../../../services/contato.service';
 import { cidadeService } from '../../../services/cidade.service';
 import { usuarioService } from '../../../services/usuario.service';
 import { perfilService } from '../../../services/perfil.service';
 
-interface NovaEmpresaSectionProps {
+interface NovaSedeSecionProps {
   onNavigate: (section: string) => void;
 }
 
-export const NovaEmpresaSection: React.FC<NovaEmpresaSectionProps> = ({ onNavigate }) => {
+export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -39,14 +39,8 @@ export const NovaEmpresaSection: React.FC<NovaEmpresaSectionProps> = ({ onNaviga
       return;
     }
 
-    const empresas = await empresaService.findByCliente(clienteId);
-    console.log(empresas);
-    const sede = empresas.find(e => e.sede === null);
-    const empresaId = sede ? sede.id : '';
-
-    const dto: CreateFilialDto = {
+    const dto: CreateEmpresaDto = {
       cliente_id: clienteId,
-      empresa_id: empresaId,
       razao_social: formData.get('razao-social') as string,
       nome_fantasia: formData.get('nome-fantasia') as string,
       cnpj_cpf: formData.get('cnpj') as string,
@@ -82,7 +76,9 @@ export const NovaEmpresaSection: React.FC<NovaEmpresaSectionProps> = ({ onNaviga
           },
         });
       }
-      const empresa = await empresaService.createFilial(empresaId, dto);
+
+      const empresa = await empresaService.create(dto);
+
       await contatoService.create({
         clienteId: clienteId,
         filialId: empresa.id,
@@ -92,6 +88,7 @@ export const NovaEmpresaSection: React.FC<NovaEmpresaSectionProps> = ({ onNaviga
         email: dto.email || '',
         telefone: dto.telefone || '',
       });
+
       await cidadeService.create({
         clienteId: clienteId,
         filialId: empresa.id,
@@ -101,14 +98,21 @@ export const NovaEmpresaSection: React.FC<NovaEmpresaSectionProps> = ({ onNaviga
         nome: dto.cidade || '',
         codigoBacen: bacen || '',
       });
+
       await usuarioService.associarEmpresaFilial(clienteId, {
-        filialId: empresa.id,
+        empresaId: empresa.id,
       });
-      setSuccess('Filial cadastrada com sucesso!');
+
+      setSuccess('Empresa (sede) cadastrada com sucesso!');
       setBacen('');
       form.reset();
+
+      // Redirecionar após 2 segundos
+      setTimeout(() => {
+        onNavigate('empresas-listar');
+      }, 2000);
     } catch (err: any) {
-      setError(err.message || 'Erro ao cadastrar filial');
+      setError(err.message || 'Erro ao cadastrar empresa');
     } finally {
       setLoading(false);
     }
@@ -120,10 +124,6 @@ export const NovaEmpresaSection: React.FC<NovaEmpresaSectionProps> = ({ onNaviga
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-6">
-        Cadastrar Nova Empresa
-      </h2>
-
       {error && (
         <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md">
           {error}
@@ -146,14 +146,22 @@ export const NovaEmpresaSection: React.FC<NovaEmpresaSectionProps> = ({ onNaviga
             label="Razão Social"
             type="text"
             placeholder="Digite a razão social"
+            required
           />
           <InputField
             id="nome-fantasia"
             label="Nome Fantasia"
             type="text"
             placeholder="Digite o nome fantasia"
+            required
           />
-          <InputField id="cnpj" label="CNPJ" type="text" placeholder="00.000.000/0000-00" />
+          <InputField
+            id="cnpj"
+            label="CNPJ"
+            type="text"
+            placeholder="00.000.000/0000-00"
+            required
+          />
           <InputField
             id="inscricao-estadual"
             label="Inscrição Estadual"
@@ -216,7 +224,7 @@ export const NovaEmpresaSection: React.FC<NovaEmpresaSectionProps> = ({ onNaviga
             disabled={loading}
             className="px-6 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Cadastrando...' : 'Cadastrar'}
+            {loading ? 'Cadastrando...' : 'Cadastrar SEDE'}
           </button>
         </div>
       </form>

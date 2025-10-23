@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { FiEdit, FiTrash2, FiLock, FiUserCheck } from 'react-icons/fi';
+import { FiEdit, FiUserCheck } from 'react-icons/fi';
 import type { Perfil } from '../../../types/api.types';
 import { perfilService } from '../../../services/perfil.service';
 import { useAuth } from '../../../context/AuthContext';
 
-export const UsuariosPerfisSection: React.FC = () => {
+interface UsuariosPerfisSectionProps {
+  onNavigate: (section: string, params?: Record<string, any>) => void;
+}
+
+export const UsuariosPerfisSection: React.FC<UsuariosPerfisSectionProps> = ({ onNavigate }) => {
   const [perfis, setPerfis] = useState<Perfil[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -43,10 +47,9 @@ export const UsuariosPerfisSection: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Gerenciar Perfis</h2>
-        <button className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors">
-          Novo Perfil
-        </button>
+          {/* <button className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors">
+            Novo Perfil
+          </button> */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -109,22 +112,13 @@ export const UsuariosPerfisSection: React.FC = () => {
                     <td className="p-4">
                       <div className="flex justify-center gap-2">
                         <button
+                          onClick={() =>
+                            onNavigate('usuarios-perfis-editar', { perfilId: perfil.id })
+                          }
                           className="p-2 hover:bg-[var(--color-primary-hover)] rounded transition-colors"
                           title="Editar"
                         >
                           <FiEdit size={18} />
-                        </button>
-                        <button
-                          className="p-2 hover:bg-[var(--color-primary-hover)] rounded transition-colors"
-                          title="Resetar Senha"
-                        >
-                          <FiLock size={18} />
-                        </button>
-                        <button
-                          className="p-2 hover:bg-red-100 dark:hover:bg-red-900 rounded transition-colors text-red-600"
-                          title="Excluir"
-                        >
-                          <FiTrash2 size={18} />
                         </button>
                       </div>
                     </td>

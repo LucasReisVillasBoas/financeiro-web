@@ -6,6 +6,21 @@ import type {
   AssociarEmpresaFilialDto,
 } from '../types/api.types';
 
+export interface CidadeDto {
+  nome: string;
+  codigoIbge: string;
+  uf: string;
+  codigoBacen?: string;
+}
+
+export interface ContatoDto {
+  nome: string;
+  funcao: string;
+  telefone: string;
+  celular: string;
+  email: string;
+}
+
 export interface UsuarioCreateDto {
   nome: string;
   email: string;
@@ -14,6 +29,8 @@ export interface UsuarioCreateDto {
   telefone: string;
   cargo: string;
   ativo?: boolean;
+  cidade?: CidadeDto;
+  contatos?: ContatoDto[];
 }
 
 export interface UsuarioUpdateDto {
@@ -21,6 +38,10 @@ export interface UsuarioUpdateDto {
   email?: string;
   cpf?: string;
   data_nascimento?: string;
+  senha?: string;
+  ativo?: boolean;
+  telefone?: string;
+  cargo?: string;
 }
 
 class UsuarioService {
@@ -31,6 +52,11 @@ class UsuarioService {
 
   async getById(): Promise<User | null> {
     const response: ApiResponse<User> = await apiService.get(`/usuario`);
+    return response.data || null;
+  }
+
+  async getOne(id: string): Promise<User | null> {
+    const response: ApiResponse<User> = await apiService.get(`/usuario/id/${id}`);
     return response.data || null;
   }
 

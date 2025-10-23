@@ -4,23 +4,37 @@ import { NavigationSidebar } from '../../components/workspace/NavigationSidebar'
 import { Header } from '../../components/workspace/Header';
 import { DashboardSection } from './sections/DashboardSection';
 import { EmpresasListSection } from './sections/EmpresasListSection';
-import { NovaEmpresaSection } from './sections/NovaEmpresaSection';
 import { ContasPagarSection } from './sections/ContasPagarSection';
 import { ContasReceberSection } from './sections/ContasReceberSection';
 import { UsuariosSection } from './sections/UsuariosSection';
 import { useAuth } from '../../context/AuthContext';
 import { UsuariosPerfisSection } from './sections/UsuariosPerfisSection';
+import { EditarPerfilSection } from './sections/EditarPerfilSection';
 import { ContatosSection } from './sections/ContatosSection';
+import { NovoContatoSection } from './sections/NovoContatoSection';
+import { EditarContatoSection } from './sections/EditarContatoSection';
 import { EditarEmpresaSection } from './sections/EditarEmpresaSection';
+import { EditarUsuarioSection } from './sections/EditarUsuarioSection';
+import { ResetarSenhaUsuarioSection } from './sections/ResetarSenhaUsuarioSection';
+import { NovoUsuarioSection } from './sections/NovoUsuarioSection';
+import { NovaSedeSection } from './sections/NovaSedeSection';
+import { NovaFilialSection } from './sections/NovaFilialSection';
 
 const sectionTitles: Record<string, string> = {
   dashboard: 'Dashboard',
   'empresas-listar': 'Listar Empresas',
-  'empresas-nova': 'Nova Empresa',
+  'empresas-nova': 'Nova Empresa (sede)',
+  'empresas-nova-filial': 'Nova Filial',
   'empresas-editar': 'Editar Empresa',
   'usuarios-listar': 'Usuários',
+  'usuarios-novo': 'Novo Usuário',
+  'usuarios-editar': 'Editar Usuário',
+  'usuarios-resetar-senha': 'Resetar Senha',
   'usuarios-perfis': 'Perfis de Acesso',
+  'usuarios-perfis-editar': 'Editar Perfil',
   'auxiliares-contatos': 'Contatos',
+  'auxiliares-contatos-novo': 'Novo Contato',
+  'auxiliares-contatos-editar': 'Editar Contato',
   'pessoas-listar': 'Listar Pessoas',
   'pessoas-nova': 'Nova Pessoa',
   'financeiro-bancos': 'Contas Bancárias',
@@ -58,7 +72,9 @@ export const MainWorkspace: React.FC = () => {
       case 'empresas-listar':
         return <EmpresasListSection onNavigate={handleNavigate} />;
       case 'empresas-nova':
-        return <NovaEmpresaSection onNavigate={handleNavigate} />;
+        return <NovaSedeSection onNavigate={handleNavigate} />;
+      case 'empresas-nova-filial':
+        return <NovaFilialSection onNavigate={handleNavigate} />;
       case 'empresas-editar':
         return (
           <EditarEmpresaSection empresaId={sectionParams.empresaId} onNavigate={handleNavigate} />
@@ -68,11 +84,34 @@ export const MainWorkspace: React.FC = () => {
       case 'financeiro-receber':
         return <ContasReceberSection />;
       case 'usuarios-listar':
-        return <UsuariosSection />;
+        return <UsuariosSection onNavigate={handleNavigate} />;
+      case 'usuarios-novo':
+        return <NovoUsuarioSection onNavigate={handleNavigate} />;
+      case 'usuarios-editar':
+        return (
+          <EditarUsuarioSection usuarioId={sectionParams.usuarioId} onNavigate={handleNavigate} />
+        );
+      case 'usuarios-resetar-senha':
+        return (
+          <ResetarSenhaUsuarioSection
+            usuarioId={sectionParams.usuarioId}
+            onNavigate={handleNavigate}
+          />
+        );
       case 'usuarios-perfis':
-        return <UsuariosPerfisSection />;
+        return <UsuariosPerfisSection onNavigate={handleNavigate} />;
+      case 'usuarios-perfis-editar':
+        return (
+          <EditarPerfilSection perfilId={sectionParams.perfilId} onNavigate={handleNavigate} />
+        );
       case 'auxiliares-contatos':
-        return <ContatosSection />;
+        return <ContatosSection onNavigate={handleNavigate} />;
+      case 'auxiliares-contatos-novo':
+        return <NovoContatoSection onNavigate={handleNavigate} />;
+      case 'auxiliares-contatos-editar':
+        return (
+          <EditarContatoSection contatoId={sectionParams.contatoId} onNavigate={handleNavigate} />
+        );
       case 'pessoas-listar':
         return (
           <div className="p-6 bg-[var(--color-surface)] rounded-md shadow">

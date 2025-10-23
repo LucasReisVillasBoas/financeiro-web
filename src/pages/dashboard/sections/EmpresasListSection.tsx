@@ -44,7 +44,12 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Deseja realmente excluir esta empresa? Todos os dados relacionados (contatos, cidades, associações) também serão removidos.')) return;
+    if (
+      !confirm(
+        'Deseja realmente excluir esta empresa? Todos os dados relacionados (contatos, cidades, associações) também serão removidos.'
+      )
+    )
+      return;
 
     try {
       setLoading(true);
@@ -91,7 +96,6 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
       await empresaService.delete(id);
 
       setEmpresas(empresas.filter(e => e.id !== id));
-
     } catch (err: any) {
       alert(err.message || 'Erro ao excluir empresa');
     } finally {
@@ -115,8 +119,8 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
 
   const selectedEmpresa = empresas.find(e => e.id === selectedEmpresaId);
 
-  const handleCreate = () => {
-    onNavigate('empresas-nova');
+  const handleCreateFilial = () => {
+    onNavigate('empresas-nova-filial');
   };
 
   const getStatus = (empresa: Empresa) => {
@@ -126,14 +130,11 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
-          Empresas Cadastradas
-        </h2>
         <button
           className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors"
-          onClick={() => handleCreate()}
+          onClick={() => handleCreateFilial()}
         >
-          Nova Empresa
+          Nova Filial
         </button>
       </div>
 
