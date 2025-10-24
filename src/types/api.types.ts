@@ -182,3 +182,56 @@ export interface Perfil {
   ativo: boolean;
   deleted_at?: string;
 }
+
+export interface ContaBancaria {
+  id: string;
+  banco: string;
+  agencia: string;
+  conta: string;
+  tipoConta: 'Conta Corrente' | 'Conta Poupança' | 'Conta Salário' | 'Conta Investimento';
+  saldoDisponivel: number;
+  ativo: boolean;
+  empresaId?: string;
+  filialId?: string;
+  deleted_at?: string;
+}
+
+export interface CreateContaBancariaDto {
+  banco: string;
+  agencia: string;
+  conta: string;
+  tipoConta: string;
+  saldoDisponivel: number;
+  empresaId?: string;
+  filialId?: string;
+}
+
+export interface UpdateContaBancariaDto extends Partial<CreateContaBancariaDto> {}
+
+export interface MovimentacaoBancaria {
+  id: string;
+  data: string;
+  descricao: string;
+  conta: string;
+  categoria: string;
+  valor: number;
+  tipo: 'Entrada' | 'Saída';
+  contaBancariaId: string;
+  empresaId?: string;
+  filialId?: string;
+  deleted_at?: string;
+}
+
+export interface CreateMovimentacaoBancariaDto {
+  data: string;
+  descricao: string;
+  conta: string;
+  categoria: string;
+  valor: number;
+  tipo: 'Entrada' | 'Saída';
+  contaBancariaId: string;
+  empresaId?: string;
+  filialId?: string;
+}
+
+export interface UpdateMovimentacaoBancariaDto extends Partial<CreateMovimentacaoBancariaDto> {}

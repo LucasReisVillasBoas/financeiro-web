@@ -19,6 +19,8 @@ import { ResetarSenhaUsuarioSection } from './sections/ResetarSenhaUsuarioSectio
 import { NovoUsuarioSection } from './sections/NovoUsuarioSection';
 import { NovaSedeSection } from './sections/NovaSedeSection';
 import { NovaFilialSection } from './sections/NovaFilialSection';
+import { ContasBancariasSection } from './sections/ContasBancariasSection';
+import { MovimentacoesBancariasSection } from './sections/MovimentacoesBancariasSection';
 
 const sectionTitles: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -131,27 +133,9 @@ export const MainWorkspace: React.FC = () => {
           </div>
         );
       case 'financeiro-bancos':
-        return (
-          <div className="p-6 bg-[var(--color-surface)] rounded-md shadow">
-            <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
-              Contas Bancárias
-            </h2>
-            <p className="text-[var(--color-text-secondary)] mt-4">
-              Seção de contas bancárias em desenvolvimento...
-            </p>
-          </div>
-        );
+        return <ContasBancariasSection />;
       case 'financeiro-movimentacao':
-        return (
-          <div className="p-6 bg-[var(--color-surface)] rounded-md shadow">
-            <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
-              Movimentação Bancária
-            </h2>
-            <p className="text-[var(--color-text-secondary)] mt-4">
-              Seção de movimentação bancária em desenvolvimento...
-            </p>
-          </div>
-        );
+        return <MovimentacoesBancariasSection />;
       default:
         return (
           <div className="p-6 bg-[var(--color-surface)] rounded-md shadow">
