@@ -229,9 +229,56 @@ export interface CreateMovimentacaoBancariaDto {
   categoria: string;
   valor: number;
   tipo: 'Entrada' | 'Saída';
-  contaBancariaId: string;
+  contaBancaria: string;
   empresaId?: string;
-  filialId?: string;
 }
 
 export interface UpdateMovimentacaoBancariaDto extends Partial<CreateMovimentacaoBancariaDto> {}
+
+export interface ContaPagar {
+  id: string;
+  descricao: string;
+  valor: number;
+  vencimento: string;
+  status: 'Pendente' | 'Vencida' | 'Paga';
+  fornecedor: string;
+  dataPagamento?: string;
+  empresaId?: string;
+  deletadoEm?: string;
+}
+
+export interface CreateContaPagarDto {
+  descricao: string;
+  valor: number;
+  vencimento: string;
+  status?: 'Pendente' | 'Vencida' | 'Paga';
+  fornecedor: string;
+  dataPagamento?: string;
+  empresaId?: string;
+}
+
+export interface UpdateContaPagarDto extends Partial<CreateContaPagarDto> {}
+
+export interface ContaReceber {
+  id: string;
+  descricao: string;
+  valor: number;
+  vencimento: string;
+  status: 'Pendente' | 'Recebida';
+  cliente: string;
+  dataRecebimento?: string;
+  empresaId?: string;
+  deletadoEm?: string;
+}
+
+export interface CreateContaReceberDto {
+  descricao: string;
+  valor: number;
+  vencimento: string;
+  status?: 'Pendente' | 'Recebida';
+  cliente: string;
+  dataRecebimento?: string;
+  empresaId?: string;
+}
+
+export interface UpdateContaReceberDto extends Partial<CreateContaReceberDto> {}
