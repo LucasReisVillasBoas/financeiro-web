@@ -74,14 +74,14 @@ export const EmpresaViewModal: React.FC<EmpresaViewModalProps> = ({ empresa, onC
                 <span
                   className={`px-3 py-1 rounded text-xs font-medium ${
                     getStatus(empresa) === 'Ativa'
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
                   }`}
                 >
                   {getStatus(empresa)}
                 </span>
                 {!empresa.sede && (
-                  <span className="px-3 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                  <span className="px-3 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
                     Sede
                   </span>
                 )}

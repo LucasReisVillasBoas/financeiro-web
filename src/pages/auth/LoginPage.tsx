@@ -38,7 +38,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md p-8 rounded-xl shadow-lg bg-[var(--color-surface)] border border-[var(--color-border)]">
         <h1 className="text-3xl font-bold text-center mb-6">Entrar</h1>
         {error && (
-          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md text-sm">
+          <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md text-sm">
             {error}
           </div>
         )}

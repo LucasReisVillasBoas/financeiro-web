@@ -55,7 +55,7 @@ export const FiliaisSection: React.FC<FiliaisSectionProps> = ({ empresaId }) => 
       </div>
 
       {error && (
-        <div className="p-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md">
+        <div className="p-4 bg-red-100/30 text-red-800 rounded-md">
           {error}
         </div>
       )}
@@ -94,8 +94,8 @@ export const FiliaisSection: React.FC<FiliaisSectionProps> = ({ empresaId }) => 
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded text-sm ${
                         getStatus(filial) === "Ativa"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                          : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
                       }`}>
                         {getStatus(filial)}
                       </span>
@@ -109,7 +109,7 @@ export const FiliaisSection: React.FC<FiliaisSectionProps> = ({ empresaId }) => 
                           <FiEdit size={18} />
                         </button>
                         <button
-                          className="p-2 hover:bg-red-100 dark:hover:bg-red-900 rounded transition-colors text-red-600"
+                          className="p-2 hover:bg-red-100:bg-red-900 rounded transition-colors text-red-600"
                           onClick={() => handleDelete(filial.id)}
                           title="Excluir"
                         >

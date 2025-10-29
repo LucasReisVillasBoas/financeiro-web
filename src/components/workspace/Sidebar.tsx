@@ -1,6 +1,6 @@
 // src/components/workspace/Sidebar.tsx
-import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import React, { useState } from 'react';
+import { NavLink } from 'react-router-dom';
 import {
   FiUsers,
   FiShield,
@@ -13,11 +13,11 @@ import {
   FiPlus,
   FiList,
   FiChevronDown,
-} from "react-icons/fi";
-import { GiMoneyStack, GiBank } from "react-icons/gi";
-import { MdOutlineDashboard } from "react-icons/md";
-import { RiBuilding4Line } from "react-icons/ri";
-import { useUserEmpresas } from "../../hooks/useUserEmpresas";
+} from 'react-icons/fi';
+import { GiMoneyStack, GiBank } from 'react-icons/gi';
+import { MdOutlineDashboard } from 'react-icons/md';
+import { RiBuilding4Line } from 'react-icons/ri';
+import { useUserEmpresas } from '../../hooks/useUserEmpresas';
 
 interface MenuItem {
   label: string;
@@ -28,97 +28,92 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   {
-    label: "Dashboard",
-    path: "/dashboard",
-    icon: <MdOutlineDashboard size={20} />,
+    label: 'Dashboard',
+    path: '/dashboard',
+    icon: <MdOutlineDashboard size={16} />,
   },
   {
-    label: "Empresas",
-    icon: <RiBuilding4Line size={20} />,
+    label: 'Empresas',
+    icon: <RiBuilding4Line size={16} />,
     children: [
       {
-        label: "Listar Empresas",
-        path: "/dashboard/empresas/listar",
-        icon: <FiList size={16} />,
+        label: 'Listar Empresas',
+        path: '/dashboard/empresas/listar',
+        icon: <FiList size={14} />,
       },
       {
-        label: "Nova Empresa",
-        path: "/dashboard/empresas/nova",
-        icon: (
-          <FiPlus
-            size={16}
-            className="bg-red-500 text-white rounded-full p-1"
-          />
-        ),
+        label: 'Nova Empresa',
+        path: '/dashboard/empresas/nova',
+        icon: <FiPlus size={14} />,
       },
     ],
   },
   {
-    label: "Usuarios & Permissões",
-    icon: <FiUsers size={20} />,
+    label: 'Usuarios & Permissões',
+    icon: <FiUsers size={16} />,
     children: [
       {
-        label: "Usuários",
-        path: "/dashboard/usuarios",
-        icon: <FiUser size={16} />,
+        label: 'Usuários',
+        path: '/dashboard/usuarios',
+        icon: <FiUser size={14} />,
       },
       {
-        label: "Perfis",
-        path: "/dashboard/perfis",
-        icon: <FiShield size={16} />,
+        label: 'Perfis',
+        path: '/dashboard/perfis',
+        icon: <FiShield size={14} />,
       },
     ],
   },
   {
-    label: "Cadastro Auxiliares",
-    icon: <FiSettings size={20} />,
+    label: 'Cadastro Auxiliares',
+    icon: <FiSettings size={16} />,
     children: [
       {
-        label: "Contatos",
-        path: "/dashboard/contatos",
-        icon: <FiUser size={16} />,
+        label: 'Contatos',
+        path: '/dashboard/contatos',
+        icon: <FiUser size={14} />,
       },
     ],
   },
   {
-    label: "Pessoas",
-    icon: <FiUser size={20} />,
+    label: 'Pessoas',
+    icon: <FiUser size={16} />,
     children: [
       {
-        label: "Listar Pessoas",
-        path: "/dashboard/pessoas/listar",
-        icon: <FiUsers size={16} />,
+        label: 'Listar Pessoas',
+        path: '/dashboard/pessoas/listar',
+        icon: <FiUsers size={14} />,
       },
       {
-        label: "Nova Pessoa",
-        path: "/dashboard/pessoas/nova",
-        icon: <FiUserPlus size={16} />,
+        label: 'Nova Pessoa',
+        path: '/dashboard/pessoas/nova',
+        icon: <FiUserPlus size={14} />,
       },
     ],
   },
   {
-    label: "Financeiro",
-    icon: <GiMoneyStack size={20} />,
+    label: 'Financeiro',
+    icon: <GiMoneyStack size={16} />,
     children: [
       {
-        label: "Contas Bancárias",
-        path: "/dashboard/financeiro/bancos",
-        icon: <GiBank size={16} />,
+        label: 'Contas Bancárias',
+        path: '/dashboard/financeiro/bancos',
+        icon: <GiBank size={14} />,
       },
       {
-        label: "Contas a Pagar",
-        path: "/dashboard/financeiro/pagar",
-        icon: <FiFileText size={16} />,
+        label: 'Contas a Pagar',
+        path: '/dashboard/financeiro/pagar',
+        icon: <FiFileText size={14} />,
       },
       {
-        label: "Contas a Receber",
-        path: "/dashboard/financeiro/receber",
-        icon: <FiDollarSign size={16} />,
+        label: 'Contas a Receber',
+        path: '/dashboard/financeiro/receber',
+        icon: <FiDollarSign size={14} />,
       },
       {
-        label: "Movimentação Bancária",
-        path: "/dashboard/financeiro/movimentacao",
-        icon: <FiRepeat size={16} />,
+        label: 'Movimentação Bancária',
+        path: '/dashboard/financeiro/movimentacao',
+        icon: <FiRepeat size={14} />,
       },
     ],
   },
@@ -129,28 +124,24 @@ export const Sidebar: React.FC = () => {
   const { hasEmpresas, loading } = useUserEmpresas();
 
   const toggleMenu = (label: string) => {
-    setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
+    setOpenMenus(prev => ({ ...prev, [label]: !prev[label] }));
   };
 
   // Filtrar itens do menu de empresas
   const getFilteredMenuItems = () => {
-    return menuItems.map((item) => {
-      if (item.label === "Empresas" && item.children) {
+    return menuItems.map(item => {
+      if (item.label === 'Empresas' && item.children) {
         // Se o usuário já tem empresas, remover "Nova Empresa"
         if (hasEmpresas) {
           return {
             ...item,
-            children: item.children.filter(
-              (child) => child.label !== "Nova Empresa"
-            ),
+            children: item.children.filter(child => child.label !== 'Nova Empresa'),
           };
         }
         // Se não tem empresas, remover "Listar Empresas"
         return {
           ...item,
-          children: item.children.filter(
-            (child) => child.label !== "Listar Empresas"
-          ),
+          children: item.children.filter(child => child.label !== 'Listar Empresas'),
         };
       }
       return item;
@@ -160,55 +151,94 @@ export const Sidebar: React.FC = () => {
   const filteredMenuItems = loading ? menuItems : getFilteredMenuItems();
 
   return (
-    <aside className="w-64 h-screen bg-[var(--color-surface)] dark:bg-[var(--color-bg)] shadow-md flex flex-col">
-      <div className="p-6 font-bold text-xl text-[var(--color-text-primary)]">
-        FinSys
+    <aside className="w-64 h-screen bg-[var(--color-sidebar-bg)] shadow-md flex flex-col">
+      {/* Logo */}
+      <div className="px-6 py-5 border-b border-[var(--color-sidebar-border)]">
+        <h1 className="font-semibold text-lg tracking-wide text-gray-100">
+          FinSys
+        </h1>
       </div>
 
-      <nav className="flex flex-col">
-        {filteredMenuItems.map((item) => (
-          <div key={item.label} className="relative">
+      {/* Menu */}
+      <nav className="flex-1 overflow-y-auto py-4 px-3">
+        {filteredMenuItems.map(item => (
+          <div key={item.label} className="mb-1">
             {/* Item Pai */}
-            <button
-              className={`w-full flex items-center justify-between gap-3 px-4 py-4 rounded-md text-[var(--color-text)] hover:bg-[var(--color-primary-hover)] border-b border-b-[var(--color-border)] transition-colors duration-200`}
-              onClick={() => item.children && toggleMenu(item.label)}
-            >
-              <div className="flex items-center gap-3">
-                {item.icon}
-                <span>{item.label}</span>
-              </div>
-              {item.children && (
-                <span
-                  className={`transition-transform duration-300 ${openMenus[item.label] ? "rotate-180" : "rotate-0"}`}
-                >
-                  <FiChevronDown size={18} />
-                </span>
-              )}
-            </button>
+            {item.path ? (
+              <NavLink
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 no-underline ${
+                    isActive
+                      ? 'bg-[var(--color-sidebar-active)] text-white'
+                      : 'text-[var(--color-sidebar-text)] hover:bg-[var(--color-sidebar-hover)] hover:text-[var(--color-sidebar-text-hover)]'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <span className={isActive ? 'text-white' : 'text-[var(--color-sidebar-icon)]'}>
+                      {item.icon}
+                    </span>
+                    <span className="text-sm font-medium">
+                      {item.label}
+                    </span>
+                  </>
+                )}
+              </NavLink>
+            ) : (
+              <button
+                className="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 border-none bg-transparent cursor-pointer text-[var(--color-sidebar-text)] hover:bg-[var(--color-sidebar-hover)] hover:text-[var(--color-sidebar-text-hover)]"
+                onClick={() => item.children && toggleMenu(item.label)}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-[var(--color-sidebar-icon)]">{item.icon}</span>
+                  <span className="text-sm font-medium">{item.label}</span>
+                </div>
+                {item.children && (
+                  <FiChevronDown
+                    size={14}
+                    className={`text-[var(--color-sidebar-icon)] transition-transform duration-200 ${
+                      openMenus[item.label] ? 'rotate-180' : 'rotate-0'
+                    }`}
+                  />
+                )}
+              </button>
+            )}
 
             {/* Subitens */}
             {item.children && (
               <div
-                className={`flex flex-col ml-6 overflow-hidden transition-all duration-300 ${
-                  openMenus[item.label] ? "max-h-96 mt-1" : "max-h-0"
+                className={`overflow-hidden transition-all duration-200 ${
+                  openMenus[item.label] ? 'max-h-96 mt-1' : 'max-h-0'
                 }`}
               >
-                {item.children.map((child) => (
-                  <NavLink
-                    key={child.label}
-                    to={child.path || "#"}
-                    className={({ isActive }) =>
-                      `flex items-center gap-2 px-4 py-2 rounded-md text-[var(--color-text)] bg-[var(--color-surface)] dark:bg-[var(--color-surface)] hover:bg-[var(--color-bg)] hover:text-[var(--color-primary)] transition-colors duration-200 ${
-                        isActive
-                          ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-                          : ""
-                      }`
-                    }
-                  >
-                    {child.icon}
-                    <span>{child.label}</span>
-                  </NavLink>
-                ))}
+                <div className="ml-3 pl-3 border-l border-[var(--color-sidebar-border)]">
+                  {item.children.map(child => (
+                    <NavLink
+                      key={child.label}
+                      to={child.path || '#'}
+                      className={({ isActive }) =>
+                        `flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 no-underline mb-0.5 ${
+                          isActive
+                            ? 'bg-[var(--color-sidebar-active)] text-white'
+                            : 'text-[var(--color-sidebar-text)] hover:bg-[var(--color-sidebar-hover)] hover:text-[var(--color-sidebar-text-hover)]'
+                        }`
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <span className={isActive ? 'text-white' : 'text-[var(--color-sidebar-icon)]'}>
+                            {child.icon}
+                          </span>
+                          <span className="text-xs font-medium">
+                            {child.label}
+                          </span>
+                        </>
+                      )}
+                    </NavLink>
+                  ))}
+                </div>
               </div>
             )}
           </div>

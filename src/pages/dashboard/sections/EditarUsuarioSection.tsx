@@ -106,13 +106,13 @@ export const EditarUsuarioSection: React.FC<EditarUsuarioSectionProps> = ({
   return (
     <div className="max-w-4xl mx-auto">
       {error && (
-        <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md">
+        <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-md">
+        <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">
           {success}
         </div>
       )}

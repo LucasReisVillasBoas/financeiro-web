@@ -16,7 +16,7 @@ export const WorkspaceLayout: React.FC<WorkspaceLayoutProps> = ({ title }) => {
   if (location.pathname.includes("payable")) headerTitle = "Contas a Pagar";
 
   return (
-    <div className="flex h-screen bg-[var(--color-bg)] dark:bg-[var(--color-bg)]">
+    <div className="flex h-screen bg-[var(--color-bg)]">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title={headerTitle} />
