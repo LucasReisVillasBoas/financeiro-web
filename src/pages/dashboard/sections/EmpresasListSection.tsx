@@ -144,7 +144,7 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
       </div>
 
       {error && (
-        <div className="p-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md">
+        <div className="p-4 bg-red-100/30 text-red-800 rounded-md">
           {error}
         </div>
       )}
@@ -186,14 +186,14 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
                         <span
                           className={`px-2 py-1 rounded text-sm text-center ${
                             getStatus(empresa) === 'Ativa'
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                              : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800'
                           }`}
                         >
                           {getStatus(empresa)}
                         </span>
                         {!empresa.sede && (
-                          <span className="px-2 py-1 rounded text-sm text-center bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                          <span className="px-2 py-1 rounded text-sm text-center bg-blue-100 text-blue-800">
                             Sede
                           </span>
                         )}
@@ -216,7 +216,7 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
                           <FiEdit size={18} />
                         </button>
                         <button
-                          className="p-2 hover:bg-red-100 dark:hover:bg-red-900 rounded transition-colors text-red-600"
+                          className="p-2 hover:bg-red-100:bg-red-900 rounded transition-colors text-red-600"
                           onClick={() => handleDelete(empresa.id)}
                           title="Excluir"
                         >

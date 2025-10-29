@@ -154,7 +154,7 @@ export const OnboardingEmpresa: React.FC = () => {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md">
+          <div className="mb-6 p-4 bg-red-100/30 text-red-800 rounded-md">
             {error}
           </div>
         )}

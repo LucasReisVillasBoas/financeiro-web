@@ -167,7 +167,7 @@ export const MainWorkspace: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-[var(--color-bg)] dark:bg-[var(--color-bg)]">
+    <div className="flex h-screen bg-[var(--color-bg)]">
       <NavigationSidebar activeItem={activeSection} onItemSelect={setActiveSection} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title={sectionTitles[activeSection] || 'Dashboard'} />
