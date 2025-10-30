@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiEdit, FiTrash2, FiUserCheck } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiUserCheck, FiX } from 'react-icons/fi';
 import type { Contato } from '../../../types/api.types';
 import { contatoService } from '../../../services/contato.service';
 
@@ -11,6 +11,8 @@ export const ContatosSection: React.FC<ContatosSectionProps> = ({ onNavigate }) 
   const [contatos, setContatos] = useState<Contato[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [contatoParaExcluir, setContatoParaExcluir] = useState<Contato | null>(null);
 
   useEffect(() => {
     const fetchContatos = async () => {
@@ -32,15 +34,23 @@ export const ContatosSection: React.FC<ContatosSectionProps> = ({ onNavigate }) 
     fetchContatos();
   }, []);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Deseja realmente excluir este contato? Esta ação não pode ser desfeita.')) {
-      return;
-    }
+  const handleDelete = (id: string) => {
+    const contato = contatos.find(c => c.id === id);
+    if (!contato) return;
+
+    setContatoParaExcluir(contato);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmarExclusao = async () => {
+    if (!contatoParaExcluir) return;
 
     try {
       setLoading(true);
-      await contatoService.delete(id);
-      setContatos(contatos.filter(c => c.id !== id));
+      setShowConfirmModal(false);
+      await contatoService.delete(contatoParaExcluir.id);
+      setContatos(contatos.filter(c => c.id !== contatoParaExcluir.id));
+      setContatoParaExcluir(null);
     } catch (err: any) {
       setError(err.message || 'Erro ao excluir contato');
       console.error('Erro ao deletar contato:', err);
@@ -49,12 +59,59 @@ export const ContatosSection: React.FC<ContatosSectionProps> = ({ onNavigate }) 
     }
   };
 
+  const handleCancelarModal = () => {
+    setShowConfirmModal(false);
+    setContatoParaExcluir(null);
+  };
+
   const getStatus = (contato: Contato) => {
     return contato.deletadoEm ? 'Inativo' : 'Ativo';
   };
 
   return (
     <div className="space-y-6">
+      {/* Modal de Confirmação */}
+      {showConfirmModal && contatoParaExcluir && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--color-surface)] rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center p-6 border-b border-[var(--color-border)]">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Confirmação</h2>
+              <button
+                onClick={handleCancelarModal}
+                className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <p className="text-[var(--color-text)] mb-4">
+                Deseja realmente excluir este contato? Esta ação não pode ser desfeita.
+              </p>
+              <div className="bg-[var(--color-bg)] p-4 rounded-md">
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Nome</p>
+                <p className="text-[var(--color-text)] font-medium">{contatoParaExcluir.nome}</p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 p-6 border-t border-[var(--color-border)]">
+              <button
+                onClick={handleCancelarModal}
+                className="px-4 py-2 bg-[var(--color-bg)] text-[var(--color-text)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface)] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmarExclusao}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <button
           onClick={() => onNavigate('auxiliares-contatos-novo')}

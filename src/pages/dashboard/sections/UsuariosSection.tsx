@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiEdit, FiTrash2, FiLock, FiUserCheck } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiLock, FiUserCheck, FiX } from 'react-icons/fi';
 import { usuarioService } from '../../../services/usuario.service';
 import type { User } from '../../../types/api.types';
 import { perfilService } from '../../../services/perfil.service';
@@ -12,35 +12,56 @@ export const UsuariosSection: React.FC<UsuariosSectionProps> = ({ onNavigate }) 
   const [usuarios, setUsuarios] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<User | null>(null);
+  const [modalMessage, setModalMessage] = useState('');
+  const [isAlertModal, setIsAlertModal] = useState(false);
 
-  const handleDelete = async (usuarioId: string) => {
+  const handleDelete = (usuarioId: string) => {
     const usuario = usuarios.find(u => u.id === usuarioId);
     if (usuario?.cargo === 'Proprietário') {
-      alert('Não é permitido excluir o usuário Proprietário.');
+      setModalMessage('Não é permitido excluir o usuário Proprietário.');
+      setIsAlertModal(true);
+      setShowConfirmModal(true);
       return;
-    } else {
-      const confirmDelete = window.confirm('Tem certeza que deseja excluir este usuário?');
-      if (!confirmDelete) return;
+    }
+
+    setUsuarioParaExcluir(usuario || null);
+    setModalMessage('Tem certeza que deseja excluir este usuário?');
+    setIsAlertModal(false);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmarExclusao = async () => {
+    if (!usuarioParaExcluir) return;
+
+    try {
+      setLoading(true);
+      setShowConfirmModal(false);
 
       try {
-        setLoading(true);
-
-        try {
-          const perfils = await perfilService.findAll(usuarioId);
-          await Promise.all(perfils.map(p => perfilService.remove(usuarioId, p.id)));
-        } catch (error) {
-          console.warn('Erro ao deletar perfis:', error);
-        }
-
-        await usuarioService.update(usuarioId, { ativo: false });
-        setUsuarios(prevUsuarios => prevUsuarios.filter(u => u.id !== usuarioId));
+        const perfils = await perfilService.findAll(usuarioParaExcluir.id);
+        await Promise.all(perfils.map(p => perfilService.remove(usuarioParaExcluir.id, p.id)));
       } catch (error) {
-        setError('Erro ao excluir usuário');
-        console.error('Erro ao excluir usuário:', error);
-      } finally {
-        setLoading(false);
+        console.warn('Erro ao deletar perfis:', error);
       }
+
+      await usuarioService.update(usuarioParaExcluir.id, { ativo: false });
+      setUsuarios(prevUsuarios => prevUsuarios.filter(u => u.id !== usuarioParaExcluir.id));
+      setUsuarioParaExcluir(null);
+    } catch (error) {
+      setError('Erro ao excluir usuário');
+      console.error('Erro ao excluir usuário:', error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCancelarModal = () => {
+    setShowConfirmModal(false);
+    setUsuarioParaExcluir(null);
+    setModalMessage('');
+    setIsAlertModal(false);
   };
 
   useEffect(() => {
@@ -50,7 +71,10 @@ export const UsuariosSection: React.FC<UsuariosSectionProps> = ({ onNavigate }) 
         if (usuariosData.length === 0) {
           setUsuarios([]);
         } else {
-          setUsuarios(usuariosData);
+          const usuariosUnicos = Array.from(
+            new Map(usuariosData.map(usuario => [usuario.id, usuario])).values()
+          );
+          setUsuarios(usuariosUnicos);
         }
       } catch (err) {
         setError('Erro ao carregar usuários');
@@ -69,6 +93,55 @@ export const UsuariosSection: React.FC<UsuariosSectionProps> = ({ onNavigate }) 
 
   return (
     <div className="space-y-6">
+      {/* Modal de Confirmação/Alerta */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--color-surface)] rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center p-6 border-b border-[var(--color-border)]">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+                {isAlertModal ? 'Aviso' : 'Confirmação'}
+              </h2>
+              <button
+                onClick={handleCancelarModal}
+                className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <p className="text-[var(--color-text)]">{modalMessage}</p>
+            </div>
+
+            <div className="flex justify-end gap-3 p-6 border-t border-[var(--color-border)]">
+              {isAlertModal ? (
+                <button
+                  onClick={handleCancelarModal}
+                  className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors"
+                >
+                  OK
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleCancelarModal}
+                    className="px-4 py-2 bg-[var(--color-bg)] text-[var(--color-text)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface)] transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleConfirmarExclusao}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    Excluir
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <button
           onClick={() => onNavigate('usuarios-novo')}
