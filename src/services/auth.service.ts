@@ -16,9 +16,15 @@ class AuthService {
     return (response as any).token ? (response as any) : response.data!;
   }
 
-  logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+  async logout(): Promise<void> {
+    try {
+      await apiService.post('/auth/logout');
+    } catch (error) {
+      console.error('Erro ao registrar logout no servidor:', error);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
   }
 
   getToken(): string | null {
