@@ -21,6 +21,7 @@ import { NovaSedeSection } from './sections/NovaSedeSection';
 import { NovaFilialSection } from './sections/NovaFilialSection';
 import { ContasBancariasSection } from './sections/ContasBancariasSection';
 import { MovimentacoesBancariasSection } from './sections/MovimentacoesBancariasSection';
+import { authService } from '../../services';
 
 const sectionTitles: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -53,8 +54,11 @@ export const MainWorkspace: React.FC = () => {
 
   useEffect(() => {
     if (activeSection === 'sair') {
-      logout();
-      navigate('/login');
+      const handleLogout = async () => {
+        await logout();
+        navigate('/login');
+      };
+      handleLogout();
     }
   }, [activeSection, logout, navigate]);
 
