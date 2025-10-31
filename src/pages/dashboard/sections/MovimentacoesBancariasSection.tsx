@@ -44,7 +44,6 @@ export const MovimentacoesBancariasSection: React.FC = () => {
     return new Date(data).toLocaleDateString('pt-BR');
   };
 
-  // Calcular totais
   const totalEntradas = movimentacoes
     .filter(m => m.tipo === 'Entrada')
     .reduce((acc, m) => acc + m.valor, 0);
@@ -57,7 +56,6 @@ export const MovimentacoesBancariasSection: React.FC = () => {
   const qtdEntradas = movimentacoes.filter(m => m.tipo === 'Entrada').length;
   const qtdSaidas = movimentacoes.filter(m => m.tipo === 'Saída').length;
 
-  // Filtrar movimentações
   const movimentacoesFiltradas = movimentacoes.filter(mov => {
     const matchSearch =
       mov.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||

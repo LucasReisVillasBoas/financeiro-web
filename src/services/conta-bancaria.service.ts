@@ -43,7 +43,8 @@ class ContaBancariaService {
 
   async toggleStatus(id: string): Promise<ContaBancaria> {
     const response: ApiResponse<ContaBancaria> = await apiService.patch(
-      `/contas-bancarias/${id}/toggle-status`
+      `/contas-bancarias/${id}/toggle-status`,
+      id
     );
     return response.data!;
   }

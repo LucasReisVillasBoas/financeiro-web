@@ -18,25 +18,21 @@ export const DashboardSection: React.FC = () => {
     try {
       setLoading(true);
 
-      // Buscar contas a pagar e a receber
       const [contasPagar, contasReceber] = await Promise.all([
         contaPagarService.findAll(),
         contaReceberService.findAll(),
       ]);
 
-      // Calcular Total a Receber (contas pendentes)
       const totalAReceber = contasReceber
         .filter((conta: ContaReceber) => conta.status === 'Pendente')
         .reduce((acc: number, conta: ContaReceber) => acc + conta.valor, 0);
       setTotalRecebivel(totalAReceber);
 
-      // Calcular Total a Pagar (contas pendentes)
       const totalAPagar = contasPagar
         .filter((conta: ContaPagar) => conta.status === 'Pendente')
         .reduce((acc: number, conta: ContaPagar) => acc + conta.valor, 0);
       setTotalPagar(totalAPagar);
 
-      // Calcular Contas Quitadas (soma de pagas + recebidas)
       const totalPagas = contasPagar
         .filter((conta: ContaPagar) => conta.status === 'Paga')
         .reduce((acc: number, conta: ContaPagar) => acc + conta.valor, 0);
@@ -47,7 +43,6 @@ export const DashboardSection: React.FC = () => {
 
       setContasQuitadas(totalPagas + totalRecebidas);
 
-      // Calcular Pendências (contas vencidas)
       const hoje = new Date().toISOString().split('T')[0];
 
       const contasPagarVencidas = contasPagar

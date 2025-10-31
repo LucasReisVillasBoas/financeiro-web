@@ -185,25 +185,34 @@ export interface Perfil {
 
 export interface ContaBancaria {
   id: string;
+  cliente_id: string;
+  empresaId: string;
   banco: string;
   agencia: string;
+  agencia_digito?: string;
   conta: string;
-  tipoConta: 'Conta Corrente' | 'Conta Poupança' | 'Conta Salário' | 'Conta Investimento';
-  saldoDisponivel: number;
+  conta_digito?: string;
+  descricao: string;
+  tipo: 'Conta Corrente' | 'Conta Poupança' | 'Conta Salário' | 'Conta Investimento';
+  saldo_inicial: number;
+  saldo_atual: number;
+  data_referencia_saldo: string;
   ativo: boolean;
-  empresaId?: string;
-  filialId?: string;
   deleted_at?: string;
 }
 
 export interface CreateContaBancariaDto {
+  cliente_id: string;
+  empresaId: string;
   banco: string;
   agencia: string;
+  agencia_digito?: string;
   conta: string;
-  tipoConta: string;
-  saldoDisponivel: number;
-  empresaId?: string;
-  filialId?: string;
+  conta_digito?: string;
+  descricao: string;
+  tipo: string;
+  saldo_inicial: number;
+  data_referencia_saldo: string;
 }
 
 export interface UpdateContaBancariaDto extends Partial<CreateContaBancariaDto> {}

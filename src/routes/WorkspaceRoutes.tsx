@@ -24,8 +24,6 @@ export const WorkspaceRoutes: React.FC = () => {
 };
 
 const WorkspaceLayoutWithOutlet: React.FC = () => {
-  // Aqui podemos passar título dinâmico baseado na rota usando useLocation
-  // Para simplificar, o Header pode mostrar algo genérico
   return (
     <WorkspaceLayout title="Dashboard">
       <Outlet />

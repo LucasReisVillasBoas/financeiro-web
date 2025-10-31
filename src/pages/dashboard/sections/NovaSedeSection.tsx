@@ -110,7 +110,6 @@ export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) =
       setBacen('');
       form.reset();
 
-      // Redirecionar após 2 segundos
       setTimeout(() => {
         onNavigate('empresas-listar');
       }, 2000);

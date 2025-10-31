@@ -64,7 +64,6 @@ export const EditarContatoSection: React.FC<EditarContatoSectionProps> = ({
       celular: celular,
     };
 
-    // Validações
     if (!dto.nome || !dto.funcao || !dto.celular) {
       setError('Por favor, preencha todos os campos obrigatórios.');
       setLoading(false);
