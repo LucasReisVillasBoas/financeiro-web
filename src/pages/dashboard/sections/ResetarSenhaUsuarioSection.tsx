@@ -50,7 +50,6 @@ export const ResetarSenhaUsuarioSection: React.FC<ResetarSenhaUsuarioSectionProp
     const novaSenha = formData.get('novaSenha') as string;
     const confirmarSenha = formData.get('confirmarSenha') as string;
 
-    // Validações
     if (!novaSenha || novaSenha.trim() === '') {
       setError('Por favor, informe a nova senha.');
       setLoading(false);

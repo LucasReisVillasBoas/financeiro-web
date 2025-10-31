@@ -43,7 +43,7 @@ export const ContaBancariaCard: React.FC<ContaBancariaCardProps> = ({
         <div>
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">{conta.banco}</h3>
           <p className="text-sm text-[var(--color-text-secondary)]">
-            Ag: {conta.agencia} • Conta: {conta.conta}
+            Ag: {conta.agencia}-{conta.agencia_digito} • Conta: {conta.conta}-{conta.conta_digito}
           </p>
         </div>
       </div>
@@ -51,15 +51,25 @@ export const ContaBancariaCard: React.FC<ContaBancariaCardProps> = ({
       {/* Tipo de Conta */}
       <div className="mb-4">
         <p className="text-xs text-[var(--color-text-secondary)] mb-1">Tipo de Conta</p>
-        <p className="text-sm font-medium text-[var(--color-text)]">{conta.tipoConta}</p>
+        <p className="text-sm font-medium text-[var(--color-text)]">{conta.tipo}</p>
       </div>
 
-      {/* Saldo Disponível */}
-      <div className="mb-6">
-        <p className="text-xs text-[var(--color-text-secondary)] mb-1">Saldo Disponível</p>
-        <p className="text-2xl font-bold text-[var(--color-text-primary)]">
-          {formatarMoeda(conta.saldoDisponivel)}
-        </p>
+      {/* Saldos */}
+      <div className="mb-6 space-y-3">
+        <div>
+          <p className="text-xs text-[var(--color-text-secondary)] mb-1">Saldo Atual</p>
+          <p className="text-2xl font-bold text-[var(--color-text-primary)]">
+            {formatarMoeda(conta.saldo_atual)}
+          </p>
+        </div>
+        <div className="pt-3 border-t border-[var(--color-border)]">
+          <p className="text-xs text-[var(--color-text-secondary)] mb-1">
+            Saldo Inicial (Ref: {new Date(conta.data_referencia_saldo).toLocaleDateString('pt-BR')})
+          </p>
+          <p className="text-sm font-medium text-[var(--color-text)]">
+            {formatarMoeda(conta.saldo_inicial)}
+          </p>
+        </div>
       </div>
 
       {/* Botões de ação */}

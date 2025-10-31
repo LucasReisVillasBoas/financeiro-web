@@ -127,18 +127,15 @@ export const Sidebar: React.FC = () => {
     setOpenMenus(prev => ({ ...prev, [label]: !prev[label] }));
   };
 
-  // Filtrar itens do menu de empresas
   const getFilteredMenuItems = () => {
     return menuItems.map(item => {
       if (item.label === 'Empresas' && item.children) {
-        // Se o usuário já tem empresas, remover "Nova Empresa"
         if (hasEmpresas) {
           return {
             ...item,
             children: item.children.filter(child => child.label !== 'Nova Empresa'),
           };
         }
-        // Se não tem empresas, remover "Listar Empresas"
         return {
           ...item,
           children: item.children.filter(child => child.label !== 'Listar Empresas'),

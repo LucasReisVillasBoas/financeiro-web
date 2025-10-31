@@ -152,18 +152,15 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
     }
   };
 
-  // Filtrar itens do menu de empresas
   const getFilteredMenuItems = () => {
     return menuItems.map(item => {
       if (item.id === 'empresas' && item.children) {
-        // Se o usuário já tem empresas, remover "Nova Empresa"
         if (hasEmpresas) {
           return {
             ...item,
             children: item.children.filter(child => child.id !== 'empresas-nova'),
           };
         }
-        // Se não tem empresas, remover "Listar Empresas"
         return {
           ...item,
           children: item.children.filter(child => child.id !== 'empresas-listar'),

@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiEye, FiCreditCard, FiTrendingUp, FiX, FiArrowUp, FiArrowDown } from 'react-icons/fi';
+import {
+  FiPlus,
+  FiEye,
+  FiCreditCard,
+  FiTrendingUp,
+  FiX,
+  FiArrowUp,
+  FiArrowDown,
+} from 'react-icons/fi';
 import { contaBancariaService } from '../../../services/conta-bancaria.service';
 import { movimentacaoBancariaService } from '../../../services/movimentacao-bancaria.service';
 import { empresaService } from '../../../services/empresa.service';
 import { ContaBancariaCard } from '../../../components/ContaBancariaCard';
-import type { ContaBancaria, Empresa, CreateContaBancariaDto, MovimentacaoBancaria } from '../../../types/api.types';
+import type {
+  ContaBancaria,
+  Empresa,
+  CreateContaBancariaDto,
+  MovimentacaoBancaria,
+} from '../../../types/api.types';
 
 export const ContasBancariasSection: React.FC = () => {
   const [contas, setContas] = useState<ContaBancaria[]>([]);
@@ -17,19 +30,27 @@ export const ContasBancariasSection: React.FC = () => {
   const [formData, setFormData] = useState<CreateContaBancariaDto>({
     banco: '',
     agencia: '',
+    agencia_digito: '',
     conta: '',
-    tipoConta: 'Conta Corrente',
-    saldoDisponivel: 0,
+    conta_digito: '',
+    descricao: '',
+    tipo: 'Conta Corrente',
+    saldo_inicial: 0,
     empresaId: '',
+    cliente_id: '',
+    data_referencia_saldo: '',
   });
   const [formError, setFormError] = useState('');
+  const [saldoFormatado, setSaldoFormatado] = useState('R$ 0,00');
   const [showExtratoModal, setShowExtratoModal] = useState(false);
-  const [contaSelecionadaExtrato, setContaSelecionadaExtrato] = useState<ContaBancaria | null>(null);
+  const [contaSelecionadaExtrato, setContaSelecionadaExtrato] = useState<ContaBancaria | null>(
+    null
+  );
   const [movimentacoes, setMovimentacoes] = useState<MovimentacaoBancaria[]>([]);
   const [loadingMovimentacoes, setLoadingMovimentacoes] = useState(false);
   const [showConfigurarModal, setShowConfigurarModal] = useState(false);
   const [contaSelecionadaConfig, setContaSelecionadaConfig] = useState<ContaBancaria | null>(null);
-  const [configData, setConfigData] = useState({ tipoConta: '', ativo: true });
+  const [configData, setConfigData] = useState({ tipo: '', ativo: true });
   const [configError, setConfigError] = useState('');
 
   useEffect(() => {
@@ -132,7 +153,7 @@ export const ContasBancariasSection: React.FC = () => {
 
     setContaSelecionadaConfig(conta);
     setConfigData({
-      tipoConta: conta.tipoConta,
+      tipo: conta.tipo,
       ativo: conta.ativo,
     });
     setConfigError('');
@@ -142,7 +163,7 @@ export const ContasBancariasSection: React.FC = () => {
   const handleCloseConfigurar = () => {
     setShowConfigurarModal(false);
     setContaSelecionadaConfig(null);
-    setConfigData({ tipoConta: '', ativo: true });
+    setConfigData({ tipo: '', ativo: true });
     setConfigError('');
   };
 
@@ -191,20 +212,62 @@ export const ContasBancariasSection: React.FC = () => {
     setFormData({
       banco: '',
       agencia: '',
+      agencia_digito: '',
       conta: '',
-      tipoConta: 'Conta Corrente',
-      saldoDisponivel: 0,
+      conta_digito: '',
+      descricao: '',
+      tipo: 'Conta Corrente',
+      saldo_inicial: 0,
       empresaId: '',
+      cliente_id: '',
+      data_referencia_saldo: '',
     });
     setFormError('');
+    setSaldoFormatado('R$ 0,00');
+  };
+
+  const formatarMoedaInput = (valor: number): string => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(valor);
+  };
+
+  const desformatarMoeda = (valorFormatado: string): number => {
+    // Remove tudo exceto números e vírgula
+    const apenasNumeros = valorFormatado.replace(/[^\d,]/g, '');
+    // Substitui vírgula por ponto
+    const valorComPonto = apenasNumeros.replace(',', '.');
+    // Converte para número
+    const numero = parseFloat(valorComPonto) || 0;
+    return numero;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'saldoDisponivel' ? parseFloat(value) || 0 : value,
+      [name]: value,
     }));
+  };
+
+  const handleSaldoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value;
+
+    // Remove tudo exceto números
+    const apenasNumeros = valor.replace(/\D/g, '');
+
+    // Converte para número (considerando os últimos 2 dígitos como centavos)
+    const numero = parseFloat(apenasNumeros) / 100 || 0;
+
+    // Atualiza o valor numérico no formData
+    setFormData(prev => ({
+      ...prev,
+      saldo_inicial: numero,
+    }));
+
+    // Atualiza o valor formatado
+    setSaldoFormatado(formatarMoedaInput(numero));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -212,6 +275,12 @@ export const ContasBancariasSection: React.FC = () => {
     setFormError('');
 
     try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        formData.cliente_id = user.clienteId;
+      }
+      formData.data_referencia_saldo = new Date().toISOString().split('T')[0];
       await contaBancariaService.create(formData);
       await loadContas();
       handleCloseForm();
@@ -225,7 +294,7 @@ export const ContasBancariasSection: React.FC = () => {
     setShowSaldo(!show);
   };
 
-  const saldoTotal = contas.reduce((acc, conta) => acc + conta.saldoDisponivel, 0);
+  const saldoTotal = contas.reduce((acc, conta) => acc + conta.saldo_atual, 0);
   const contasAtivas = contas.filter(conta => conta.ativo).length;
   const totalContas = contas.length;
 
@@ -261,7 +330,9 @@ export const ContasBancariasSection: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-[var(--color-surface)] rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b border-[var(--color-border)]">
-              <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Nova Conta Bancária</h2>
+              <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                Nova Conta Bancária
+              </h2>
               <button
                 onClick={handleCloseForm}
                 className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
@@ -272,7 +343,7 @@ export const ContasBancariasSection: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {formError && (
-                <div className="p-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md">
+                <div className="p-4 bg-red-600 dark:bg-red-700 text-white rounded-md font-medium border border-red-700 dark:border-red-800">
                   {formError}
                 </div>
               )}
@@ -298,8 +369,8 @@ export const ContasBancariasSection: React.FC = () => {
                     Tipo de Conta *
                   </label>
                   <select
-                    name="tipoConta"
-                    value={formData.tipoConta}
+                    name="tipo"
+                    value={formData.tipo}
                     onChange={handleInputChange}
                     required
                     className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
@@ -321,8 +392,27 @@ export const ContasBancariasSection: React.FC = () => {
                     value={formData.agencia}
                     onChange={handleInputChange}
                     required
+                    pattern="\d+"
+                    title="Agência deve conter apenas números"
                     className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                    placeholder="Ex: 1234-5"
+                    placeholder="Ex: 1234"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Dígito
+                  </label>
+                  <input
+                    type="text"
+                    name="agencia_digito"
+                    value={formData.agencia_digito}
+                    onChange={handleInputChange}
+                    pattern="\d+"
+                    title="Dígito deve conter apenas números"
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                    placeholder="Ex: 9"
+                    maxLength={2}
                   />
                 </div>
 
@@ -336,8 +426,42 @@ export const ContasBancariasSection: React.FC = () => {
                     value={formData.conta}
                     onChange={handleInputChange}
                     required
+                    pattern="\d+"
+                    title="Conta deve conter apenas números"
                     className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                    placeholder="Ex: 12345678-9"
+                    placeholder="Ex: 12345678"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Dígito
+                  </label>
+                  <input
+                    type="text"
+                    name="conta_digito"
+                    value={formData.conta_digito}
+                    onChange={handleInputChange}
+                    pattern="\d+"
+                    title="Dígito deve conter apenas números"
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                    placeholder="Ex: 9"
+                    maxLength={2}
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Descrição *
+                  </label>
+                  <input
+                    type="text"
+                    name="descricao"
+                    value={formData.descricao}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                    placeholder="Ex: Conta principal da empresa"
                   />
                 </div>
 
@@ -346,16 +470,17 @@ export const ContasBancariasSection: React.FC = () => {
                     Saldo Disponível *
                   </label>
                   <input
-                    type="number"
-                    name="saldoDisponivel"
-                    value={formData.saldoDisponivel}
-                    onChange={handleInputChange}
+                    type="text"
+                    name="saldo_inicial"
+                    value={saldoFormatado}
+                    onChange={handleSaldoChange}
                     required
-                    step="0.01"
-                    min="0"
                     className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                    placeholder="Ex: 5000.00"
+                    placeholder="R$ 0,00"
                   />
+                  <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                    Digite apenas números. Ex: 500000 = R$ 5.000,00
+                  </p>
                 </div>
 
                 {empresas.length > 0 && (
@@ -407,9 +532,13 @@ export const ContasBancariasSection: React.FC = () => {
           <div className="bg-[var(--color-surface)] rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b border-[var(--color-border)]">
               <div>
-                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Extrato Bancário</h2>
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                  Extrato Bancário
+                </h2>
                 <p className="text-sm text-[var(--color-text-secondary)] mt-1">
-                  {contaSelecionadaExtrato.banco} - Ag: {contaSelecionadaExtrato.agencia} / Conta: {contaSelecionadaExtrato.conta}
+                  {contaSelecionadaExtrato.banco} - Ag: {contaSelecionadaExtrato.agencia}-
+                  {contaSelecionadaExtrato.agencia_digito} / Conta: {contaSelecionadaExtrato.conta}-
+                  {contaSelecionadaExtrato.conta_digito}
                 </p>
               </div>
               <button
@@ -426,12 +555,20 @@ export const ContasBancariasSection: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-[var(--color-text-secondary)]">Tipo de Conta</p>
-                    <p className="text-[var(--color-text)] font-medium">{contaSelecionadaExtrato.tipoConta}</p>
+                    <p className="text-[var(--color-text)] font-medium">
+                      {contaSelecionadaExtrato.tipo}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm text-[var(--color-text-secondary)]">Saldo Disponível</p>
+                    <p className="text-sm text-[var(--color-text-secondary)]">Saldo Atual</p>
                     <p className="text-[var(--color-text)] font-bold text-lg">
-                      {formatarMoeda(contaSelecionadaExtrato.saldoDisponivel)}
+                      {formatarMoeda(contaSelecionadaExtrato.saldo_atual)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-[var(--color-text-secondary)]">Saldo Inicial</p>
+                    <p className="text-[var(--color-text)] font-medium">
+                      {formatarMoeda(contaSelecionadaExtrato.saldo_inicial)}
                     </p>
                   </div>
                 </div>
@@ -446,11 +583,15 @@ export const ContasBancariasSection: React.FC = () => {
                 {loadingMovimentacoes ? (
                   <div className="text-center py-8">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)]"></div>
-                    <p className="mt-2 text-[var(--color-text-secondary)]">Carregando movimentações...</p>
+                    <p className="mt-2 text-[var(--color-text-secondary)]">
+                      Carregando movimentações...
+                    </p>
                   </div>
                 ) : movimentacoes.length === 0 ? (
                   <div className="text-center py-8 bg-[var(--color-bg)] rounded-md">
-                    <p className="text-[var(--color-text-secondary)]">Nenhuma movimentação encontrada</p>
+                    <p className="text-[var(--color-text-secondary)]">
+                      Nenhuma movimentação encontrada
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -468,7 +609,10 @@ export const ContasBancariasSection: React.FC = () => {
                             }`}
                           >
                             {mov.tipo === 'Entrada' ? (
-                              <FiArrowDown className="text-green-600 dark:text-green-400" size={20} />
+                              <FiArrowDown
+                                className="text-green-600 dark:text-green-400"
+                                size={20}
+                              />
                             ) : (
                               <FiArrowUp className="text-red-600 dark:text-red-400" size={20} />
                             )}
@@ -516,9 +660,12 @@ export const ContasBancariasSection: React.FC = () => {
           <div className="bg-[var(--color-surface)] rounded-lg shadow-xl max-w-md w-full">
             <div className="flex justify-between items-center p-6 border-b border-[var(--color-border)]">
               <div>
-                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Configurar Conta</h2>
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                  Configurar Conta
+                </h2>
                 <p className="text-sm text-[var(--color-text-secondary)] mt-1">
-                  {contaSelecionadaConfig.banco} - {contaSelecionadaConfig.conta}
+                  {contaSelecionadaConfig.banco} - {contaSelecionadaConfig.conta}-
+                  {contaSelecionadaConfig.conta_digito}
                 </p>
               </div>
               <button
@@ -531,7 +678,7 @@ export const ContasBancariasSection: React.FC = () => {
 
             <form onSubmit={handleSubmitConfig} className="p-6 space-y-4">
               {configError && (
-                <div className="p-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md">
+                <div className="p-4 bg-red-600 dark:bg-red-700 text-white rounded-md font-medium border border-red-700 dark:border-red-800">
                   {configError}
                 </div>
               )}
@@ -542,7 +689,7 @@ export const ContasBancariasSection: React.FC = () => {
                 </label>
                 <select
                   name="tipoConta"
-                  value={configData.tipoConta}
+                  value={configData.tipo}
                   onChange={handleConfigInputChange}
                   required
                   className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
@@ -653,7 +800,7 @@ export const ContasBancariasSection: React.FC = () => {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md">
+        <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-md font-medium">
           {error}
         </div>
       )}

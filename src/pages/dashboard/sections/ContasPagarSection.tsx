@@ -34,7 +34,6 @@ export const ContasPagarSection: React.FC = () => {
       setLoading(true);
       const data = await contaPagarService.findAll();
 
-      // Verificar e atualizar contas vencidas automaticamente
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
@@ -47,7 +46,6 @@ export const ContasPagarSection: React.FC = () => {
         return vencimento < hoje;
       });
 
-      // Atualizar contas vencidas no backend
       if (contasParaAtualizar.length > 0) {
         await Promise.all(
           contasParaAtualizar.map(conta =>
@@ -55,7 +53,6 @@ export const ContasPagarSection: React.FC = () => {
           )
         );
 
-        // Recarregar dados após atualização
         const dataAtualizada = await contaPagarService.findAll();
         setContas(dataAtualizada);
       } else {
@@ -76,7 +73,6 @@ export const ContasPagarSection: React.FC = () => {
     setContaBancariaSelecionada('');
     setShowConfirmModal(true);
 
-    // Carregar contas bancárias
     try {
       const contasBanc = await contaBancariaService.findAll();
       setContasBancarias(contasBanc.filter(cb => cb.ativo));
@@ -92,22 +88,13 @@ export const ContasPagarSection: React.FC = () => {
     }
 
     try {
-      // 1. Atualizar status da conta a pagar
       await contaPagarService.update(contaSelecionada.id, {
         status: 'Paga',
         dataPagamento: new Date().toISOString().split('T')[0],
       });
 
-      // 2. Buscar conta bancária selecionada
       const contaBancaria = contasBancarias.find(cb => cb.id === contaBancariaSelecionada);
       if (contaBancaria) {
-        // 3. Atualizar saldo da conta bancária (diminuir)
-        const novoSaldo = contaBancaria.saldoDisponivel - contaSelecionada.valor;
-        await contaBancariaService.update(contaBancaria.id, {
-          saldoDisponivel: novoSaldo,
-        });
-
-        // 4. Criar movimentação bancária
         await movimentacaoBancariaService.create({
           data: new Date().toISOString().split('T')[0],
           descricao: `Pagamento: ${contaSelecionada.descricao}`,
@@ -119,7 +106,6 @@ export const ContasPagarSection: React.FC = () => {
         });
       }
 
-      // 5. Recarregar dados
       await loadContasReceber();
       setShowConfirmModal(false);
       setContaSelecionada(null);
@@ -266,14 +252,14 @@ export const ContasPagarSection: React.FC = () => {
                       {new Intl.NumberFormat('pt-BR', {
                         style: 'currency',
                         currency: 'BRL',
-                      }).format(cb.saldoDisponivel)}
+                      }).format(cb.saldo_atual)}
                     </option>
                   ))}
                 </select>
               </div>
 
               {error && (
-                <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md text-sm">
+                <div className="p-3 bg-red-600 dark:bg-red-700 text-white rounded-md font-medium border border-red-700 dark:border-red-800 text-sm">
                   {error}
                 </div>
               )}
@@ -315,7 +301,7 @@ export const ContasPagarSection: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {formError && (
-                <div className="p-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md">
+                <div className="p-4 bg-red-600 dark:bg-red-700 text-white rounded-md font-medium border border-red-700 dark:border-red-800">
                   {formError}
                 </div>
               )}
@@ -449,7 +435,7 @@ export const ContasPagarSection: React.FC = () => {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md">
+        <div className="p-4 bg-red-600 dark:bg-red-700 text-white rounded-md font-medium border border-red-700 dark:border-red-800">
           {error}
         </div>
       )}
@@ -518,7 +504,10 @@ export const ContasPagarSection: React.FC = () => {
                   </td>
                   <td className="p-4">
                     <div className="flex justify-center gap-2">
-                      <button className="px-3 py-1 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded text-sm hover:bg-[var(--color-primary-hover)] transition-colors">
+                      <button
+                        onClick={() => handlePagar(conta.id)}
+                        className="px-3 py-1 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded text-sm hover:bg-[var(--color-primary-hover)] transition-colors"
+                      >
                         Pagar
                       </button>
                     </div>

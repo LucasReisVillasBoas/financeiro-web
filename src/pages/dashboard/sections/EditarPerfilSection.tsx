@@ -19,11 +19,9 @@ export const EditarPerfilSection: React.FC<EditarPerfilSectionProps> = ({
   const [perfilData, setPerfilData] = useState<Perfil | null>(null);
   const { getClienteId } = useAuth();
 
-  // Permissões disponíveis
   const modulosDisponiveis = ['usuarios', 'empresas', 'relatorios', 'financeiro'];
   const acoesDisponiveis = ['visualizar', 'criar', 'editar', 'excluir'];
 
-  // Estado para gerenciar as permissões selecionadas
   const [permissoes, setPermissoes] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
@@ -98,14 +96,12 @@ export const EditarPerfilSection: React.FC<EditarPerfilSectionProps> = ({
       permissoes: permissoes,
     };
 
-    // Validações
     if (!dto.nome) {
       setError('Por favor, informe o nome do perfil.');
       setLoading(false);
       return;
     }
 
-    // Verificar se pelo menos uma permissão foi selecionada
     const temPermissoes = Object.values(permissoes).some(acoes => acoes.length > 0);
     if (!temPermissoes) {
       setError('Por favor, selecione pelo menos uma permissão.');
