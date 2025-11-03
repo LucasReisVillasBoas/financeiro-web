@@ -21,6 +21,8 @@ import { NovaSedeSection } from './sections/NovaSedeSection';
 import { NovaFilialSection } from './sections/NovaFilialSection';
 import { ContasBancariasSection } from './sections/ContasBancariasSection';
 import { MovimentacoesBancariasSection } from './sections/MovimentacoesBancariasSection';
+import { PlanoContasSection } from './sections/PlanoContasSection';
+import { DreSection } from './sections/DreSection';
 import { authService } from '../../services';
 
 const sectionTitles: Record<string, string> = {
@@ -44,6 +46,8 @@ const sectionTitles: Record<string, string> = {
   'financeiro-pagar': 'Contas a Pagar',
   'financeiro-receber': 'Contas a Receber',
   'financeiro-movimentacao': 'Movimentação Bancária',
+  'financeiro-plano-contas': 'Plano de Contas',
+  'financeiro-dre': 'DRE - Demonstração do Resultado',
 };
 
 export const MainWorkspace: React.FC = () => {
@@ -140,6 +144,10 @@ export const MainWorkspace: React.FC = () => {
         return <ContasBancariasSection />;
       case 'financeiro-movimentacao':
         return <MovimentacoesBancariasSection />;
+      case 'financeiro-plano-contas':
+        return <PlanoContasSection />;
+      case 'financeiro-dre':
+        return <DreSection />;
       default:
         return (
           <div className="p-6 bg-[var(--color-surface)] rounded-md shadow">

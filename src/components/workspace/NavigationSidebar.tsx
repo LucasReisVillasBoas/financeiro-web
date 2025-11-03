@@ -12,6 +12,8 @@ import {
   FiList,
   FiChevronDown,
   FiLogOut,
+  FiGrid,
+  FiTrendingUp,
 } from 'react-icons/fi';
 import { GiMoneyStack, GiBank } from 'react-icons/gi';
 import { MdOutlineDashboard } from 'react-icons/md';
@@ -118,6 +120,16 @@ export const menuItems: MenuItem[] = [
         id: 'financeiro-movimentacao',
         label: 'Movimentação Bancária',
         icon: <FiRepeat size={14} />,
+      },
+      {
+        id: 'financeiro-plano-contas',
+        label: 'Plano de Contas',
+        icon: <FiGrid size={14} />,
+      },
+      {
+        id: 'financeiro-dre',
+        label: 'DRE',
+        icon: <FiTrendingUp size={14} />,
       },
     ],
   },

@@ -1,13 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { FiDollarSign, FiCalendar, FiCheckCircle, FiCreditCard, FiPlus, FiX } from 'react-icons/fi';
-import type { ContaReceber, CreateContaReceberDto, ContaBancaria } from '../../../types/api.types';
+import type {
+  ContaReceber,
+  CreateContaReceberDto,
+  ContaBancaria,
+  PlanoContas,
+} from '../../../types/api.types';
 import {
   contaReceberService,
   contaBancariaService,
   movimentacaoBancariaService,
+  planoContasService,
+  empresaService,
 } from '../../../services';
+import { useAuth } from '../../../context/AuthContext';
 
 export const ContasReceberSection: React.FC = () => {
+  const { user } = useAuth();
   const [contas, setContas] = useState<ContaReceber[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -24,6 +33,7 @@ export const ContasReceberSection: React.FC = () => {
   const [contaSelecionada, setContaSelecionada] = useState<ContaReceber | null>(null);
   const [contasBancarias, setContasBancarias] = useState<ContaBancaria[]>([]);
   const [contaBancariaSelecionada, setContaBancariaSelecionada] = useState('');
+  const [planosContas, setPlanosContas] = useState<PlanoContas[]>([]);
 
   useEffect(() => {
     loadContasReceber();
@@ -71,11 +81,6 @@ export const ContasReceberSection: React.FC = () => {
 
       const contaBancaria = contasBancarias.find(cb => cb.id === contaBancariaSelecionada);
       if (contaBancaria) {
-        const novoSaldo = contaBancaria.saldoDisponivel + contaSelecionada.valor;
-        await contaBancariaService.update(contaBancaria.id, {
-          saldoDisponivel: novoSaldo,
-        });
-
         await movimentacaoBancariaService.create({
           data: new Date().toISOString().split('T')[0],
           descricao: `Recebimento: ${contaSelecionada.descricao}`,
@@ -102,9 +107,25 @@ export const ContasReceberSection: React.FC = () => {
     setContaBancariaSelecionada('');
   };
 
-  const handleNovaConta = () => {
+  const handleNovaConta = async () => {
     setShowForm(true);
     setFormError('');
+
+    try {
+      if (user?.clienteId) {
+        const empresas = await empresaService.findByCliente(user.clienteId);
+        if (empresas && empresas.length > 0) {
+          const planosResponse = await planoContasService.findByEmpresa(empresas[0].id);
+          const planosDisponiveis =
+            planosResponse.data?.filter(
+              (p: PlanoContas) => p.tipo === 'Receita' && p.permite_lancamento && p.ativo
+            ) || [];
+          setPlanosContas(planosDisponiveis);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao carregar planos de contas:', err);
+    }
   };
 
   const handleCloseForm = () => {
@@ -241,7 +262,7 @@ export const ContasReceberSection: React.FC = () => {
                       {new Intl.NumberFormat('pt-BR', {
                         style: 'currency',
                         currency: 'BRL',
-                      }).format(cb.saldoDisponivel)}
+                      }).format(cb.saldo_atual)}
                     </option>
                   ))}
                 </select>
@@ -371,6 +392,29 @@ export const ContasReceberSection: React.FC = () => {
                     <option value="Recebida">Recebida</option>
                   </select>
                 </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Plano de Contas (Receita)
+                  </label>
+                  <select
+                    name="planoContasId"
+                    value={formData.planoContasId || ''}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  >
+                    <option value="">Selecione um plano de contas (opcional)</option>
+                    {planosContas.map(plano => (
+                      <option key={plano.id} value={plano.id}>
+                        {plano.codigo} - {plano.descricao}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                    Vincule esta conta a receber a uma conta do plano de contas para gerar
+                    relatórios (DRE)
+                  </p>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
@@ -492,7 +536,10 @@ export const ContasReceberSection: React.FC = () => {
                   <td className="p-4">
                     <div className="flex justify-center gap-2">
                       {conta.status === 'Pendente' && (
-                        <button className="px-3 py-1 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded text-sm hover:bg-[var(--color-primary-hover)] transition-colors">
+                        <button
+                          className="px-3 py-1 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded text-sm hover:bg-[var(--color-primary-hover)] transition-colors"
+                          onClick={() => handleReceber(conta.id)}
+                        >
                           Receber
                         </button>
                       )}

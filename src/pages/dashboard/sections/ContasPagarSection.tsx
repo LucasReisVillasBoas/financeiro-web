@@ -1,13 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { FiDollarSign, FiCalendar, FiAlertCircle, FiCreditCard, FiPlus, FiX } from 'react-icons/fi';
-import type { ContaPagar, CreateContaPagarDto, ContaBancaria } from '../../../types/api.types';
+import type {
+  ContaPagar,
+  CreateContaPagarDto,
+  ContaBancaria,
+  PlanoContas,
+} from '../../../types/api.types';
 import {
   contaPagarService,
   contaBancariaService,
   movimentacaoBancariaService,
+  planoContasService,
+  empresaService,
 } from '../../../services';
+import { useAuth } from '../../../context/AuthContext';
 
 export const ContasPagarSection: React.FC = () => {
+  const { user } = useAuth();
   const [contas, setContas] = useState<ContaPagar[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -24,6 +33,7 @@ export const ContasPagarSection: React.FC = () => {
   const [contaSelecionada, setContaSelecionada] = useState<ContaPagar | null>(null);
   const [contasBancarias, setContasBancarias] = useState<ContaBancaria[]>([]);
   const [contaBancariaSelecionada, setContaBancariaSelecionada] = useState('');
+  const [planosContas, setPlanosContas] = useState<PlanoContas[]>([]);
 
   useEffect(() => {
     loadContasReceber();
@@ -121,9 +131,34 @@ export const ContasPagarSection: React.FC = () => {
     setContaBancariaSelecionada('');
   };
 
-  const handleNovaConta = () => {
+  const handleNovaConta = async () => {
     setShowForm(true);
     setFormError('');
+
+    // Carregar planos de contas de despesa
+    try {
+      if (user?.clienteId) {
+        const empresas = await empresaService.findByCliente(user.clienteId);
+        if (empresas && empresas.length > 0) {
+          const planosResponse = await planoContasService.findByEmpresa(empresas[0].id);
+          console.log('Todos os planos:', planosResponse.data);
+
+          // Filtrar apenas contas de despesa e que permitem lançamento
+          const planosDisponiveis =
+            planosResponse.data?.filter((p: PlanoContas) => {
+              console.log(
+                `Conta ${p.codigo}: tipo=${p.tipo}, permite=${p.permite_lancamento}, ativo=${p.ativo}`
+              );
+              return p.tipo === 'Despesa' && p.permite_lancamento && p.ativo;
+            }) || [];
+
+          console.log('Planos de despesa disponíveis:', planosDisponiveis);
+          setPlanosContas(planosDisponiveis);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao carregar planos de contas:', err);
+    }
   };
 
   const handleCloseForm = () => {
@@ -384,6 +419,29 @@ export const ContasPagarSection: React.FC = () => {
                     <option value="Paga">Paga</option>
                   </select>
                 </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Plano de Contas (Despesa)
+                  </label>
+                  <select
+                    name="planoContasId"
+                    value={formData.planoContasId || ''}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  >
+                    <option value="">Selecione um plano de contas (opcional)</option>
+                    {planosContas.map(plano => (
+                      <option key={plano.id} value={plano.id}>
+                        {plano.codigo} - {plano.descricao}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                    Vincule esta conta a pagar a uma conta do plano de contas para gerar relatórios
+                    (DRE)
+                  </p>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
@@ -504,12 +562,14 @@ export const ContasPagarSection: React.FC = () => {
                   </td>
                   <td className="p-4">
                     <div className="flex justify-center gap-2">
-                      <button
-                        onClick={() => handlePagar(conta.id)}
-                        className="px-3 py-1 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded text-sm hover:bg-[var(--color-primary-hover)] transition-colors"
-                      >
-                        Pagar
-                      </button>
+                      {conta.status === 'Pendente' && (
+                        <button
+                          onClick={() => handlePagar(conta.id)}
+                          className="px-3 py-1 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded text-sm hover:bg-[var(--color-primary-hover)] transition-colors"
+                        >
+                          Pagar
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
