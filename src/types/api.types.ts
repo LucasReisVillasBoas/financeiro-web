@@ -212,6 +212,7 @@ export interface CreateContaBancariaDto {
   descricao: string;
   tipo: string;
   saldo_inicial: number;
+  saldo_atual: number;
   data_referencia_saldo: string;
 }
 
@@ -253,6 +254,7 @@ export interface ContaPagar {
   fornecedor: string;
   dataPagamento?: string;
   empresaId?: string;
+  planoContasId?: string;
   deletadoEm?: string;
 }
 
@@ -264,6 +266,7 @@ export interface CreateContaPagarDto {
   fornecedor: string;
   dataPagamento?: string;
   empresaId?: string;
+  planoContasId?: string;
 }
 
 export interface UpdateContaPagarDto extends Partial<CreateContaPagarDto> {}
@@ -277,6 +280,7 @@ export interface ContaReceber {
   cliente: string;
   dataRecebimento?: string;
   empresaId?: string;
+  planoContasId?: string;
   deletadoEm?: string;
 }
 
@@ -288,6 +292,207 @@ export interface CreateContaReceberDto {
   cliente: string;
   dataRecebimento?: string;
   empresaId?: string;
+  planoContasId?: string;
 }
 
 export interface UpdateContaReceberDto extends Partial<CreateContaReceberDto> {}
+
+// Plano de Contas
+export enum TipoPlanoContas {
+  RECEITA = 'Receita',
+  CUSTO = 'Custo',
+  DESPESA = 'Despesa',
+  OUTROS = 'Outros',
+}
+
+export interface PlanoContas {
+  id: string;
+  codigo: string;
+  descricao: string;
+  tipo: TipoPlanoContas;
+  nivel: number;
+  permite_lancamento: boolean;
+  ativo: boolean;
+  empresaId: string;
+  empresaNome?: string;
+  parentId?: string;
+  parentCodigo?: string;
+  filhos?: PlanoContas[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePlanoContasDto {
+  empresaId: string;
+  codigo: string;
+  descricao: string;
+  tipo: TipoPlanoContas;
+  nivel: number;
+  parentId?: string;
+  permite_lancamento?: boolean;
+  ativo?: boolean;
+}
+
+export interface UpdatePlanoContasDto extends Partial<CreatePlanoContasDto> {}
+
+export interface FilterPlanoContasDto {
+  empresaId?: string;
+  search?: string;
+  tipo?: TipoPlanoContas;
+  ativo?: boolean;
+  permite_lancamento?: boolean;
+  nivel?: number;
+  parentId?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface PaginatedPlanoContasResponse {
+  data: PlanoContas[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface ImportPlanoContasRowDto {
+  codigo: string;
+  descricao: string;
+  tipo: string;
+  codigoPai?: string;
+  permite_lancamento?: string | boolean;
+  ativo?: string | boolean;
+}
+
+export interface ImportPlanoContasDto {
+  empresaId: string;
+  sobrescrever?: boolean;
+  dryRun?: boolean;
+  linhas: ImportPlanoContasRowDto[];
+}
+
+export interface ImportValidationResult {
+  linha: number;
+  codigo: string;
+  valido: boolean;
+  erros: string[];
+  avisos: string[];
+  contaExistente?: boolean;
+  contaEmUso?: boolean;
+}
+
+export interface ImportResult {
+  sucesso: boolean;
+  totalLinhas: number;
+  importadas: number;
+  atualizadas: number;
+  ignoradas: number;
+  erros: ImportValidationResult[];
+  avisos: ImportValidationResult[];
+  mensagem: string;
+}
+
+// DRE (Demonstração do Resultado do Exercício)
+export interface DreLinhaDto {
+  contaId: string;
+  codigo: string;
+  descricao: string;
+  tipo: TipoPlanoContas;
+  nivel: number;
+  valor: number;
+  parentCodigo?: string;
+}
+
+export interface DreTotaisDto {
+  totalReceitas: number;
+  totalCustos: number;
+  totalDespesas: number;
+  totalOutros: number;
+  lucroOperacional: number;
+  resultadoLiquido: number;
+}
+
+export interface DreResponseDto {
+  empresaId: string;
+  empresaNome: string;
+  dataInicio: string;
+  dataFim: string;
+  receitas: DreLinhaDto[];
+  custos: DreLinhaDto[];
+  despesas: DreLinhaDto[];
+  outros: DreLinhaDto[];
+  totais: DreTotaisDto;
+  geradoEm: Date;
+  totalLancamentos: number;
+}
+
+export interface DreConsolidadoDto {
+  periodo: {
+    dataInicio: string;
+    dataFim: string;
+  };
+  empresas: Array<{
+    empresaId: string;
+    empresaNome: string;
+    dre: DreResponseDto;
+  }>;
+  consolidado: {
+    receitas: DreLinhaDto[];
+    custos: DreLinhaDto[];
+    despesas: DreLinhaDto[];
+    outros: DreLinhaDto[];
+    totais: DreTotaisDto;
+  };
+  geradoEm: Date;
+}
+
+export interface DreComparativoDto {
+  empresaId: string;
+  empresaNome: string;
+  periodo1: {
+    dataInicio: string;
+    dataFim: string;
+    dre: DreResponseDto;
+  };
+  periodo2: {
+    dataInicio: string;
+    dataFim: string;
+    dre: DreResponseDto;
+  };
+  comparativo: {
+    receitas: Array<DreLinhaDto & { variacao: number; variacaoPercentual: number }>;
+    custos: Array<DreLinhaDto & { variacao: number; variacaoPercentual: number }>;
+    despesas: Array<DreLinhaDto & { variacao: number; variacaoPercentual: number }>;
+    outros: Array<DreLinhaDto & { variacao: number; variacaoPercentual: number }>;
+    totais: DreTotaisDto & {
+      variacao: {
+        receitas: number;
+        custos: number;
+        despesas: number;
+        outros: number;
+        lucroOperacional: number;
+        resultadoLiquido: number;
+      };
+      variacaoPercentual: {
+        receitas: number;
+        custos: number;
+        despesas: number;
+        outros: number;
+        lucroOperacional: number;
+        resultadoLiquido: number;
+      };
+    };
+  };
+  geradoEm: Date;
+}
+
+export interface FilterDreDto {
+  empresaId: string;
+  dataInicio: string;
+  dataFim: string;
+  consolidarPor?: 'empresa' | 'filial';
+}
