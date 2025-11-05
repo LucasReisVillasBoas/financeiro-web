@@ -3,6 +3,9 @@ import type {
   ContaPagar,
   CreateContaPagarDto,
   UpdateContaPagarDto,
+  RegistrarBaixaDto,
+  CancelarContaPagarDto,
+  GerarParcelasDto,
   ApiResponse,
 } from '../types/api.types';
 
@@ -37,10 +40,34 @@ class ContaPagarService {
     return response.data!;
   }
 
-  async marcarComoPaga(id: string): Promise<ContaPagar> {
-    const response: ApiResponse<ContaPagar> = await apiService.patch(
-      `/contas-pagar/${id}/pagar`,
+  async registrarBaixa(id: string, dto: RegistrarBaixaDto): Promise<ContaPagar> {
+    const response: ApiResponse<ContaPagar> = await apiService.post(
+      `/contas-pagar/${id}/registrar-baixa`,
+      dto
+    );
+    return response.data!;
+  }
+
+  async estornarBaixa(id: string): Promise<ContaPagar> {
+    const response: ApiResponse<ContaPagar> = await apiService.post(
+      `/contas-pagar/${id}/estornar-baixa`,
       {}
+    );
+    return response.data!;
+  }
+
+  async cancelar(id: string, dto: CancelarContaPagarDto): Promise<ContaPagar> {
+    const response: ApiResponse<ContaPagar> = await apiService.post(
+      `/contas-pagar/${id}/cancelar`,
+      dto
+    );
+    return response.data!;
+  }
+
+  async gerarParcelas(dto: GerarParcelasDto): Promise<ContaPagar[]> {
+    const response: ApiResponse<ContaPagar[]> = await apiService.post(
+      '/contas-pagar/gerar-parcelas',
+      dto
     );
     return response.data!;
   }

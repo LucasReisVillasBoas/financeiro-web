@@ -1,0 +1,572 @@
+import React, { useState, useEffect } from 'react';
+import { FiArrowLeft, FiSave, FiUser } from 'react-icons/fi';
+import type { Pessoa, UpdatePessoaDto } from '../../../types/api.types';
+import { pessoaService } from '../../../services';
+
+interface EditarPessoaSectionProps {
+  pessoaId: string;
+  onNavigate: (section: string, params?: Record<string, any>) => void;
+}
+
+export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
+  pessoaId,
+  onNavigate,
+}) => {
+  const [pessoa, setPessoa] = useState<Pessoa | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const [formData, setFormData] = useState({
+    tipo: 'Física' as 'Física' | 'Jurídica',
+    nome: '',
+    cpf_cnpj: '',
+    dataNascimento: '',
+    email: '',
+    telefone: '',
+    cep: '',
+    logradouro: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    cidade: '',
+    uf: '',
+    ativo: true,
+  });
+
+  useEffect(() => {
+    loadPessoa();
+  }, [pessoaId]);
+
+  const loadPessoa = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await pessoaService.findById(pessoaId);
+
+      if (!data) {
+        setError('Pessoa não encontrada');
+        return;
+      }
+
+      setPessoa(data);
+      setFormData({
+        tipo: data.documento && data.documento?.length > 12 ? 'Jurídica' : 'Física',
+        nome: data.nome || data.razaoNome || '',
+        cpf_cnpj: handleDocumento(data.documento || ''),
+        dataNascimento: data.aniversario || '',
+        email: data.email || '',
+        telefone: formatTelefone(data.telefone || ''),
+        cep: formatCep(data.endereco?.cep || ''),
+        logradouro: data.endereco?.logradouro || '',
+        numero: data.endereco?.numero || '',
+        complemento: data.endereco?.complemento || '',
+        bairro: data.endereco?.bairro || '',
+        cidade: data.endereco?.cidade || '',
+        uf: data.endereco?.uf || '',
+        ativo: data.ativo,
+      });
+    } catch (err: any) {
+      console.error('Erro ao carregar pessoa:', err);
+      setError(err.message || 'Erro ao carregar pessoa');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const formatCpf = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length <= 11) {
+      return cleaned
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+    return value;
+  };
+
+  const formatCnpj = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length <= 14) {
+      return cleaned
+        .replace(/(\d{2})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1/$2')
+        .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+    }
+    return value;
+  };
+
+  const handleDocumento = (documento: string) => {
+    if (documento.length > 11) {
+      return formatCnpj(documento);
+    } else {
+      return formatCpf(documento);
+    }
+  };
+
+  const formatCep = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length <= 8) {
+      return cleaned.replace(/(\d{5})(\d{1,3})$/, '$1-$2');
+    }
+    return value;
+  };
+
+  const formatTelefone = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length <= 10) {
+      return cleaned.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d{1,4})$/, '$1-$2');
+    } else {
+      return cleaned
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{5})(\d{1,4})$/, '$1-$2')
+        .slice(0, 15);
+    }
+  };
+
+  const handleCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const formatted = formData.tipo === 'Física' ? formatCpf(value) : formatCnpj(value);
+    setFormData(prev => ({ ...prev, cpf_cnpj: formatted }));
+  };
+
+  const handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const formatted = formatCep(value);
+    setFormData(prev => ({ ...prev, cep: formatted }));
+  };
+
+  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const formatted = formatTelefone(value);
+    setFormData(prev => ({ ...prev, [name]: formatted }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess(false);
+
+    try {
+      const payload: UpdatePessoaDto = {
+        razaoNome: formData.nome,
+        email: formData.email || undefined,
+        telefone: formData.telefone ? formData.telefone.replace(/\D/g, '') : undefined,
+        ativo: formData.ativo,
+        // Campos de endereço
+        cep: formData.cep ? formData.cep.replace(/\D/g, '') : undefined,
+        logradouro: formData.logradouro || undefined,
+        numero: formData.numero || undefined,
+        complemento: formData.complemento || undefined,
+        bairro: formData.bairro || undefined,
+        cidade: formData.cidade || undefined,
+        uf: formData.uf || undefined,
+      };
+
+      if (formData.tipo === 'Física' && formData.dataNascimento) {
+        payload.aniversario = formData.dataNascimento;
+      }
+
+      await pessoaService.update(pessoa?.id || '', payload);
+      setSuccess(true);
+      setTimeout(() => {
+        onNavigate('pessoas-listar');
+      }, 1500);
+    } catch (err: any) {
+      console.error('Erro ao cadastrar pessoa:', err);
+      setError(err.message || 'Erro ao cadastrar pessoa');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    onNavigate('pessoas-listar');
+  };
+
+  const estados = [
+    'AC',
+    'AL',
+    'AP',
+    'AM',
+    'BA',
+    'CE',
+    'DF',
+    'ES',
+    'GO',
+    'MA',
+    'MT',
+    'MS',
+    'MG',
+    'PA',
+    'PB',
+    'PR',
+    'PE',
+    'PI',
+    'RJ',
+    'RN',
+    'RS',
+    'RO',
+    'RR',
+    'SC',
+    'SP',
+    'SE',
+    'TO',
+  ];
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary)]"></div>
+        <p className="mt-4 text-[var(--color-text-secondary)]">Carregando pessoa...</p>
+      </div>
+    );
+  }
+
+  if (error && !pessoa) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleCancel}
+            className="p-2 hover:bg-[var(--color-bg)] rounded-md transition-colors"
+          >
+            <FiArrowLeft size={24} className="text-[var(--color-text)]" />
+          </button>
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Editar Pessoa</h1>
+        </div>
+        <div className="p-4 bg-red-600 dark:bg-red-700 text-white rounded-md font-medium border border-red-700 dark:border-red-800">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={handleCancel}
+          className="p-2 hover:bg-[var(--color-bg)] rounded-md transition-colors"
+        >
+          <FiArrowLeft size={24} className="text-[var(--color-text)]" />
+        </button>
+        <div className="flex items-center gap-3">
+          <FiUser size={24} className="text-[var(--color-primary)]" />
+          <div>
+            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Editar Pessoa</h1>
+            <p className="text-sm text-[var(--color-text-secondary)]">{pessoa?.nome}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Mensagens */}
+      {error && (
+        <div className="p-4 bg-red-600 dark:bg-red-700 text-white rounded-md font-medium border border-red-700 dark:border-red-800">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="p-4 bg-green-600 dark:bg-green-700 text-white rounded-md font-medium border border-green-700 dark:border-green-800">
+          Pessoa atualizada com sucesso! Redirecionando...
+        </div>
+      )}
+
+      {/* Formulário */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Informações Básicas */}
+        <div className="bg-[var(--color-surface)] p-6 rounded-md shadow space-y-4">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">
+            Informações Básicas
+          </h2>
+
+          {/* Tipo */}
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+              Tipo de Pessoa *
+            </label>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                disabled
+                className={`flex-1 px-4 py-3 rounded-md border-2 transition-colors ${
+                  formData.tipo === 'Física'
+                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-medium'
+                    : 'border-[var(--color-border)] text-[var(--color-text)]'
+                } opacity-60 cursor-not-allowed`}
+                title="Não é possível alterar o tipo de pessoa"
+              >
+                Pessoa Física
+              </button>
+              <button
+                type="button"
+                disabled
+                className={`flex-1 px-4 py-3 rounded-md border-2 transition-colors ${
+                  formData.tipo === 'Jurídica'
+                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-medium'
+                    : 'border-[var(--color-border)] text-[var(--color-text)]'
+                } opacity-60 cursor-not-allowed`}
+                title="Não é possível alterar o tipo de pessoa"
+              >
+                Pessoa Jurídica
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Nome */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                {formData.tipo === 'Física' ? 'Nome Completo' : 'Razão Social'} *
+              </label>
+              <input
+                type="text"
+                name="nome"
+                value={formData.nome}
+                onChange={handleInputChange}
+                required
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                placeholder={formData.tipo === 'Física' ? 'Ex: João da Silva' : 'Ex: Empresa LTDA'}
+              />
+            </div>
+
+            {/* CPF/CNPJ */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                {formData.tipo === 'Física' ? 'CPF' : 'CNPJ'}
+              </label>
+              <input
+                type="text"
+                name="cpf_cnpj"
+                value={formData.cpf_cnpj}
+                onChange={handleCpfCnpjChange}
+                disabled
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:opacity-60 disabled:cursor-not-allowed"
+                placeholder={formData.tipo === 'Física' ? '000.000.000-00' : '00.000.000/0000-00'}
+                maxLength={formData.tipo === 'Física' ? 14 : 18}
+                title="Não é possível alterar o CPF/CNPJ"
+              />
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                Status *
+              </label>
+              <select
+                name="ativo"
+                value={formData.ativo ? 'true' : 'false'}
+                onChange={e => setFormData(prev => ({ ...prev, ativo: e.target.value === 'true' }))}
+                required
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              >
+                <option value="true">Ativo</option>
+                <option value="false">Inativo</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Contato */}
+        <div className="bg-[var(--color-surface)] p-6 rounded-md shadow space-y-4">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">
+            Contato
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                placeholder="exemplo@email.com"
+              />
+            </div>
+
+            {/* Telefone */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                Telefone
+              </label>
+              <input
+                type="text"
+                name="telefone"
+                value={formData.telefone}
+                onChange={handleTelefoneChange}
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                placeholder="(00) 0000-0000"
+                maxLength={15}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Endereço */}
+        <div className="bg-[var(--color-surface)] p-6 rounded-md shadow space-y-4">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">
+            Endereço
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* CEP */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">CEP</label>
+              <input
+                type="text"
+                name="cep"
+                value={formData.cep}
+                onChange={handleCepChange}
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                placeholder="00000-000"
+                maxLength={9}
+              />
+            </div>
+
+            {/* Logradouro */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                Logradouro
+              </label>
+              <input
+                type="text"
+                name="logradouro"
+                value={formData.logradouro}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                placeholder="Rua, Avenida, etc."
+              />
+            </div>
+
+            {/* Número */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                Número
+              </label>
+              <input
+                type="text"
+                name="numero"
+                value={formData.numero}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                placeholder="123"
+              />
+            </div>
+
+            {/* Complemento */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                Complemento
+              </label>
+              <input
+                type="text"
+                name="complemento"
+                value={formData.complemento}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                placeholder="Apto, Bloco, etc."
+              />
+            </div>
+
+            {/* Bairro */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                Bairro
+              </label>
+              <input
+                type="text"
+                name="bairro"
+                value={formData.bairro}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                placeholder="Centro"
+              />
+            </div>
+
+            {/* Cidade */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                Cidade
+              </label>
+              <input
+                type="text"
+                name="cidade"
+                value={formData.cidade}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                placeholder="São Paulo"
+              />
+            </div>
+
+            {/* UF */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">UF</label>
+              <select
+                name="uf"
+                value={formData.uf}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              >
+                <option value="">Selecione</option>
+                {estados.map(estado => (
+                  <option key={estado} value={estado}>
+                    {estado}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Botões de Ação */}
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={saving}
+            className="px-6 py-2 bg-[var(--color-bg)] text-[var(--color-text)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface)] transition-colors disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex items-center gap-2 px-6 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
+          >
+            {saving ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Salvando...
+              </>
+            ) : (
+              <>
+                <FiSave size={18} />
+                Salvar Alterações
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};

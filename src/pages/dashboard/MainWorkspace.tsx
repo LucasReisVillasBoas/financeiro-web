@@ -23,7 +23,9 @@ import { ContasBancariasSection } from './sections/ContasBancariasSection';
 import { MovimentacoesBancariasSection } from './sections/MovimentacoesBancariasSection';
 import { PlanoContasSection } from './sections/PlanoContasSection';
 import { DreSection } from './sections/DreSection';
-import { authService } from '../../services';
+import { PessoasSection } from './sections/PessoasSection';
+import { NovaPessoaSection } from './sections/NovaPessoaSection';
+import { EditarPessoaSection } from './sections/EditarPessoaSection';
 
 const sectionTitles: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -40,8 +42,9 @@ const sectionTitles: Record<string, string> = {
   'auxiliares-contatos': 'Contatos',
   'auxiliares-contatos-novo': 'Novo Contato',
   'auxiliares-contatos-editar': 'Editar Contato',
-  'pessoas-listar': 'Listar Pessoas',
+  'pessoas-listar': 'Pessoas',
   'pessoas-nova': 'Nova Pessoa',
+  'pessoas-editar': 'Editar Pessoa',
   'financeiro-bancos': 'Contas Bancárias',
   'financeiro-pagar': 'Contas a Pagar',
   'financeiro-receber': 'Contas a Receber',
@@ -53,18 +56,25 @@ const sectionTitles: Record<string, string> = {
 export const MainWorkspace: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>('dashboard');
   const [sectionParams, setSectionParams] = useState<Record<string, any>>({});
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (activeSection === 'sair') {
+    if (activeSection === 'sair' && !isLoggingOut) {
       const handleLogout = async () => {
-        await logout();
-        navigate('/login');
+        setIsLoggingOut(true);
+        try {
+          await logout();
+          navigate('/login');
+        } catch (error) {
+          console.error('Erro ao fazer logout:', error);
+          setIsLoggingOut(false);
+        }
       };
       handleLogout();
     }
-  }, [activeSection, logout, navigate]);
+  }, [activeSection, logout, navigate, isLoggingOut]);
 
   const handleNavigate = (section: string, params?: Record<string, any>) => {
     setActiveSection(section);
@@ -123,23 +133,11 @@ export const MainWorkspace: React.FC = () => {
           <EditarContatoSection contatoId={sectionParams.contatoId} onNavigate={handleNavigate} />
         );
       case 'pessoas-listar':
-        return (
-          <div className="p-6 bg-[var(--color-surface)] rounded-md shadow">
-            <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Listar Pessoas</h2>
-            <p className="text-[var(--color-text-secondary)] mt-4">
-              Seção de listagem de pessoas em desenvolvimento...
-            </p>
-          </div>
-        );
+        return <PessoasSection onNavigate={handleNavigate} />;
       case 'pessoas-nova':
-        return (
-          <div className="p-6 bg-[var(--color-surface)] rounded-md shadow">
-            <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Nova Pessoa</h2>
-            <p className="text-[var(--color-text-secondary)] mt-4">
-              Formulário de cadastro de pessoa em desenvolvimento...
-            </p>
-          </div>
-        );
+        return <NovaPessoaSection onNavigate={handleNavigate} />;
+      case 'pessoas-editar':
+        return <EditarPessoaSection pessoaId={sectionParams.pessoaId} onNavigate={handleNavigate} />;
       case 'financeiro-bancos':
         return <ContasBancariasSection />;
       case 'financeiro-movimentacao':
