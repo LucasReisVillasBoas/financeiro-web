@@ -108,9 +108,7 @@ export const MovimentacoesBancariasSection: React.FC = () => {
         {/* Total Saídas */}
         <div className="bg-[var(--color-surface)] rounded-lg shadow-md p-6 border border-[var(--color-border)]">
           <div className="flex justify-between items-start mb-4">
-            <h3 className="text-sm font-medium text-[var(--color-text-secondary)]">
-              Total Saídas
-            </h3>
+            <h3 className="text-sm font-medium text-[var(--color-text-secondary)]">Total Saídas</h3>
             <FiArrowUpRight size={18} className="text-red-500" />
           </div>
           <p className="text-3xl font-bold text-red-500 mb-1">{formatarMoeda(totalSaidas)}</p>

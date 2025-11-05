@@ -30,12 +30,14 @@ const DashboardHome: React.FC = () => {
 
       const totalAPagar = contasPagar
         .filter((conta: ContaPagar) => conta.status === 'Pendente')
-        .reduce((acc: number, conta: ContaPagar) => acc + conta.valor, 0);
+        .reduce((acc: number, conta: ContaPagar) => acc + conta.valor_total, 0);
       setTotalPagar(totalAPagar);
+
+      console.log(contasPagar);
 
       const totalPagas = contasPagar
         .filter((conta: ContaPagar) => conta.status === 'Paga')
-        .reduce((acc: number, conta: ContaPagar) => acc + conta.valor, 0);
+        .reduce((acc: number, conta: ContaPagar) => acc + conta.valor_total, 0);
 
       const totalRecebidas = contasReceber
         .filter((conta: ContaReceber) => conta.status === 'Recebida')
@@ -46,21 +48,17 @@ const DashboardHome: React.FC = () => {
       const hoje = new Date().toISOString().split('T')[0];
 
       const contasPagarVencidas = contasPagar
-        .filter((conta: ContaPagar) =>
-          (conta.status === 'Pendente' || conta.status === 'Vencida') &&
-          conta.vencimento < hoje
+        .filter(
+          (conta: ContaPagar) =>
+            (conta.status === 'Pendente' || conta.status === 'Vencida') && conta.vencimento < hoje
         )
-        .reduce((acc: number, conta: ContaPagar) => acc + conta.valor, 0);
+        .reduce((acc: number, conta: ContaPagar) => acc + conta.valor_total, 0);
 
       const contasReceberVencidas = contasReceber
-        .filter((conta: ContaReceber) =>
-          conta.status === 'Pendente' &&
-          conta.vencimento < hoje
-        )
+        .filter((conta: ContaReceber) => conta.status === 'Pendente' && conta.vencimento < hoje)
         .reduce((acc: number, conta: ContaReceber) => acc + conta.valor, 0);
 
       setPendencias(contasPagarVencidas + contasReceberVencidas);
-
     } catch (err) {
       console.error('Erro ao carregar dados financeiros:', err);
     } finally {
@@ -88,7 +86,10 @@ const DashboardHome: React.FC = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...Array(5)].map((_, index) => (
-          <div key={index} className="p-4 bg-[var(--color-surface)] dark:bg-[var(--color-bg)] rounded-md shadow flex flex-col animate-pulse">
+          <div
+            key={index}
+            className="p-4 bg-[var(--color-surface)] dark:bg-[var(--color-bg)] rounded-md shadow flex flex-col animate-pulse"
+          >
             <div className="h-4 bg-[var(--color-border)] rounded w-1/2 mb-3"></div>
             <div className="h-6 bg-[var(--color-border)] rounded w-3/4"></div>
           </div>

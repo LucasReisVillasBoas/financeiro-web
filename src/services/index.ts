@@ -10,6 +10,8 @@ export { empresaService } from './empresa.service';
 
 export { contatoService } from './contato.service';
 
+export { pessoaService } from './pessoa.service';
+
 export { cidadeService } from './cidade.service';
 
 export { contaBancariaService } from './conta-bancaria.service';

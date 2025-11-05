@@ -31,7 +31,14 @@ class ApiService {
       const error = await response.json().catch(() => ({
         message: 'Erro ao processar requisição',
       }));
-      throw new Error(error.message || 'Erro na requisição');
+
+      // Extrai a mensagem de erro da resposta da API
+      const errorMessage = error.message || error.error || 'Erro na requisição';
+
+      const apiError: any = new Error(errorMessage);
+      apiError.statusCode = response.status;
+      apiError.details = error;
+      throw apiError;
     }
 
     return response.json();

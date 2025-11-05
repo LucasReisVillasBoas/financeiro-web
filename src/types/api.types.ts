@@ -45,6 +45,7 @@ export interface Empresa {
   celular?: string;
   email?: string;
   data_abertura?: string;
+  ativo: boolean;
   deleted_at?: string;
 }
 
@@ -137,6 +138,100 @@ export interface CreateContatoDto {
 }
 
 export interface UpdateContatoDto extends Partial<CreateContatoDto> {}
+
+// Estrutura real da API do backend
+export interface PessoaEndereco {
+  id: string;
+  cep: string;
+  logradouro: string;
+  numero: string;
+  bairro: string;
+  complemento?: string;
+  cidade: string;
+  codigoIbge: string;
+  uf: string;
+  ativo: boolean;
+  deletadoEm?: string;
+  criadoEm: string;
+  atualizadoEm: string;
+}
+
+export interface Pessoa {
+  id: string;
+  empresa?: {
+    id: string;
+    razao_social: string;
+    nome_fantasia: string;
+    cnpj_cpf: string;
+  };
+  endereco?: PessoaEndereco;
+  razaoNome: string;
+  fantasiaApelido?: string;
+  documento?: string;
+  ieRg?: string;
+  aniversario?: string;
+  ativo: boolean;
+  deletadoEm?: string;
+  criadoEm: string;
+  atualizadoEm: string;
+  criadoPor?: string;
+  atualizadoPor?: string;
+
+  // Campos computados para compatibilidade
+  nome?: string; // Será preenchido com razaoNome
+  tipo?: 'Física' | 'Jurídica'; // Será inferido do documento
+  cpf_cnpj?: string; // Será preenchido com documento
+  email?: string;
+  telefone?: string;
+  celular?: string;
+  cidade?: string; // Será preenchido com endereco.cidade
+  uf?: string; // Será preenchido com endereco.uf
+}
+
+export interface CreatePessoaDto {
+  clienteId?: string;
+  tipo: 'Física' | 'Jurídica';
+  nome: string;
+  razao_nome: string;
+  cpf_cnpj: string;
+  email?: string;
+  telefone?: string;
+  celular?: string;
+  cep: string;
+  logradouro: string;
+  numero: string;
+  complemento?: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+  codigoIbge?: string;
+  ativo?: boolean;
+  aniversario?: string;
+  criado_por_id?: string;
+  atualizado_por_id?: string;
+}
+
+export interface UpdatePessoaDto {
+  empresaId?: string;
+  enderecoId?: string;
+  razaoNome?: string;
+  fantasiaApelido?: string;
+  documento?: string;
+  ieRg?: string;
+  aniversario?: string;
+  email?: string;
+  telefone?: string;
+  ativo?: boolean;
+  // Campos de endereço
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  codigoIbge?: string;
+}
 
 export interface Cidade {
   id: string;
@@ -245,31 +340,120 @@ export interface CreateMovimentacaoBancariaDto {
 
 export interface UpdateMovimentacaoBancariaDto extends Partial<CreateMovimentacaoBancariaDto> {}
 
+// Enums para Conta a Pagar
+export enum StatusContaPagar {
+  PENDENTE = 'Pendente',
+  VENCIDA = 'Vencida',
+  PAGA = 'Paga',
+  PARCIALMENTE_PAGA = 'ParcialmentePaga',
+  CANCELADA = 'Cancelada',
+}
+
+export enum TipoContaPagar {
+  FORNECEDOR = 'Fornecedor',
+  EMPRESTIMO = 'Empréstimo',
+  IMPOSTO = 'Imposto',
+  SALARIO = 'Salário',
+  ALUGUEL = 'Aluguel',
+  SERVICO = 'Serviço',
+  OUTROS = 'Outros',
+}
+
 export interface ContaPagar {
   id: string;
+  documento: string;
+  serie?: string;
+  parcela: number;
+  tipo: TipoContaPagar;
   descricao: string;
-  valor: number;
+  data_emissao: string;
   vencimento: string;
-  status: 'Pendente' | 'Vencida' | 'Paga';
-  fornecedor: string;
-  dataPagamento?: string;
-  empresaId?: string;
-  planoContasId?: string;
+  data_lancamento: string;
+  data_liquidacao?: string;
+  valor_principal: number;
+  acrescimos: number;
+  descontos: number;
+  valor_total: number;
+  saldo: number;
+  status: StatusContaPagar;
+  pessoaId: string;
+  pessoaNome?: string;
+  planoContasId: string;
+  planoContasCodigo?: string;
+  planoContasDescricao?: string;
+  empresaId: string;
+  empresaNome?: string;
+  movimentacaoBancariaId?: string;
+  canceladoEm?: string;
+  justificativaCancelamento?: string;
   deletadoEm?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CreateContaPagarDto {
+  documento: string;
+  serie?: string;
+  parcela: number;
+  tipo: string;
   descricao: string;
-  valor: number;
+  data_emissao: string;
   vencimento: string;
-  status?: 'Pendente' | 'Vencida' | 'Paga';
-  fornecedor: string;
-  dataPagamento?: string;
-  empresaId?: string;
+  data_lancamento: string;
+  data_liquidacao?: string;
+  valor_principal: number;
+  acrescimos?: number;
+  descontos?: number;
+  pessoaId: string;
+  planoContasId: string;
+  empresaId: string;
+  status?: string;
+}
+
+export interface UpdateContaPagarDto {
+  documento?: string;
+  serie?: string;
+  parcela?: number;
+  tipo?: string;
+  descricao?: string;
+  data_emissao?: string;
+  vencimento?: string;
+  data_lancamento?: string;
+  valor_principal?: number;
+  acrescimos?: number;
+  descontos?: number;
+  pessoaId?: string;
   planoContasId?: string;
 }
 
-export interface UpdateContaPagarDto extends Partial<CreateContaPagarDto> {}
+export interface RegistrarBaixaDto {
+  dataPagamento: string;
+  valorPago: number;
+  contaBancariaId: string;
+  observacao?: string;
+}
+
+export interface CancelarContaPagarDto {
+  justificativa: string;
+}
+
+export interface GerarParcelasDto {
+  documento: string;
+  serie?: string;
+  quantidade_parcelas: number;
+  tipo: string;
+  descricao: string;
+  data_emissao: string;
+  primeiro_vencimento: string;
+  intervalo_dias: number;
+  data_lancamento: string;
+  valor_total: number;
+  acrescimos?: number;
+  descontos?: number;
+  pessoaId: string;
+  planoContasId: string;
+  empresaId: string;
+}
 
 export interface ContaReceber {
   id: string;
