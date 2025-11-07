@@ -315,15 +315,20 @@ export interface UpdateContaBancariaDto extends Partial<CreateContaBancariaDto> 
 
 export interface MovimentacaoBancaria {
   id: string;
-  data: string;
+  dataMovimento: string;
   descricao: string;
   conta: string;
   categoria: string;
   valor: number;
-  tipo: 'Entrada' | 'Saída';
+  tipoMovimento: 'Entrada' | 'Saída';
   contaBancariaId: string;
   empresaId?: string;
   filialId?: string;
+  conciliado: 'S' | 'N';
+  conciliadoEm?: string;
+  conciliadoPor?: string;
+  observacao?: string;
+  referencia?: 'Pagar' | 'Receber' | 'Manual';
   deleted_at?: string;
 }
 
@@ -679,4 +684,104 @@ export interface FilterDreDto {
   dataInicio: string;
   dataFim: string;
   consolidarPor?: 'empresa' | 'filial';
+}
+
+// Conciliação de Movimentações Bancárias
+export interface ConciliarMovimentacoesDto {
+  movimentacaoIds: string[];
+}
+
+export interface ConciliacaoResponse {
+  conciliadas?: number;
+  desconciliadas?: number;
+  erros: string[];
+}
+
+// Extrato Bancário
+export enum StatusExtratoItem {
+  PENDENTE = 'pendente',
+  SUGESTAO = 'sugestao',
+  CONCILIADO = 'conciliado',
+  IGNORADO = 'ignorado',
+}
+
+export enum TipoTransacao {
+  DEBITO = 'debito',
+  CREDITO = 'credito',
+}
+
+export enum FormatoExtrato {
+  OFX = 'OFX',
+  CSV = 'CSV',
+}
+
+export interface SugestaoMatch {
+  movimentacaoId: string;
+  score: number;
+  razoes: string[];
+  movimentacao: {
+    id: string;
+    data: Date;
+    descricao: string;
+    valor: number;
+    tipo: string;
+  };
+}
+
+export interface ExtratoBancario {
+  id: string;
+  contaBancaria?: {
+    id: string;
+    descricao: string;
+    banco: string;
+  };
+  dataTransacao: string;
+  descricao: string;
+  documento?: string;
+  valor: number;
+  tipoTransacao: TipoTransacao;
+  status: StatusExtratoItem;
+  movimentacaoSugerida?: {
+    id: string;
+    descricao: string;
+    valor: number;
+    dataMovimento: string;
+  };
+  movimentacaoConciliada?: {
+    id: string;
+    descricao: string;
+    valor: number;
+    dataMovimento: string;
+  };
+  scoreMatch?: number;
+  observacao?: string;
+  formatoOrigem: string;
+  nomeArquivo: string;
+  empresaId?: string;
+  importadoPor?: string;
+  criadoEm: string;
+  sugestao?: SugestaoMatch;
+}
+
+export interface ImportarExtratoDto {
+  contaBancariaId: string;
+  formato: FormatoExtrato;
+  nomeArquivo: string;
+}
+
+export interface ItemExtratoImportado {
+  id: string;
+  data: Date;
+  descricao: string;
+  valor: number;
+  tipo: TipoTransacao;
+  status: StatusExtratoItem;
+  sugestao?: SugestaoMatch;
+}
+
+export interface ResultadoImportacao {
+  totalImportado: number;
+  comSugestao: number;
+  semSugestao: number;
+  itens: ItemExtratoImportado[];
 }

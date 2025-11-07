@@ -1,4 +1,7 @@
 :root {
+  /* Tamanho de fonte base */
+  font-size: 14px; /* Mobile first */
+
   /* Base do layout */
   --color-bg: #ffffff;                /* fundo geral */
   --color-surface: #f8fafc;           /* cards, modais, tabelas */
@@ -49,4 +52,11 @@
   --color-sidebar-border: #374151;    /* bordas */
   --color-subitem-bg: #f1f5f9;        /* background levemente mais escuro */
   --color-subitem-hover: #e2e8f0;     /* hover nos subitens */
+}
+
+/* Desktop - aumenta tamanho da fonte */
+@media (min-width: 768px) {
+  :root {
+    font-size: 16px;
+  }
 }
