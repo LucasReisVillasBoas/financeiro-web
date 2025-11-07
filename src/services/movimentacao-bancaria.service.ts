@@ -3,6 +3,8 @@ import type {
   MovimentacaoBancaria,
   CreateMovimentacaoBancariaDto,
   UpdateMovimentacaoBancariaDto,
+  ConciliarMovimentacoesDto,
+  ConciliacaoResponse,
   ApiResponse,
 } from '../types/api.types';
 
@@ -53,6 +55,22 @@ class MovimentacaoBancariaService {
 
   async delete(id: string): Promise<void> {
     await apiService.delete(`/movimentacoes-bancarias/${id}`);
+  }
+
+  async conciliar(dto: ConciliarMovimentacoesDto): Promise<ConciliacaoResponse> {
+    const response: ApiResponse<ConciliacaoResponse> = await apiService.post(
+      '/movimentacoes-bancarias/conciliar',
+      dto
+    );
+    return response.data!;
+  }
+
+  async desconciliar(dto: ConciliarMovimentacoesDto): Promise<ConciliacaoResponse> {
+    const response: ApiResponse<ConciliacaoResponse> = await apiService.post(
+      '/movimentacoes-bancarias/desconciliar',
+      dto
+    );
+    return response.data!;
   }
 }
 
