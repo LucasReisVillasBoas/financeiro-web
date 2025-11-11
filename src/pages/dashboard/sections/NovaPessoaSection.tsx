@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiArrowLeft, FiSave, FiUser } from 'react-icons/fi';
 import type { CreatePessoaDto, Empresa } from '../../../types/api.types';
+import { TipoPessoa, TipoContribuinte } from '../../../types/api.types';
 import { pessoaService, empresaService } from '../../../services';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -14,12 +15,17 @@ export const NovaPessoaSection: React.FC<NovaPessoaSectionProps> = ({ onNavigate
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [filiais, setFiliais] = useState<Empresa[]>([]);
 
   const [formData, setFormData] = useState({
     empresaId: '',
+    filialId: '',
     tipo: 'Física' as 'Física' | 'Jurídica',
     nome: '',
     cpf_cnpj: '',
+    ieRg: '',
+    im: '',
+    tipoContribuinte: '',
     dataNascimento: '',
     email: '',
     telefone: '',
@@ -44,6 +50,8 @@ export const NovaPessoaSection: React.FC<NovaPessoaSectionProps> = ({ onNavigate
         setEmpresas(data || []);
         if (data && data.length > 0) {
           setFormData(prev => ({ ...prev, empresaId: data[0].id }));
+          // Carregar filiais (empresas que não são sede)
+          setFiliais(data || []);
         }
       }
     } catch (err) {
@@ -66,6 +74,9 @@ export const NovaPessoaSection: React.FC<NovaPessoaSectionProps> = ({ onNavigate
       ...prev,
       tipo: novoTipo,
       cpf_cnpj: '',
+      ieRg: '',
+      im: '',
+      tipoContribuinte: '',
       dataNascimento: '',
     }));
   };
@@ -138,25 +149,26 @@ export const NovaPessoaSection: React.FC<NovaPessoaSectionProps> = ({ onNavigate
     setSuccess(false);
 
     try {
-      const payload: CreatePessoaDto = {
+      const payload: any = {
         clienteId: user?.clienteId || '',
-        // empresaId: formData.empresaId,
-        razao_nome: formData.nome,
+        tipos: [TipoPessoa.CLIENTE],
+        tipo: formData.tipo,
         nome: formData.nome,
         cpf_cnpj: formData.cpf_cnpj ? formData.cpf_cnpj.replace(/\D/g, '') : '',
-        email: formData.email || '',
-        telefone: formData.telefone ? formData.telefone.replace(/\D/g, '') : '',
+        ieRg: formData.ieRg || undefined,
+        im: formData.im || undefined,
+        tipoContribuinte: formData.tipoContribuinte || undefined,
+        filialId: formData.filialId || undefined,
+        email: formData.email || undefined,
+        telefone: formData.telefone ? formData.telefone.replace(/\D/g, '') : undefined,
         cep: formData.cep ? formData.cep.replace(/\D/g, '') : '',
         logradouro: formData.logradouro || '',
         numero: formData.numero || '',
-        complemento: formData.complemento || '',
+        complemento: formData.complemento || undefined,
         bairro: formData.bairro || '',
         cidade: formData.cidade || '',
         uf: formData.uf || '',
         ativo: formData.ativo,
-        criado_por_id: user?.clienteId || '',
-        atualizado_por_id: user?.clienteId || '',
-        tipo: formData.tipo,
       };
 
       if (formData.tipo === 'Física' && formData.dataNascimento) {
@@ -268,6 +280,29 @@ export const NovaPessoaSection: React.FC<NovaPessoaSectionProps> = ({ onNavigate
             </select>
           </div>
 
+          {/* Filial (opcional) */}
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+              Filial (opcional)
+            </label>
+            <select
+              name="filialId"
+              value={formData.filialId}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            >
+              <option value="">Nenhuma filial</option>
+              {filiais.map(filial => (
+                <option key={filial.id} value={filial.id}>
+                  {filial.nome_fantasia} - {filial.cnpj_cpf}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+              Selecione uma filial se esta pessoa pertencer a uma filial específica
+            </p>
+          </div>
+
           {/* Tipo */}
           <div>
             <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
@@ -349,6 +384,67 @@ export const NovaPessoaSection: React.FC<NovaPessoaSectionProps> = ({ onNavigate
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                 />
+              </div>
+            )}
+
+            {/* IE/RG */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                {formData.tipo === 'Física' ? 'RG' : 'Inscrição Estadual'}
+              </label>
+              <input
+                type="text"
+                name="ieRg"
+                value={formData.ieRg}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                placeholder={formData.tipo === 'Física' ? 'Digite o RG' : 'Digite a IE ou ISENTO'}
+              />
+            </div>
+
+            {/* IM (apenas para Pessoa Jurídica) */}
+            {formData.tipo === 'Jurídica' && (
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                  Inscrição Municipal
+                </label>
+                <input
+                  type="text"
+                  name="im"
+                  value={formData.im}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  placeholder="Digite a IM ou ISENTO"
+                />
+              </div>
+            )}
+
+            {/* Tipo Contribuinte (apenas para Pessoa Jurídica) */}
+            {formData.tipo === 'Jurídica' && (
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                  Tipo de Contribuinte (SEFAZ)
+                </label>
+                <select
+                  name="tipoContribuinte"
+                  value={formData.tipoContribuinte}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                >
+                  <option value="">Selecione...</option>
+                  <option value={TipoContribuinte.CONTRIBUINTE_ICMS}>
+                    1 - Contribuinte ICMS
+                  </option>
+                  <option value={TipoContribuinte.CONTRIBUINTE_ISENTO}>
+                    2 - Contribuinte Isento
+                  </option>
+                  <option value={TipoContribuinte.NAO_CONTRIBUINTE}>
+                    9 - Não Contribuinte
+                  </option>
+                </select>
+                <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                  Classificação fiscal conforme tabela SEFAZ
+                </p>
               </div>
             )}
 

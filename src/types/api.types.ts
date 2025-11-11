@@ -139,6 +139,37 @@ export interface CreateContatoDto {
 
 export interface UpdateContatoDto extends Partial<CreateContatoDto> {}
 
+// Enums de Pessoa
+export enum TipoPessoa {
+  CLIENTE = 'cliente',
+  FORNECEDOR = 'fornecedor',
+  FUNCIONARIO = 'funcionario',
+  TRANSPORTADORA = 'transportadora',
+  MEDICO = 'medico',
+  CONVENIO = 'convenio',
+  HOSPITAL = 'hospital',
+}
+
+export enum SituacaoPessoa {
+  ATIVO = 'ativo',
+  INATIVO = 'inativo',
+  BLOQUEADO = 'bloqueado',
+  PENDENTE = 'pendente',
+}
+
+export enum TipoContribuinte {
+  CONTRIBUINTE_ICMS = '1',
+  CONTRIBUINTE_ISENTO = '2',
+  NAO_CONTRIBUINTE = '9',
+}
+
+export enum SituacaoFinanceira {
+  ATIVO = 'ativo',
+  INATIVO = 'inativo',
+  BLOQUEADO = 'bloqueado',
+  SUSPENSO = 'suspenso',
+}
+
 // Estrutura real da API do backend
 export interface PessoaEndereco {
   id: string;
@@ -156,20 +187,54 @@ export interface PessoaEndereco {
   atualizadoEm: string;
 }
 
+export interface PessoaTipo {
+  id: string;
+  tipo: TipoPessoa;
+  criadoEm: string;
+}
+
 export interface Pessoa {
   id: string;
+  // Multi-tenancy
+  clienteId?: string;
   empresa?: {
     id: string;
     razao_social: string;
     nome_fantasia: string;
     cnpj_cpf: string;
   };
+  filial?: {
+    id: string;
+    razao_social: string;
+    nome_fantasia: string;
+  };
+
+  // Dados básicos
   endereco?: PessoaEndereco;
   razaoNome: string;
   fantasiaApelido?: string;
+
+  // Tipos de pessoa (múltiplos)
+  tipos?: PessoaTipo[];
+
+  // Dados fiscais
   documento?: string;
   ieRg?: string;
+  im?: string;
+  tipoContribuinte?: TipoContribuinte;
+  consumidorFinal: boolean;
+
+  // Dados financeiros
+  limiteCredito?: number;
+  situacaoFinanceira: SituacaoFinanceira;
   aniversario?: string;
+
+  // Contato
+  email?: string;
+  telefone?: string;
+
+  // Status e controle
+  situacao: SituacaoPessoa;
   ativo: boolean;
   deletadoEm?: string;
   criadoEm: string;
@@ -181,47 +246,97 @@ export interface Pessoa {
   nome?: string; // Será preenchido com razaoNome
   tipo?: 'Física' | 'Jurídica'; // Será inferido do documento
   cpf_cnpj?: string; // Será preenchido com documento
-  email?: string;
-  telefone?: string;
   celular?: string;
   cidade?: string; // Será preenchido com endereco.cidade
   uf?: string; // Será preenchido com endereco.uf
 }
 
 export interface CreatePessoaDto {
+  // Multi-tenancy
   clienteId?: string;
-  tipo: 'Física' | 'Jurídica';
-  nome: string;
-  razao_nome: string;
-  cpf_cnpj: string;
+  empresaId: string;
+  filialId?: string;
+
+  // Tipos de pessoa (obrigatório, pode ser múltiplo)
+  tipos: TipoPessoa[];
+
+  // Dados básicos
+  enderecoId: string;
+  razaoNome?: string;
+  fantasiaApelido?: string;
+
+  // Dados fiscais
+  documento?: string;
+  ieRg?: string;
+  im?: string;
+  tipoContribuinte?: TipoContribuinte;
+  consumidorFinal?: boolean;
+
+  // Dados financeiros
+  limiteCredito?: number;
+  situacaoFinanceira?: SituacaoFinanceira;
+  aniversario?: string;
+
+  // Contato
   email?: string;
   telefone?: string;
-  celular?: string;
-  cep: string;
-  logradouro: string;
-  numero: string;
-  complemento?: string;
-  bairro: string;
-  cidade: string;
-  uf: string;
-  codigoIbge?: string;
+
+  // Status
+  situacao?: SituacaoPessoa;
   ativo?: boolean;
-  aniversario?: string;
-  criado_por_id?: string;
-  atualizado_por_id?: string;
+
+  // Campos de endereço (para criação inline)
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  codigoIbge?: string;
+
+  // Compatibilidade com formato antigo
+  tipo?: 'Física' | 'Jurídica';
+  nome?: string;
+  razao_nome?: string;
+  cpf_cnpj?: string;
+  celular?: string;
 }
 
 export interface UpdatePessoaDto {
+  // Multi-tenancy
+  clienteId?: string;
   empresaId?: string;
+  filialId?: string;
+
+  // Tipos de pessoa
+  tipos?: TipoPessoa[];
+
+  // Dados básicos
   enderecoId?: string;
   razaoNome?: string;
   fantasiaApelido?: string;
+
+  // Dados fiscais
   documento?: string;
   ieRg?: string;
+  im?: string;
+  tipoContribuinte?: TipoContribuinte;
+  consumidorFinal?: boolean;
+
+  // Dados financeiros
+  limiteCredito?: number;
+  situacaoFinanceira?: SituacaoFinanceira;
   aniversario?: string;
+
+  // Contato
   email?: string;
   telefone?: string;
+
+  // Status
+  situacao?: SituacaoPessoa;
   ativo?: boolean;
+
   // Campos de endereço
   cep?: string;
   logradouro?: string;
