@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FiArrowLeft, FiSave, FiUser } from 'react-icons/fi';
-import type { Pessoa, UpdatePessoaDto } from '../../../types/api.types';
-import { pessoaService } from '../../../services';
+import type { Pessoa, UpdatePessoaDto, Empresa } from '../../../types/api.types';
+import { TipoContribuinte } from '../../../types/api.types';
+import { pessoaService, empresaService } from '../../../services';
+import { useAuth } from '../../../context/AuthContext';
 
 interface EditarPessoaSectionProps {
   pessoaId: string;
@@ -12,16 +14,22 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
   pessoaId,
   onNavigate,
 }) => {
+  const { user } = useAuth();
   const [pessoa, setPessoa] = useState<Pessoa | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [filiais, setFiliais] = useState<Empresa[]>([]);
 
   const [formData, setFormData] = useState({
+    filialId: '',
     tipo: 'Física' as 'Física' | 'Jurídica',
     nome: '',
     cpf_cnpj: '',
+    ieRg: '',
+    im: '',
+    tipoContribuinte: '',
     dataNascimento: '',
     email: '',
     telefone: '',
@@ -37,7 +45,19 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
 
   useEffect(() => {
     loadPessoa();
+    loadFiliais();
   }, [pessoaId]);
+
+  const loadFiliais = async () => {
+    try {
+      if (user?.clienteId) {
+        const data = await empresaService.findByCliente(user.clienteId);
+        setFiliais(data || []);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar filiais:', err);
+    }
+  };
 
   const loadPessoa = async () => {
     try {
@@ -52,9 +72,13 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
 
       setPessoa(data);
       setFormData({
+        filialId: data.filial?.id || '',
         tipo: data.documento && data.documento?.length > 12 ? 'Jurídica' : 'Física',
         nome: data.nome || data.razaoNome || '',
         cpf_cnpj: handleDocumento(data.documento || ''),
+        ieRg: data.ieRg || '',
+        im: data.im || '',
+        tipoContribuinte: data.tipoContribuinte || '',
         dataNascimento: data.aniversario || '',
         email: data.email || '',
         telefone: formatTelefone(data.telefone || ''),
@@ -163,6 +187,10 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
     try {
       const payload: UpdatePessoaDto = {
         razaoNome: formData.nome,
+        filialId: formData.filialId || undefined,
+        ieRg: formData.ieRg || undefined,
+        im: formData.im || undefined,
+        tipoContribuinte: formData.tipoContribuinte || undefined,
         email: formData.email || undefined,
         telefone: formData.telefone ? formData.telefone.replace(/\D/g, '') : undefined,
         ativo: formData.ativo,
@@ -295,6 +323,29 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
             Informações Básicas
           </h2>
 
+          {/* Filial (opcional) */}
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+              Filial (opcional)
+            </label>
+            <select
+              name="filialId"
+              value={formData.filialId}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            >
+              <option value="">Nenhuma filial</option>
+              {filiais.map(filial => (
+                <option key={filial.id} value={filial.id}>
+                  {filial.nome_fantasia} - {filial.cnpj_cpf}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+              Selecione uma filial se esta pessoa pertencer a uma filial específica
+            </p>
+          </div>
+
           {/* Tipo */}
           <div>
             <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
@@ -362,6 +413,83 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
                 title="Não é possível alterar o CPF/CNPJ"
               />
             </div>
+
+            {/* Data de Nascimento (apenas para Pessoa Física) */}
+            {formData.tipo === 'Física' && (
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                  Data de Nascimento
+                </label>
+                <input
+                  type="date"
+                  name="dataNascimento"
+                  value={formData.dataNascimento}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                />
+              </div>
+            )}
+
+            {/* IE/RG */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                {formData.tipo === 'Física' ? 'RG' : 'Inscrição Estadual'}
+              </label>
+              <input
+                type="text"
+                name="ieRg"
+                value={formData.ieRg}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                placeholder={formData.tipo === 'Física' ? 'Digite o RG' : 'Digite a IE ou ISENTO'}
+              />
+            </div>
+
+            {/* IM (apenas para Pessoa Jurídica) */}
+            {formData.tipo === 'Jurídica' && (
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                  Inscrição Municipal
+                </label>
+                <input
+                  type="text"
+                  name="im"
+                  value={formData.im}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  placeholder="Digite a IM ou ISENTO"
+                />
+              </div>
+            )}
+
+            {/* Tipo Contribuinte (apenas para Pessoa Jurídica) */}
+            {formData.tipo === 'Jurídica' && (
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                  Tipo de Contribuinte (SEFAZ)
+                </label>
+                <select
+                  name="tipoContribuinte"
+                  value={formData.tipoContribuinte}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                >
+                  <option value="">Selecione...</option>
+                  <option value={TipoContribuinte.CONTRIBUINTE_ICMS}>
+                    1 - Contribuinte ICMS
+                  </option>
+                  <option value={TipoContribuinte.CONTRIBUINTE_ISENTO}>
+                    2 - Contribuinte Isento
+                  </option>
+                  <option value={TipoContribuinte.NAO_CONTRIBUINTE}>
+                    9 - Não Contribuinte
+                  </option>
+                </select>
+                <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                  Classificação fiscal conforme tabela SEFAZ
+                </p>
+              </div>
+            )}
 
             {/* Status */}
             <div>
