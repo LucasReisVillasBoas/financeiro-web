@@ -38,6 +38,14 @@ export const OnboardingEmpresa: React.FC = () => {
 
   const [bacen, setBacen] = useState('');
 
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 10) {
+      return numbers.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+    }
+    return numbers.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
 
@@ -53,9 +61,16 @@ export const OnboardingEmpresa: React.FC = () => {
 
     const dtoKey = keyMap[id] || (id as keyof EmpresaFormData);
 
+    let finalValue = value;
+
+    // Aplicar máscara de telefone
+    if (id === 'telefone' || id === 'celular') {
+      finalValue = formatPhone(value);
+    }
+
     setFormData(prev => ({
       ...prev,
-      [dtoKey]: value,
+      [dtoKey]: finalValue,
     }));
   };
 
@@ -63,8 +78,64 @@ export const OnboardingEmpresa: React.FC = () => {
     setBacen(e.target.value);
   };
 
+  const validateStep = (currentStep: number): boolean => {
+    setError('');
+
+    if (currentStep === 1) {
+      if (!formData.razao_social || formData.razao_social.trim().length < 3) {
+        setError('Razão social deve ter no mínimo 3 caracteres');
+        return false;
+      }
+      if (!formData.nome_fantasia || formData.nome_fantasia.trim().length < 3) {
+        setError('Nome fantasia deve ter no mínimo 3 caracteres');
+        return false;
+      }
+      if (!formData.cnpj_cpf || formData.cnpj_cpf.trim().length === 0) {
+        setError('CNPJ/CPF é obrigatório');
+        return false;
+      }
+    }
+
+    if (currentStep === 2) {
+      if (formData.cep && !/^\d{5}-?\d{3}$/.test(formData.cep)) {
+        setError('CEP deve estar no formato 00000-000');
+        return false;
+      }
+      if (formData.uf && !/^[A-Z]{2}$/.test(formData.uf)) {
+        setError('UF deve ter 2 letras maiúsculas (ex: SP, RJ)');
+        return false;
+      }
+    }
+
+    if (currentStep === 3) {
+      if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        setError('E-mail deve ser um endereço válido');
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleNextStep = (nextStep: number) => {
+    if (validateStep(step)) {
+      setStep(nextStep);
+      setError('');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!validateStep(step)) {
+      return;
+    }
+
+    // Se não está no último step, não submete - apenas avança
+    if (step !== 3) {
+      return;
+    }
+
     setError('');
     setLoading(true);
 
@@ -78,9 +149,12 @@ export const OnboardingEmpresa: React.FC = () => {
       return;
     }
 
+    // Remover máscaras de telefone e celular antes de enviar (salvar apenas números)
     const dto: CreateEmpresaDto = {
       cliente_id: clienteId,
       ...formData,
+      telefone: formData.telefone ? formData.telefone.replace(/\D/g, '') : '',
+      celular: formData.celular ? formData.celular.replace(/\D/g, '') : '',
     };
 
     try {
@@ -103,15 +177,18 @@ export const OnboardingEmpresa: React.FC = () => {
         email: dto.email || '',
         telefone: dto.telefone || '',
       });
-      await cidadeService.create({
-        clienteId: clienteId,
-        filialId: empresa.id,
-        codigoIbge: formData.codigo_ibge || '',
-        uf: dto.uf || '',
-        pais: 'Brasil',
-        nome: dto.cidade || '',
-        codigoBacen: bacen || '',
-      });
+      // Cadastrar cidade apenas se tiver dados obrigatórios
+      if (formData.cidade) {
+        await cidadeService.create({
+          clienteId: clienteId,
+          filialId: empresa.id,
+          codigoIbge: formData.codigo_ibge || undefined,
+          uf: dto.uf || undefined,
+          pais: 'Brasil',
+          nome: dto.cidade,
+          codigoBacen: bacen || undefined,
+        });
+      }
       await usuarioService.associarEmpresaFilial(clienteId, {
         empresaId: empresa.id,
       });
@@ -210,7 +287,7 @@ export const OnboardingEmpresa: React.FC = () => {
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    onClick={() => setStep(2)}
+                    onClick={() => handleNextStep(2)}
                     className="px-6 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors"
                   >
                     Próximo
@@ -299,7 +376,7 @@ export const OnboardingEmpresa: React.FC = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setStep(3)}
+                    onClick={() => handleNextStep(3)}
                     className="px-6 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors"
                   >
                     Próximo
@@ -356,18 +433,6 @@ export const OnboardingEmpresa: React.FC = () => {
               </div>
             )}
           </form>
-
-          {step === 3 && (
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard')}
-                className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] underline"
-              >
-                Pular por enquanto
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
