@@ -1,17 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { FiDollarSign, FiCalendar, FiCheckCircle, FiCreditCard, FiPlus, FiX } from 'react-icons/fi';
-import {
-  StatusContaReceber,
-  TipoContaReceber,
-} from '../../../types/api.types';
+import { StatusContaReceber, TipoContaReceber } from '../../../types/api.types';
 import type {
   ContaReceber,
   CreateContaReceberDto,
   ContaBancaria,
   PlanoContas,
-  BaixaRecebimento,
   CreateBaixaRecebimentoDto,
-  CreateContaReceberParceladaDto,
   Pessoa,
 } from '../../../types/api.types';
 import {
@@ -78,6 +73,7 @@ export const ContasReceberSection: React.FC = () => {
     try {
       setLoading(true);
       const data = await contaReceberService.findAll();
+      console.log('Contas a Receber carregadas:', data);
       setContas(data);
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar contas bancárias');
@@ -190,7 +186,19 @@ export const ContasReceberSection: React.FC = () => {
     setFormError('');
 
     try {
-      await contaReceberService.create(formData);
+      // Calculate valorTotal and saldo
+      const valorTotal =
+        formData.valorPrincipal + (formData.valorAcrescimos || 0) - (formData.valorDescontos || 0);
+
+      // Prepare data with calculated fields
+      const dataToSubmit = {
+        ...formData,
+        dataLancamento: formData.dataLancamento || new Date().toISOString().split('T')[0],
+        valorTotal,
+        saldo: valorTotal, // Initial saldo is the same as valorTotal
+      };
+
+      await contaReceberService.create(dataToSubmit);
       await loadContasReceber();
       handleCloseForm();
     } catch (err: any) {
@@ -199,7 +207,10 @@ export const ContasReceberSection: React.FC = () => {
   };
 
   const totalAReceber = contas
-    .filter(conta => conta.status === StatusContaReceber.PENDENTE || conta.status === StatusContaReceber.PARCIAL)
+    .filter(
+      conta =>
+        conta.status === StatusContaReceber.PENDENTE || conta.status === StatusContaReceber.PARCIAL
+    )
     .reduce((acc, conta) => acc + conta.saldo, 0);
 
   const recebidoEsteMes = contas
@@ -216,7 +227,11 @@ export const ContasReceberSection: React.FC = () => {
 
   const previsaoProximos30Dias = contas
     .filter(conta => {
-      if (conta.status !== StatusContaReceber.PENDENTE && conta.status !== StatusContaReceber.PARCIAL) return false;
+      if (
+        conta.status !== StatusContaReceber.PENDENTE &&
+        conta.status !== StatusContaReceber.PARCIAL
+      )
+        return false;
 
       const vencimento = new Date(conta.vencimento);
       const hoje = new Date();
@@ -235,15 +250,31 @@ export const ContasReceberSection: React.FC = () => {
   };
 
   const StatusBadge: React.FC<{ status: StatusContaReceber }> = ({ status }) => {
-    const statusConfig = {
-      [StatusContaReceber.PENDENTE]: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pendente' },
+    const statusConfig: Record<StatusContaReceber, { bg: string; text: string; label: string }> = {
+      [StatusContaReceber.PENDENTE]: {
+        bg: 'bg-yellow-100',
+        text: 'text-yellow-800',
+        label: 'Pendente',
+      },
       [StatusContaReceber.PARCIAL]: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Parcial' },
-      [StatusContaReceber.LIQUIDADO]: { bg: 'bg-green-100', text: 'text-green-800', label: 'Liquidado' },
+      [StatusContaReceber.LIQUIDADO]: {
+        bg: 'bg-green-100',
+        text: 'text-green-800',
+        label: 'Liquidado',
+      },
       [StatusContaReceber.VENCIDO]: { bg: 'bg-red-100', text: 'text-red-800', label: 'Vencido' },
-      [StatusContaReceber.CANCELADO]: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Cancelado' },
+      [StatusContaReceber.CANCELADO]: {
+        bg: 'bg-gray-100',
+        text: 'text-gray-800',
+        label: 'Cancelado',
+      },
     };
 
-    const config = statusConfig[status];
+    const config = statusConfig[status] || {
+      bg: 'bg-gray-100',
+      text: 'text-gray-800',
+      label: status,
+    };
 
     return (
       <span className={`px-2 py-1 rounded text-sm ${config.bg} ${config.text}`}>
@@ -297,13 +328,16 @@ export const ContasReceberSection: React.FC = () => {
                 </label>
                 <select
                   value={baixaData.contaBancariaId}
-                  onChange={e => setBaixaData(prev => ({ ...prev, contaBancariaId: e.target.value }))}
+                  onChange={e =>
+                    setBaixaData(prev => ({ ...prev, contaBancariaId: e.target.value }))
+                  }
                   className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                 >
                   <option value="">Selecione uma conta</option>
                   {contasBancarias.map(cb => (
                     <option key={cb.id} value={cb.id}>
-                      {cb.banco} - {cb.agencia}/{cb.conta} - Saldo: R$ {cb.saldo_atual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      {cb.banco} - {cb.agencia}/{cb.conta} - Saldo: R${' '}
+                      {cb.saldo_atual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </option>
                   ))}
                 </select>
@@ -318,7 +352,9 @@ export const ContasReceberSection: React.FC = () => {
                   step="0.01"
                   min="0"
                   value={baixaData.valor}
-                  onChange={e => setBaixaData(prev => ({ ...prev, valor: parseFloat(e.target.value) || 0 }))}
+                  onChange={e =>
+                    setBaixaData(prev => ({ ...prev, valor: parseFloat(e.target.value) || 0 }))
+                  }
                   className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                   placeholder="0.00"
                 />
@@ -333,7 +369,9 @@ export const ContasReceberSection: React.FC = () => {
                   step="0.01"
                   min="0"
                   value={baixaData.acrescimos}
-                  onChange={e => setBaixaData(prev => ({ ...prev, acrescimos: parseFloat(e.target.value) || 0 }))}
+                  onChange={e =>
+                    setBaixaData(prev => ({ ...prev, acrescimos: parseFloat(e.target.value) || 0 }))
+                  }
                   className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                   placeholder="0.00"
                 />
@@ -348,7 +386,9 @@ export const ContasReceberSection: React.FC = () => {
                   step="0.01"
                   min="0"
                   value={baixaData.descontos}
-                  onChange={e => setBaixaData(prev => ({ ...prev, descontos: parseFloat(e.target.value) || 0 }))}
+                  onChange={e =>
+                    setBaixaData(prev => ({ ...prev, descontos: parseFloat(e.target.value) || 0 }))
+                  }
                   className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                   placeholder="0.00"
                 />
@@ -358,7 +398,12 @@ export const ContasReceberSection: React.FC = () => {
                 <div className="flex justify-between text-sm">
                   <span>Total a Receber:</span>
                   <span className="font-bold">
-                    R$ {(baixaData.valor + baixaData.acrescimos - baixaData.descontos).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    R${' '}
+                    {(
+                      baixaData.valor +
+                      (baixaData.acrescimos ?? 0) -
+                      (baixaData.descontos ?? 0)
+                    ).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>
@@ -695,7 +740,9 @@ export const ContasReceberSection: React.FC = () => {
           <table className="w-full bg-[var(--color-surface)] rounded-md shadow">
             <thead>
               <tr className="border-b border-[var(--color-border)]">
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">Documento/Parcela</th>
+                <th className="text-left p-4 text-[var(--color-text-secondary)]">
+                  Documento/Parcela
+                </th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Descrição</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Cliente</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Valor Total</th>
@@ -715,7 +762,9 @@ export const ContasReceberSection: React.FC = () => {
                     {conta.documento}/{conta.serie} - {conta.parcela}
                   </td>
                   <td className="p-4 text-[var(--color-text)]">{conta.descricao}</td>
-                  <td className="p-4 text-[var(--color-text)]">{conta.pessoaNome || 'N/A'}</td>
+                  <td className="p-4 text-[var(--color-text)]">
+                    {conta.pessoa.fantasiaApelido || 'N/A'}
+                  </td>
                   <td className="p-4 text-[var(--color-text)]">
                     R$ {conta.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </td>
@@ -730,7 +779,8 @@ export const ContasReceberSection: React.FC = () => {
                   </td>
                   <td className="p-4">
                     <div className="flex justify-center gap-2">
-                      {(conta.status === StatusContaReceber.PENDENTE || conta.status === StatusContaReceber.PARCIAL) && (
+                      {(conta.status === StatusContaReceber.PENDENTE ||
+                        conta.status === StatusContaReceber.PARCIAL) && (
                         <button
                           className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
                           onClick={() => handleBaixar(conta)}

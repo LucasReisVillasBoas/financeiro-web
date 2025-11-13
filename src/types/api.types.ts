@@ -598,7 +598,7 @@ export enum TipoContaReceber {
 
 export interface ContaReceber {
   id: string;
-  pessoaId: string;
+  pessoa: Pessoa;
   pessoaNome?: string;
   pessoaDocumento?: string;
   empresaId: string;
