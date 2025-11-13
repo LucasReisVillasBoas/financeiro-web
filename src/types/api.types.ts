@@ -575,31 +575,122 @@ export interface GerarParcelasDto {
   empresaId: string;
 }
 
+// Enums para Contas a Receber
+export enum StatusContaReceber {
+  PENDENTE = 'PENDENTE',
+  PARCIAL = 'PARCIAL',
+  LIQUIDADO = 'LIQUIDADO',
+  VENCIDO = 'VENCIDO',
+  CANCELADO = 'CANCELADO',
+}
+
+export enum TipoContaReceber {
+  BOLETO = 'BOLETO',
+  DUPLICATA = 'DUPLICATA',
+  NOTA_PROMISSORIA = 'NOTA_PROMISSORIA',
+  CHEQUE = 'CHEQUE',
+  CARTAO_CREDITO = 'CARTAO_CREDITO',
+  CARTAO_DEBITO = 'CARTAO_DEBITO',
+  PIX = 'PIX',
+  DINHEIRO = 'DINHEIRO',
+  OUTROS = 'OUTROS',
+}
+
 export interface ContaReceber {
   id: string;
-  descricao: string;
-  valor: number;
+  pessoa: Pessoa;
+  pessoaNome?: string;
+  pessoaDocumento?: string;
+  empresaId: string;
+  planoContasId: string;
+  planoContasDescricao?: string;
+  documento: string;
+  serie: string;
+  parcela: number;
+  tipo: TipoContaReceber;
+  dataEmissao: string;
+  dataLancamento: string;
   vencimento: string;
-  status: 'Pendente' | 'Recebida';
-  cliente: string;
-  dataRecebimento?: string;
-  empresaId?: string;
-  planoContasId?: string;
+  dataLiquidacao?: string;
+  descricao: string;
+  valorPrincipal: number;
+  valorAcrescimos: number;
+  valorDescontos: number;
+  valorTotal: number;
+  saldo: number;
+  status: StatusContaReceber;
   deletadoEm?: string;
+  criadoEm: string;
+  atualizadoEm: string;
 }
 
 export interface CreateContaReceberDto {
-  descricao: string;
-  valor: number;
+  pessoaId: string;
+  planoContasId: string;
+  empresaId: string;
+  documento: string;
+  serie: string;
+  parcela: number;
+  tipo: TipoContaReceber;
+  dataEmissao: string;
+  dataLancamento?: string;
   vencimento: string;
-  status?: 'Pendente' | 'Recebida';
-  cliente: string;
-  dataRecebimento?: string;
-  empresaId?: string;
-  planoContasId?: string;
+  dataLiquidacao?: string;
+  descricao: string;
+  valorPrincipal: number;
+  valorAcrescimos?: number;
+  valorDescontos?: number;
+  valorTotal?: number;
+}
+
+export interface CreateContaReceberParceladaDto {
+  pessoaId: string;
+  planoContasId: string;
+  empresaId: string;
+  documento: string;
+  serie: string;
+  tipo: TipoContaReceber;
+  dataEmissao: string;
+  primeiroVencimento: string;
+  descricao: string;
+  valorTotal: number;
+  numeroParcelas: number;
+  intervaloDias?: number;
 }
 
 export interface UpdateContaReceberDto extends Partial<CreateContaReceberDto> {}
+
+export interface CancelarContaReceberDto {
+  justificativa: string;
+}
+
+// Baixa de Recebimento
+export interface BaixaRecebimento {
+  id: string;
+  contaReceberId: string;
+  contaBancariaId: string;
+  data: string;
+  valor: number;
+  acrescimos: number;
+  descontos: number;
+  total: number;
+  observacao?: string;
+  saldoAnterior: number;
+  saldoPosterior: number;
+  movimentacaoBancariaId?: string;
+  deletadoEm?: string;
+  criadoEm: string;
+}
+
+export interface CreateBaixaRecebimentoDto {
+  contaReceberId: string;
+  contaBancariaId: string;
+  data: string;
+  valor: number;
+  acrescimos?: number;
+  descontos?: number;
+  observacao?: string;
+}
 
 // Plano de Contas
 export enum TipoPlanoContas {

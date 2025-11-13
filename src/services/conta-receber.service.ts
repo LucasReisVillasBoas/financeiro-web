@@ -2,13 +2,23 @@ import { apiService } from './api.service';
 import type {
   ContaReceber,
   CreateContaReceberDto,
+  CreateContaReceberParceladaDto,
   UpdateContaReceberDto,
+  CancelarContaReceberDto,
   ApiResponse,
 } from '../types/api.types';
 
 class ContaReceberService {
   async create(dto: CreateContaReceberDto): Promise<ContaReceber> {
     const response: ApiResponse<ContaReceber> = await apiService.post('/contas-receber', dto);
+    return response.data!;
+  }
+
+  async createParcelado(dto: CreateContaReceberParceladaDto): Promise<ContaReceber[]> {
+    const response: ApiResponse<ContaReceber[]> = await apiService.post(
+      '/contas-receber/parcelado',
+      dto
+    );
     return response.data!;
   }
 
@@ -20,6 +30,13 @@ class ContaReceberService {
   async findByEmpresa(empresaId: string): Promise<ContaReceber[]> {
     const response: ApiResponse<ContaReceber[]> = await apiService.get(
       `/contas-receber/empresa/${empresaId}`
+    );
+    return response.data || [];
+  }
+
+  async findByPessoa(pessoaId: string): Promise<ContaReceber[]> {
+    const response: ApiResponse<ContaReceber[]> = await apiService.get(
+      `/contas-receber/pessoa/${pessoaId}`
     );
     return response.data || [];
   }
@@ -37,10 +54,10 @@ class ContaReceberService {
     return response.data!;
   }
 
-  async marcarComoRecebida(id: string): Promise<ContaReceber> {
-    const response: ApiResponse<ContaReceber> = await apiService.patch(
-      `/contas-receber/${id}/receber`,
-      {}
+  async cancelar(id: string, dto: CancelarContaReceberDto): Promise<ContaReceber> {
+    const response: ApiResponse<ContaReceber> = await apiService.post(
+      `/contas-receber/${id}/cancelar`,
+      dto
     );
     return response.data!;
   }
