@@ -1,17 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { FiDollarSign, FiCalendar, FiCheckCircle, FiCreditCard, FiPlus, FiX } from 'react-icons/fi';
+import {
+  StatusContaReceber,
+  TipoContaReceber,
+} from '../../../types/api.types';
 import type {
   ContaReceber,
   CreateContaReceberDto,
   ContaBancaria,
   PlanoContas,
+  BaixaRecebimento,
+  CreateBaixaRecebimentoDto,
+  CreateContaReceberParceladaDto,
+  Pessoa,
 } from '../../../types/api.types';
 import {
   contaReceberService,
   contaBancariaService,
-  movimentacaoBancariaService,
   planoContasService,
   empresaService,
+  baixaRecebimentoService,
+  pessoaService,
 } from '../../../services';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -22,22 +31,48 @@ export const ContasReceberSection: React.FC = () => {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<CreateContaReceberDto>({
-    descricao: '',
-    valor: 0,
+    pessoaId: '',
+    planoContasId: '',
+    empresaId: '',
+    documento: '',
+    serie: '1',
+    parcela: 1,
+    tipo: TipoContaReceber.DUPLICATA,
+    dataEmissao: new Date().toISOString().split('T')[0],
     vencimento: '',
-    status: 'Pendente',
-    cliente: '',
+    descricao: '',
+    valorPrincipal: 0,
+    valorAcrescimos: 0,
+    valorDescontos: 0,
   });
   const [formError, setFormError] = useState('');
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [contaSelecionada, setContaSelecionada] = useState<ContaReceber | null>(null);
   const [contasBancarias, setContasBancarias] = useState<ContaBancaria[]>([]);
-  const [contaBancariaSelecionada, setContaBancariaSelecionada] = useState('');
   const [planosContas, setPlanosContas] = useState<PlanoContas[]>([]);
+  const [pessoas, setPessoas] = useState<Pessoa[]>([]);
+
+  const [showBaixaModal, setShowBaixaModal] = useState(false);
+  const [baixaData, setBaixaData] = useState<CreateBaixaRecebimentoDto>({
+    contaReceberId: '',
+    contaBancariaId: '',
+    data: new Date().toISOString().split('T')[0],
+    valor: 0,
+    acrescimos: 0,
+    descontos: 0,
+  });
 
   useEffect(() => {
+    loadPessoas();
     loadContasReceber();
   }, []);
+
+  const loadPessoas = async () => {
+    try {
+      const data = await pessoaService.findAll();
+      setPessoas(data.filter(p => p.ativo));
+    } catch (err) {
+      console.error('Erro ao carregar pessoas:', err);
+    }
+  };
 
   const loadContasReceber = async () => {
     try {
@@ -51,13 +86,17 @@ export const ContasReceberSection: React.FC = () => {
     }
   };
 
-  const handleReceber = async (id: string) => {
-    const conta = contas.find(c => c.id === id);
-    if (!conta) return;
+  const handleBaixar = async (conta: ContaReceber) => {
+    setBaixaData({
+      contaReceberId: conta.id,
+      contaBancariaId: '',
+      data: new Date().toISOString().split('T')[0],
+      valor: conta.saldo,
+      acrescimos: 0,
+      descontos: 0,
+    });
 
-    setContaSelecionada(conta);
-    setContaBancariaSelecionada('');
-    setShowConfirmModal(true);
+    setShowBaixaModal(true);
 
     try {
       const contasBanc = await contaBancariaService.findAll();
@@ -67,44 +106,26 @@ export const ContasReceberSection: React.FC = () => {
     }
   };
 
-  const handleConfirmarRecebimento = async () => {
-    if (!contaSelecionada || !contaBancariaSelecionada) {
-      setError('Selecione uma conta bancária');
-      return;
-    }
-
+  const handleConfirmarBaixa = async () => {
     try {
-      await contaReceberService.update(contaSelecionada.id, {
-        status: 'Recebida',
-        dataRecebimento: new Date().toISOString().split('T')[0],
-      });
-
-      const contaBancaria = contasBancarias.find(cb => cb.id === contaBancariaSelecionada);
-      if (contaBancaria) {
-        await movimentacaoBancariaService.create({
-          data: new Date().toISOString().split('T')[0],
-          descricao: `Recebimento: ${contaSelecionada.descricao}`,
-          conta: contaBancaria.conta,
-          categoria: 'Recebimento',
-          valor: contaSelecionada.valor,
-          tipo: 'Entrada',
-          contaBancaria: contaBancaria.id,
-        });
-      }
-
+      await baixaRecebimentoService.create(baixaData);
       await loadContasReceber();
-      setShowConfirmModal(false);
-      setContaSelecionada(null);
-      setContaBancariaSelecionada('');
+      setShowBaixaModal(false);
     } catch (err: any) {
-      setError(err.message || 'Erro ao processar recebimento');
+      setError(err.message || 'Erro ao processar baixa');
     }
   };
 
-  const handleCancelarModal = () => {
-    setShowConfirmModal(false);
-    setContaSelecionada(null);
-    setContaBancariaSelecionada('');
+  const handleCancelarBaixaModal = () => {
+    setShowBaixaModal(false);
+    setBaixaData({
+      contaReceberId: '',
+      contaBancariaId: '',
+      data: new Date().toISOString().split('T')[0],
+      valor: 0,
+      acrescimos: 0,
+      descontos: 0,
+    });
   };
 
   const handleNovaConta = async () => {
@@ -115,6 +136,12 @@ export const ContasReceberSection: React.FC = () => {
       if (user?.clienteId) {
         const empresas = await empresaService.findByCliente(user.clienteId);
         if (empresas && empresas.length > 0) {
+          // Set empresaId in formData
+          setFormData(prev => ({
+            ...prev,
+            empresaId: empresas[0].id,
+          }));
+
           const planosResponse = await planoContasService.findByEmpresa(empresas[0].id);
           const planosDisponiveis =
             planosResponse.data?.filter(
@@ -131,11 +158,19 @@ export const ContasReceberSection: React.FC = () => {
   const handleCloseForm = () => {
     setShowForm(false);
     setFormData({
-      descricao: '',
-      valor: 0,
+      pessoaId: '',
+      planoContasId: '',
+      empresaId: '',
+      documento: '',
+      serie: '1',
+      parcela: 1,
+      tipo: TipoContaReceber.DUPLICATA,
+      dataEmissao: new Date().toISOString().split('T')[0],
       vencimento: '',
-      status: 'Pendente',
-      cliente: '',
+      descricao: '',
+      valorPrincipal: 0,
+      valorAcrescimos: 0,
+      valorDescontos: 0,
     });
     setFormError('');
   };
@@ -144,7 +179,9 @@ export const ContasReceberSection: React.FC = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'valor' ? parseFloat(value) || 0 : value,
+      [name]: ['valorPrincipal', 'valorAcrescimos', 'valorDescontos', 'parcela'].includes(name)
+        ? parseFloat(value) || 0
+        : value,
     }));
   };
 
@@ -162,26 +199,24 @@ export const ContasReceberSection: React.FC = () => {
   };
 
   const totalAReceber = contas
-    .filter(conta => conta.status === 'Pendente')
-    .reduce((acc, conta) => acc + conta.valor, 0);
+    .filter(conta => conta.status === StatusContaReceber.PENDENTE || conta.status === StatusContaReceber.PARCIAL)
+    .reduce((acc, conta) => acc + conta.saldo, 0);
 
   const recebidoEsteMes = contas
     .filter(conta => {
-      if (conta.status !== 'Recebida' || !conta.dataRecebimento) return false;
-
-      const dataRecebimento = new Date(conta.dataRecebimento);
+      if (conta.status !== StatusContaReceber.LIQUIDADO || !conta.dataLiquidacao) return false;
+      const dataLiquidacao = new Date(conta.dataLiquidacao);
       const hoje = new Date();
-
       return (
-        dataRecebimento.getMonth() === hoje.getMonth() &&
-        dataRecebimento.getFullYear() === hoje.getFullYear()
+        dataLiquidacao.getMonth() === hoje.getMonth() &&
+        dataLiquidacao.getFullYear() === hoje.getFullYear()
       );
     })
-    .reduce((acc, conta) => acc + conta.valor, 0);
+    .reduce((acc, conta) => acc + conta.valorTotal, 0);
 
   const previsaoProximos30Dias = contas
     .filter(conta => {
-      if (conta.status !== 'Pendente') return false;
+      if (conta.status !== StatusContaReceber.PENDENTE && conta.status !== StatusContaReceber.PARCIAL) return false;
 
       const vencimento = new Date(conta.vencimento);
       const hoje = new Date();
@@ -190,13 +225,31 @@ export const ContasReceberSection: React.FC = () => {
 
       return vencimento >= hoje && vencimento <= em30Dias;
     })
-    .reduce((acc, conta) => acc + conta.valor, 0);
+    .reduce((acc, conta) => acc + conta.saldo, 0);
 
   const formatarMoeda = (valor: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     }).format(valor);
+  };
+
+  const StatusBadge: React.FC<{ status: StatusContaReceber }> = ({ status }) => {
+    const statusConfig = {
+      [StatusContaReceber.PENDENTE]: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pendente' },
+      [StatusContaReceber.PARCIAL]: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Parcial' },
+      [StatusContaReceber.LIQUIDADO]: { bg: 'bg-green-100', text: 'text-green-800', label: 'Liquidado' },
+      [StatusContaReceber.VENCIDO]: { bg: 'bg-red-100', text: 'text-red-800', label: 'Vencido' },
+      [StatusContaReceber.CANCELADO]: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Cancelado' },
+    };
+
+    const config = statusConfig[status];
+
+    return (
+      <span className={`px-2 py-1 rounded text-sm ${config.bg} ${config.text}`}>
+        {config.label}
+      </span>
+    );
   };
 
   return (
@@ -210,15 +263,15 @@ export const ContasReceberSection: React.FC = () => {
         </button>
       </div>
 
-      {showConfirmModal && contaSelecionada && (
+      {showBaixaModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-[var(--color-surface)] rounded-lg shadow-xl max-w-md w-full">
             <div className="flex justify-between items-center p-6 border-b border-[var(--color-border)]">
               <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
-                Confirmar Recebimento
+                Registrar Baixa de Recebimento
               </h2>
               <button
-                onClick={handleCancelarModal}
+                onClick={handleCancelarBaixaModal}
                 className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
               >
                 <FiX size={24} />
@@ -227,45 +280,87 @@ export const ContasReceberSection: React.FC = () => {
 
             <div className="p-6 space-y-4">
               <div>
-                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Descrição</p>
-                <p className="text-[var(--color-text)] font-medium">{contaSelecionada.descricao}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Cliente</p>
-                <p className="text-[var(--color-text)]">{contaSelecionada.cliente}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Valor</p>
-                <p className="text-2xl font-bold text-[var(--color-receivable)]">
-                  {new Intl.NumberFormat('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL',
-                  }).format(contaSelecionada.valor)}
-                </p>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                  Data da Baixa *
+                </label>
+                <input
+                  type="date"
+                  value={baixaData.data}
+                  onChange={e => setBaixaData(prev => ({ ...prev, data: e.target.value }))}
+                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                  Conta Bancária para Crédito *
+                  Conta Bancária *
                 </label>
                 <select
-                  value={contaBancariaSelecionada}
-                  onChange={e => setContaBancariaSelecionada(e.target.value)}
+                  value={baixaData.contaBancariaId}
+                  onChange={e => setBaixaData(prev => ({ ...prev, contaBancariaId: e.target.value }))}
                   className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                 >
                   <option value="">Selecione uma conta</option>
                   {contasBancarias.map(cb => (
                     <option key={cb.id} value={cb.id}>
-                      {cb.banco} - {cb.agencia}/{cb.conta} - Saldo:{' '}
-                      {new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                      }).format(cb.saldo_atual)}
+                      {cb.banco} - {cb.agencia}/{cb.conta} - Saldo: R$ {cb.saldo_atual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                  Valor da Baixa *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={baixaData.valor}
+                  onChange={e => setBaixaData(prev => ({ ...prev, valor: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                  Acréscimos
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={baixaData.acrescimos}
+                  onChange={e => setBaixaData(prev => ({ ...prev, acrescimos: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                  Descontos
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={baixaData.descontos}
+                  onChange={e => setBaixaData(prev => ({ ...prev, descontos: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div className="p-3 bg-[var(--color-bg)] rounded-md">
+                <div className="flex justify-between text-sm">
+                  <span>Total a Receber:</span>
+                  <span className="font-bold">
+                    R$ {(baixaData.valor + baixaData.acrescimos - baixaData.descontos).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
               </div>
 
               {error && (
@@ -277,16 +372,17 @@ export const ContasReceberSection: React.FC = () => {
 
             <div className="flex justify-end gap-3 p-6 border-t border-[var(--color-border)]">
               <button
-                onClick={handleCancelarModal}
+                onClick={handleCancelarBaixaModal}
                 className="px-4 py-2 bg-[var(--color-bg)] text-[var(--color-text)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface)] transition-colors"
               >
                 Cancelar
               </button>
               <button
-                onClick={handleConfirmarRecebimento}
-                className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors"
+                onClick={handleConfirmarBaixa}
+                disabled={!baixaData.contaBancariaId || baixaData.valor <= 0}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Confirmar Recebimento
+                Confirmar Baixa
               </button>
             </div>
           </div>
@@ -316,50 +412,101 @@ export const ContasReceberSection: React.FC = () => {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                    Descrição *
+                    Pessoa (Cliente) *
                   </label>
-                  <input
-                    type="text"
-                    name="descricao"
-                    value={formData.descricao}
+                  <select
+                    name="pessoaId"
+                    value={formData.pessoaId}
                     onChange={handleInputChange}
                     required
                     className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                    placeholder="Ex: Pagamento de projeto"
+                  >
+                    <option value="">Selecione uma pessoa</option>
+                    {pessoas.map(pessoa => (
+                      <option key={pessoa.id} value={pessoa.id}>
+                        {pessoa.razaoNome || pessoa.fantasiaApelido} - {pessoa.documento}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Documento *
+                  </label>
+                  <input
+                    type="text"
+                    name="documento"
+                    value={formData.documento}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Ex: 000001"
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                    Cliente *
+                    Série *
                   </label>
                   <input
                     type="text"
-                    name="cliente"
-                    value={formData.cliente}
+                    name="serie"
+                    value={formData.serie}
                     onChange={handleInputChange}
                     required
+                    placeholder="Ex: 1"
                     className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                    placeholder="Ex: Empresa ABC Ltda"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                    Valor *
+                    Parcela *
                   </label>
                   <input
                     type="number"
-                    name="valor"
-                    value={formData.valor}
+                    name="parcela"
+                    value={formData.parcela}
                     onChange={handleInputChange}
                     required
-                    step="0.01"
-                    min="0"
+                    min="1"
                     className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                    placeholder="Ex: 5000.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Tipo *
+                  </label>
+                  <select
+                    name="tipo"
+                    value={formData.tipo}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  >
+                    {Object.values(TipoContaReceber).map(tipo => (
+                      <option key={tipo} value={tipo}>
+                        {tipo.replace(/_/g, ' ')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Data Emissão *
+                  </label>
+                  <input
+                    type="date"
+                    name="dataEmissao"
+                    value={formData.dataEmissao}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                   />
                 </div>
 
@@ -377,20 +524,68 @@ export const ContasReceberSection: React.FC = () => {
                   />
                 </div>
 
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                    Status *
+                    Descrição *
                   </label>
-                  <select
-                    name="status"
-                    value={formData.status}
+                  <input
+                    type="text"
+                    name="descricao"
+                    value={formData.descricao}
                     onChange={handleInputChange}
                     required
                     className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                  >
-                    <option value="Pendente">Pendente</option>
-                    <option value="Recebida">Recebida</option>
-                  </select>
+                    placeholder="Ex: Pagamento de projeto"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Valor Principal *
+                  </label>
+                  <input
+                    type="number"
+                    name="valorPrincipal"
+                    value={formData.valorPrincipal}
+                    onChange={handleInputChange}
+                    required
+                    step="0.01"
+                    min="0"
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                    placeholder="Ex: 5000.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Acréscimos
+                  </label>
+                  <input
+                    type="number"
+                    name="valorAcrescimos"
+                    value={formData.valorAcrescimos}
+                    onChange={handleInputChange}
+                    step="0.01"
+                    min="0"
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                    placeholder="Ex: 50.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Descontos
+                  </label>
+                  <input
+                    type="number"
+                    name="valorDescontos"
+                    value={formData.valorDescontos}
+                    onChange={handleInputChange}
+                    step="0.01"
+                    min="0"
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                    placeholder="Ex: 100.00"
+                  />
                 </div>
 
                 <div className="md:col-span-2">
@@ -500,9 +695,11 @@ export const ContasReceberSection: React.FC = () => {
           <table className="w-full bg-[var(--color-surface)] rounded-md shadow">
             <thead>
               <tr className="border-b border-[var(--color-border)]">
+                <th className="text-left p-4 text-[var(--color-text-secondary)]">Documento/Parcela</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Descrição</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Cliente</th>
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">Valor</th>
+                <th className="text-left p-4 text-[var(--color-text-secondary)]">Valor Total</th>
+                <th className="text-left p-4 text-[var(--color-text-secondary)]">Saldo</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Vencimento</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Status</th>
                 <th className="text-center p-4 text-[var(--color-text-secondary)]">Ações</th>
@@ -514,33 +711,31 @@ export const ContasReceberSection: React.FC = () => {
                   key={conta.id}
                   className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]"
                 >
-                  <td className="p-4 text-[var(--color-text)]">{conta.descricao}</td>
-                  <td className="p-4 text-[var(--color-text)]">{conta.cliente}</td>
                   <td className="p-4 text-[var(--color-text)]">
-                    R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    {conta.documento}/{conta.serie} - {conta.parcela}
+                  </td>
+                  <td className="p-4 text-[var(--color-text)]">{conta.descricao}</td>
+                  <td className="p-4 text-[var(--color-text)]">{conta.pessoaNome || 'N/A'}</td>
+                  <td className="p-4 text-[var(--color-text)]">
+                    R$ {conta.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="p-4 text-[var(--color-text)]">
+                    R$ {conta.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="p-4 text-[var(--color-text)]">
                     {new Date(conta.vencimento).toLocaleDateString('pt-BR')}
                   </td>
                   <td className="p-4">
-                    <span
-                      className={`px-2 py-1 rounded text-sm ${
-                        conta.status === 'Recebida'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {conta.status}
-                    </span>
+                    <StatusBadge status={conta.status} />
                   </td>
                   <td className="p-4">
                     <div className="flex justify-center gap-2">
-                      {conta.status === 'Pendente' && (
+                      {(conta.status === StatusContaReceber.PENDENTE || conta.status === StatusContaReceber.PARCIAL) && (
                         <button
-                          className="px-3 py-1 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded text-sm hover:bg-[var(--color-primary-hover)] transition-colors"
-                          onClick={() => handleReceber(conta.id)}
+                          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                          onClick={() => handleBaixar(conta)}
                         >
-                          Receber
+                          Baixar
                         </button>
                       )}
                     </div>
