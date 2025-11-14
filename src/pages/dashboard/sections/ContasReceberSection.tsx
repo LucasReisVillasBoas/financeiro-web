@@ -4,6 +4,8 @@ import { StatusContaReceber, TipoContaReceber } from '../../../types/api.types';
 import type {
   ContaReceber,
   CreateContaReceberDto,
+  CreateContaReceberParceladaDto,
+  CancelarContaReceberDto,
   ContaBancaria,
   PlanoContas,
   CreateBaixaRecebimentoDto,
@@ -53,6 +55,29 @@ export const ContasReceberSection: React.FC = () => {
     valor: 0,
     acrescimos: 0,
     descontos: 0,
+    observacao: '',
+  });
+
+  const [showParceladoForm, setShowParceladoForm] = useState(false);
+  const [parceladoData, setParceladoData] = useState<CreateContaReceberParceladaDto>({
+    pessoaId: '',
+    planoContasId: '',
+    empresaId: '',
+    documento: '',
+    serie: '1',
+    tipo: TipoContaReceber.DUPLICATA,
+    dataEmissao: new Date().toISOString().split('T')[0],
+    primeiroVencimento: '',
+    descricao: '',
+    valorTotal: 0,
+    numeroParcelas: 1,
+    intervaloDias: 30,
+  });
+
+  const [showCancelarModal, setShowCancelarModal] = useState(false);
+  const [contaParaCancelar, setContaParaCancelar] = useState<ContaReceber | null>(null);
+  const [cancelarData, setCancelarData] = useState<CancelarContaReceberDto>({
+    justificativa: '',
   });
 
   useEffect(() => {
@@ -121,6 +146,7 @@ export const ContasReceberSection: React.FC = () => {
       valor: 0,
       acrescimos: 0,
       descontos: 0,
+      observacao: '',
     });
   };
 
@@ -206,6 +232,99 @@ export const ContasReceberSection: React.FC = () => {
     }
   };
 
+  const handleNovaContaParcelada = async () => {
+    setShowParceladoForm(true);
+    setFormError('');
+
+    try {
+      if (user?.clienteId) {
+        const empresas = await empresaService.findByCliente(user.clienteId);
+        if (empresas && empresas.length > 0) {
+          setParceladoData(prev => ({
+            ...prev,
+            empresaId: empresas[0].id,
+          }));
+
+          const planosResponse = await planoContasService.findByEmpresa(empresas[0].id);
+          const planosDisponiveis =
+            planosResponse.data?.filter(
+              (p: PlanoContas) => p.tipo === 'Receita' && p.permite_lancamento && p.ativo
+            ) || [];
+          setPlanosContas(planosDisponiveis);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao carregar planos de contas:', err);
+    }
+  };
+
+  const handleCloseParceladoForm = () => {
+    setShowParceladoForm(false);
+    setParceladoData({
+      pessoaId: '',
+      planoContasId: '',
+      empresaId: '',
+      documento: '',
+      serie: '1',
+      tipo: TipoContaReceber.DUPLICATA,
+      dataEmissao: new Date().toISOString().split('T')[0],
+      primeiroVencimento: '',
+      descricao: '',
+      valorTotal: 0,
+      numeroParcelas: 1,
+      intervaloDias: 30,
+    });
+    setFormError('');
+  };
+
+  const handleParceladoInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setParceladoData(prev => ({
+      ...prev,
+      [name]: ['valorTotal', 'numeroParcelas', 'intervaloDias'].includes(name)
+        ? parseFloat(value) || 0
+        : value,
+    }));
+  };
+
+  const handleSubmitParcelado = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+
+    try {
+      await contaReceberService.createParcelado(parceladoData);
+      await loadContasReceber();
+      handleCloseParceladoForm();
+    } catch (err: any) {
+      setFormError(err.message || 'Erro ao criar contas parceladas');
+    }
+  };
+
+  const handleCancelar = (conta: ContaReceber) => {
+    setContaParaCancelar(conta);
+    setShowCancelarModal(true);
+  };
+
+  const handleConfirmarCancelamento = async () => {
+    if (!contaParaCancelar) return;
+
+    try {
+      await contaReceberService.cancelar(contaParaCancelar.id, cancelarData);
+      await loadContasReceber();
+      setShowCancelarModal(false);
+      setContaParaCancelar(null);
+      setCancelarData({ justificativa: '' });
+    } catch (err: any) {
+      setError(err.message || 'Erro ao cancelar conta');
+    }
+  };
+
+  const handleCloseCancelarModal = () => {
+    setShowCancelarModal(false);
+    setContaParaCancelar(null);
+    setCancelarData({ justificativa: '' });
+  };
+
   const totalAReceber = contas
     .filter(
       conta =>
@@ -285,13 +404,21 @@ export const ContasReceberSection: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <button
-          className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors"
-          onClick={handleNovaConta}
-        >
-          Nova Receita
-        </button>
+      <div className="flex justify-between items-center gap-3">
+        <div className="flex gap-3">
+          <button
+            className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors"
+            onClick={handleNovaConta}
+          >
+            Nova Receita
+          </button>
+          <button
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            onClick={handleNovaContaParcelada}
+          >
+            Nova Receita Parcelada
+          </button>
+        </div>
       </div>
 
       {showBaixaModal && (
@@ -391,6 +518,21 @@ export const ContasReceberSection: React.FC = () => {
                   }
                   className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                   placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                  Observação
+                </label>
+                <input
+                  type="text"
+                  value={baixaData.observacao || ''}
+                  onChange={e =>
+                    setBaixaData(prev => ({ ...prev, observacao: e.target.value }))
+                  }
+                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  placeholder="Observações sobre o recebimento"
                 />
               </div>
 
@@ -677,6 +819,316 @@ export const ContasReceberSection: React.FC = () => {
         </div>
       )}
 
+      {showParceladoForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--color-surface)] rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b border-[var(--color-border)]">
+              <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                Nova Conta a Receber Parcelada
+              </h2>
+              <button
+                onClick={handleCloseParceladoForm}
+                className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitParcelado} className="p-6 space-y-4">
+              {formError && (
+                <div className="p-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md">
+                  {formError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Pessoa (Cliente) *
+                  </label>
+                  <select
+                    name="pessoaId"
+                    value={parceladoData.pessoaId}
+                    onChange={handleParceladoInputChange}
+                    required
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  >
+                    <option value="">Selecione uma pessoa</option>
+                    {pessoas.map(pessoa => (
+                      <option key={pessoa.id} value={pessoa.id}>
+                        {pessoa.razaoNome || pessoa.fantasiaApelido} - {pessoa.documento}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Documento *
+                  </label>
+                  <input
+                    type="text"
+                    name="documento"
+                    value={parceladoData.documento}
+                    onChange={handleParceladoInputChange}
+                    required
+                    placeholder="Ex: 000001"
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Série *
+                  </label>
+                  <input
+                    type="text"
+                    name="serie"
+                    value={parceladoData.serie}
+                    onChange={handleParceladoInputChange}
+                    required
+                    placeholder="Ex: 1"
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Tipo *
+                  </label>
+                  <select
+                    name="tipo"
+                    value={parceladoData.tipo}
+                    onChange={handleParceladoInputChange}
+                    required
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  >
+                    {Object.values(TipoContaReceber).map(tipo => (
+                      <option key={tipo} value={tipo}>
+                        {tipo.replace(/_/g, ' ')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Data Emissão *
+                  </label>
+                  <input
+                    type="date"
+                    name="dataEmissao"
+                    value={parceladoData.dataEmissao}
+                    onChange={handleParceladoInputChange}
+                    required
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Primeiro Vencimento *
+                  </label>
+                  <input
+                    type="date"
+                    name="primeiroVencimento"
+                    value={parceladoData.primeiroVencimento}
+                    onChange={handleParceladoInputChange}
+                    required
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Valor Total *
+                  </label>
+                  <input
+                    type="number"
+                    name="valorTotal"
+                    value={parceladoData.valorTotal}
+                    onChange={handleParceladoInputChange}
+                    required
+                    step="0.01"
+                    min="0"
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                    placeholder="Ex: 5000.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Número de Parcelas *
+                  </label>
+                  <input
+                    type="number"
+                    name="numeroParcelas"
+                    value={parceladoData.numeroParcelas}
+                    onChange={handleParceladoInputChange}
+                    required
+                    min="1"
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Intervalo entre Parcelas (dias)
+                  </label>
+                  <input
+                    type="number"
+                    name="intervaloDias"
+                    value={parceladoData.intervaloDias}
+                    onChange={handleParceladoInputChange}
+                    min="1"
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                    placeholder="30"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Descrição *
+                  </label>
+                  <input
+                    type="text"
+                    name="descricao"
+                    value={parceladoData.descricao}
+                    onChange={handleParceladoInputChange}
+                    required
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                    placeholder="Ex: Pagamento de projeto em 12x"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Plano de Contas (Receita)
+                  </label>
+                  <select
+                    name="planoContasId"
+                    value={parceladoData.planoContasId || ''}
+                    onChange={handleParceladoInputChange}
+                    className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  >
+                    <option value="">Selecione um plano de contas (opcional)</option>
+                    {planosContas.map(plano => (
+                      <option key={plano.id} value={plano.id}>
+                        {plano.codigo} - {plano.descricao}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {parceladoData.numeroParcelas > 0 && parceladoData.valorTotal > 0 && (
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                  <p className="text-sm text-blue-800 dark:text-blue-300">
+                    Serão criadas <strong>{parceladoData.numeroParcelas}</strong> parcelas de{' '}
+                    <strong>
+                      R${' '}
+                      {(parceladoData.valorTotal / parceladoData.numeroParcelas).toLocaleString(
+                        'pt-BR',
+                        { minimumFractionDigits: 2 }
+                      )}
+                    </strong>{' '}
+                    cada
+                  </p>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={handleCloseParceladoForm}
+                  className="px-4 py-2 bg-[var(--color-bg)] text-[var(--color-text)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface)] transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors"
+                >
+                  Gerar Parcelas
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showCancelarModal && contaParaCancelar && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--color-surface)] rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center p-6 border-b border-[var(--color-border)]">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+                Cancelar Conta a Receber
+              </h2>
+              <button
+                onClick={handleCloseCancelarModal}
+                className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+                <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                  Você está prestes a cancelar a conta:
+                </p>
+                <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-200 mt-2">
+                  {contaParaCancelar.documento}/{contaParaCancelar.serie} - Parcela{' '}
+                  {contaParaCancelar.parcela}
+                </p>
+                <p className="text-sm text-yellow-800 dark:text-yellow-300 mt-1">
+                  Valor: R${' '}
+                  {contaParaCancelar.valorTotal.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                  })}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                  Justificativa do Cancelamento *
+                </label>
+                <textarea
+                  value={cancelarData.justificativa}
+                  onChange={e => setCancelarData({ justificativa: e.target.value })}
+                  required
+                  rows={4}
+                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  placeholder="Digite o motivo do cancelamento..."
+                />
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md text-sm">
+                  {error}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 p-6 border-t border-[var(--color-border)]">
+              <button
+                onClick={handleCloseCancelarModal}
+                className="px-4 py-2 bg-[var(--color-bg)] text-[var(--color-text)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface)] transition-colors"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={handleConfirmarCancelamento}
+                disabled={!cancelarData.justificativa.trim()}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Confirmar Cancelamento
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 bg-[var(--color-surface)] rounded-md shadow">
           <div className="flex items-center justify-between">
@@ -781,12 +1233,20 @@ export const ContasReceberSection: React.FC = () => {
                     <div className="flex justify-center gap-2">
                       {(conta.status === StatusContaReceber.PENDENTE ||
                         conta.status === StatusContaReceber.PARCIAL) && (
-                        <button
-                          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                          onClick={() => handleBaixar(conta)}
-                        >
-                          Baixar
-                        </button>
+                        <>
+                          <button
+                            className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                            onClick={() => handleBaixar(conta)}
+                          >
+                            Baixar
+                          </button>
+                          <button
+                            className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                            onClick={() => handleCancelar(conta)}
+                          >
+                            Cancelar
+                          </button>
+                        </>
                       )}
                     </div>
                   </td>

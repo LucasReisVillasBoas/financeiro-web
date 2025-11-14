@@ -3,7 +3,6 @@ import type {
   CreatePlanoContasDto,
   UpdatePlanoContasDto,
   FilterPlanoContasDto,
-  PaginatedPlanoContasResponse,
   ImportPlanoContasDto,
   ImportResult,
   ApiResponse,
@@ -25,7 +24,7 @@ class PlanoContasService {
     return apiService.get<PlanoContas>(`${this.baseUrl}/${id}`);
   }
 
-  async findAll(filters?: FilterPlanoContasDto): Promise<ApiResponse<PlanoContas[] | PaginatedPlanoContasResponse>> {
+  async findAll(filters?: FilterPlanoContasDto): Promise<ApiResponse<PlanoContas[]>> {
     const params = new URLSearchParams();
 
     if (filters) {
@@ -39,7 +38,7 @@ class PlanoContasService {
     const query = params.toString();
     const url = query ? `${this.baseUrl}?${query}` : this.baseUrl;
 
-    return apiService.get<PlanoContas[] | PaginatedPlanoContasResponse>(url);
+    return apiService.get<PlanoContas[]>(url);
   }
 
   async findByEmpresa(empresaId: string): Promise<ApiResponse<PlanoContas[]>> {
@@ -66,26 +65,33 @@ class PlanoContasService {
     return apiService.get<PlanoContas[]>(`${this.baseUrl}/${id}/filhos`);
   }
 
-  async verificarUso(id: string): Promise<ApiResponse<{
-    emUso: boolean;
-    contasPagar: number;
-    contasReceber: number;
-    movimentacoes: number;
-    total: number;
-    detalhes?: string;
-  }>> {
-    return apiService.get(`${this.baseUrl}/${id}/uso`);
-  }
-
-  async substituirConta(contaOrigemId: string, contaDestinoId: string): Promise<ApiResponse<{
-    sucesso: boolean;
-    contasAtualizadas: number;
-    detalhes: {
+  async verificarUso(id: string): Promise<
+    ApiResponse<{
+      emUso: boolean;
       contasPagar: number;
       contasReceber: number;
       movimentacoes: number;
-    };
-  }>> {
+      total: number;
+      detalhes?: string;
+    }>
+  > {
+    return apiService.get(`${this.baseUrl}/${id}/uso`);
+  }
+
+  async substituirConta(
+    contaOrigemId: string,
+    contaDestinoId: string
+  ): Promise<
+    ApiResponse<{
+      sucesso: boolean;
+      contasAtualizadas: number;
+      detalhes: {
+        contasPagar: number;
+        contasReceber: number;
+        movimentacoes: number;
+      };
+    }>
+  > {
     return apiService.post(`${this.baseUrl}/${contaOrigemId}/substituir`, { contaDestinoId });
   }
 
@@ -94,7 +100,9 @@ class PlanoContasService {
   }
 
   async search(empresaId: string, term: string): Promise<ApiResponse<PlanoContas[]>> {
-    return apiService.get<PlanoContas[]>(`${this.baseUrl}/empresa/${empresaId}/search?term=${encodeURIComponent(term)}`);
+    return apiService.get<PlanoContas[]>(
+      `${this.baseUrl}/empresa/${empresaId}/search?term=${encodeURIComponent(term)}`
+    );
   }
 
   async inativar(id: string): Promise<ApiResponse<PlanoContas>> {
@@ -120,7 +128,7 @@ class PlanoContasService {
 
     const response = await fetch(`${API_BASE_URL}${this.baseUrl}/empresa/${empresaId}/export/csv`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -136,7 +144,12 @@ class PlanoContasService {
   }
 
   // Importação
-  async importCSV(empresaId: string, file: File, sobrescrever: boolean = false, dryRun: boolean = false): Promise<ApiResponse<ImportResult>> {
+  async importCSV(
+    empresaId: string,
+    file: File,
+    sobrescrever: boolean = false,
+    dryRun: boolean = false
+  ): Promise<ApiResponse<ImportResult>> {
     const token = localStorage.getItem('token');
     const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -148,7 +161,7 @@ class PlanoContasService {
     const response = await fetch(`${API_BASE_URL}${this.baseUrl}/empresa/${empresaId}/import/csv`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: formData,
     });
@@ -166,7 +179,10 @@ class PlanoContasService {
   }
 
   async validateImport(data: ImportPlanoContasDto): Promise<ApiResponse<ImportResult>> {
-    return apiService.post<ImportResult>(`${this.baseUrl}/empresa/${data.empresaId}/import/validate`, data);
+    return apiService.post<ImportResult>(
+      `${this.baseUrl}/empresa/${data.empresaId}/import/validate`,
+      data
+    );
   }
 }
 
