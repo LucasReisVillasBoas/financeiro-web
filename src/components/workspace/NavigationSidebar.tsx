@@ -14,6 +14,7 @@ import {
   FiLogOut,
   FiGrid,
   FiTrendingUp,
+  FiBarChart2,
 } from 'react-icons/fi';
 import { GiMoneyStack, GiBank } from 'react-icons/gi';
 import { MdOutlineDashboard } from 'react-icons/md';
@@ -130,6 +131,28 @@ export const menuItems: MenuItem[] = [
         id: 'financeiro-dre',
         label: 'DRE',
         icon: <FiTrendingUp size={14} />,
+      },
+    ],
+  },
+  {
+    id: 'relatorios',
+    label: 'Relatórios',
+    icon: <FiBarChart2 size={16} />,
+    children: [
+      {
+        id: 'relatorios',
+        label: 'Relatórios Gerais',
+        icon: <FiBarChart2 size={14} />,
+      },
+      {
+        id: 'relatorios-contas-receber',
+        label: 'Contas a Receber',
+        icon: <FiDollarSign size={14} />,
+      },
+      {
+        id: 'relatorios-contas-pagar',
+        label: 'Contas a Pagar',
+        icon: <FiFileText size={14} />,
       },
     ],
   },

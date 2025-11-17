@@ -481,6 +481,7 @@ export enum TipoContaPagar {
 
 export interface ContaPagar {
   id: string;
+  pessoa: Pessoa;
   documento: string;
   serie?: string;
   parcela: number;
@@ -599,7 +600,6 @@ export enum TipoContaReceber {
 export interface ContaReceber {
   id: string;
   pessoa: Pessoa;
-  pessoaNome?: string;
   pessoaDocumento?: string;
   empresaId: string;
   planoContasId: string;
@@ -990,4 +990,35 @@ export interface ResultadoImportacao {
   comSugestao: number;
   semSugestao: number;
   itens: ItemExtratoImportado[];
+}
+
+// Relatórios e Filtros
+export enum TipoRelatorio {
+  PESSOAS = 'pessoas',
+  CONTAS_BANCARIAS = 'contas-bancarias',
+  PLANO_CONTAS = 'plano-contas',
+  CONTAS_RECEBER = 'contas-receber',
+  CONTAS_PAGAR = 'contas-pagar',
+}
+
+export enum FormatoExportacao {
+  CSV = 'csv',
+  XLSX = 'xlsx',
+  PDF = 'pdf',
+}
+
+export interface FiltroRelatorio {
+  dataInicio?: string;
+  dataFim?: string;
+  nome?: string;
+  documento?: string;
+  situacao?: string;
+  ativo?: boolean;
+  tipo?: string;
+}
+
+export interface TotaisRelatorio {
+  total: number;
+  ativos: number;
+  inativos: number;
 }

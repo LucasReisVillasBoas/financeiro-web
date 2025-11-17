@@ -26,6 +26,9 @@ import { DreSection } from './sections/DreSection';
 import { PessoasSection } from './sections/PessoasSection';
 import { NovaPessoaSection } from './sections/NovaPessoaSection';
 import { EditarPessoaSection } from './sections/EditarPessoaSection';
+import { RelatoriosSection } from './sections/RelatoriosSection';
+import { RelatorioContasReceberSection } from './sections/RelatorioContasReceberSection';
+import { RelatorioContasPagarSection } from './sections/RelatorioContasPagarSection';
 
 const sectionTitles: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -51,6 +54,9 @@ const sectionTitles: Record<string, string> = {
   'financeiro-movimentacao': 'Movimentação Bancária',
   'financeiro-plano-contas': 'Plano de Contas',
   'financeiro-dre': 'DRE - Demonstração do Resultado',
+  relatorios: 'Relatórios',
+  'relatorios-contas-receber': 'Relatório de Contas a Receber',
+  'relatorios-contas-pagar': 'Relatório de Contas a Pagar',
 };
 
 export const MainWorkspace: React.FC = () => {
@@ -146,6 +152,12 @@ export const MainWorkspace: React.FC = () => {
         return <PlanoContasSection />;
       case 'financeiro-dre':
         return <DreSection />;
+      case 'relatorios':
+        return <RelatoriosSection />;
+      case 'relatorios-contas-receber':
+        return <RelatorioContasReceberSection />;
+      case 'relatorios-contas-pagar':
+        return <RelatorioContasPagarSection />;
       default:
         return (
           <div className="p-6 bg-[var(--color-surface)] rounded-md shadow">
