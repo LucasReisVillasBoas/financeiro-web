@@ -1022,3 +1022,133 @@ export interface TotaisRelatorio {
   ativos: number;
   inativos: number;
 }
+
+// Fluxo de Caixa
+export interface FluxoCaixaLinha {
+  data: string;
+  entradasRealizadas: number;
+  entradasPrevistas: number;
+  saidasRealizadas: number;
+  saidasPrevistas: number;
+  saldoDiarioRealizado: number;
+  saldoDiarioPrevisto: number;
+  saldoAcumuladoRealizado: number;
+  saldoAcumuladoPrevisto: number;
+  detalhes?: {
+    entradasRealizadas: Array<{
+      id: string;
+      descricao: string;
+      valor: number;
+      documento: string;
+      pessoa: string;
+    }>;
+    entradasPrevistas: Array<{
+      id: string;
+      descricao: string;
+      valor: number;
+      documento: string;
+      pessoa: string;
+      vencimento: string;
+    }>;
+    saidasRealizadas: Array<{
+      id: string;
+      descricao: string;
+      valor: number;
+      documento: string;
+      pessoa: string;
+    }>;
+    saidasPrevistas: Array<{
+      id: string;
+      descricao: string;
+      valor: number;
+      documento: string;
+      pessoa: string;
+      vencimento: string;
+    }>;
+  };
+}
+
+export interface FluxoCaixaFiltros {
+  dataInicio: string;
+  dataFim: string;
+  contaBancariaId?: string;
+  empresaId?: string;
+  consolidado?: boolean; // true = consolidado por todas empresas, false = filtrado por empresa
+}
+
+export interface FluxoCaixaResponse {
+  linhas: FluxoCaixaLinha[];
+  totais: {
+    totalEntradasRealizadas: number;
+    totalEntradasPrevistas: number;
+    totalSaidasRealizadas: number;
+    totalSaidasPrevistas: number;
+    saldoFinalRealizado: number;
+    saldoFinalPrevisto: number;
+  };
+  contaBancaria?: {
+    id: string;
+    banco: string;
+    agencia: string;
+    conta: string;
+    descricao: string;
+    saldo_inicial: number;
+  };
+  empresa?: {
+    id: string;
+    razao_social: string;
+    nome_fantasia: string;
+  };
+}
+
+// DRE - Demonstrativo de Resultado do Exercício
+export interface DreItemLinha {
+  id: string;
+  codigo: string;
+  descricao: string;
+  tipo: 'RECEITA' | 'CUSTO' | 'DESPESA' | 'RESULTADO';
+  nivel: number;
+  parentId?: string;
+  valor: number;
+  percentual?: number;
+  filhos?: DreItemLinha[];
+}
+
+export interface DreTotalizadores {
+  receitaBruta: number;
+  deducoes: number;
+  receitaLiquida: number;
+  custos: number;
+  margemBruta: number;
+  despesasOperacionais: number;
+  resultadoOperacional: number;
+  outrasReceitasDespesas: number;
+  resultadoAntesImpostos: number;
+  impostos: number;
+  resultadoLiquido: number;
+}
+
+export interface DreFiltros {
+  dataInicio: string;
+  dataFim: string;
+  empresaId?: string;
+  centroCustoId?: string;
+}
+
+export interface DreResponse {
+  itens: DreItemLinha[];
+  totalizadores: DreTotalizadores;
+  periodo: {
+    dataInicio: string;
+    dataFim: string;
+  };
+  empresa?: {
+    id: string;
+    razao_social: string;
+    nome_fantasia: string;
+  };
+  centroCusto?: {
+    id: string;
+    descricao: string;
+  };
+}

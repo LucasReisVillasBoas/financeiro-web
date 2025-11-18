@@ -72,6 +72,34 @@ class ApiService {
   async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
+
+  async getBlob(endpoint: string): Promise<Blob> {
+    const token = this.getAuthToken();
+    const headers: Record<string, string> = {};
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({
+        message: 'Erro ao processar requisição',
+      }));
+
+      const errorMessage = error.message || error.error || 'Erro na requisição';
+      const apiError: any = new Error(errorMessage);
+      apiError.statusCode = response.status;
+      apiError.details = error;
+      throw apiError;
+    }
+
+    return response.blob();
+  }
 }
 
 export const apiService = new ApiService();
