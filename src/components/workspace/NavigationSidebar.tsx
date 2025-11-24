@@ -164,6 +164,11 @@ export const menuItems: MenuItem[] = [
         label: 'DRE',
         icon: <FiBarChart2 size={14} />,
       },
+      {
+        id: 'relatorios-dre-fluxo-comparativo',
+        label: 'DRE x Fluxo (Comparativo)',
+        icon: <FiBarChart2 size={14} />,
+      },
     ],
   },
   {

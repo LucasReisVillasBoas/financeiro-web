@@ -15,6 +15,9 @@ import type { DreResponse, DreFiltros, DreItemLinha, Empresa } from '../../../ty
 import { dreRelatorioService } from '../../../services/dre-relatorio.service';
 import { empresaService } from '../../../services';
 import { useAuth } from '../../../context/AuthContext';
+import { useReportFilters } from '../../../hooks/useReportFilters';
+import { PaginationControls } from '../../../components/reports/PaginationControls';
+import { SortableTableHeader } from '../../../components/reports/SortableTableHeader';
 
 // Configure pdfMake fonts
 (pdfMake as any).vfs = pdfFonts;
@@ -26,6 +29,23 @@ export const DreRelatorioSection: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showFiltros, setShowFiltros] = useState(true);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  // Hook para ordenação e paginação (aplicado apenas aos itens raiz)
+  const {
+    paginationConfig,
+    filteredSortedPaginatedData,
+    setCurrentPage,
+    setItemsPerPage,
+    goToFirstPage,
+    goToLastPage,
+    goToNextPage,
+    goToPreviousPage,
+    requestSort,
+    sortConfig,
+  } = useReportFilters({
+    data: dados?.itens || [],
+    initialItemsPerPage: 25,
+  });
 
   const hoje = new Date();
   const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
@@ -65,6 +85,43 @@ export const DreRelatorioSection: React.FC = () => {
     }
   };
 
+  // Função para construir hierarquia a partir de lista plana
+  const construirHierarquia = (itens: DreItemLinha[]): DreItemLinha[] => {
+    if (!itens || itens.length === 0) return [];
+
+    // Criar um mapa de itens por ID
+    const itemsMap = new Map<string, DreItemLinha>();
+    const roots: DreItemLinha[] = [];
+
+    // Primeiro, criar cópias de todos os itens e adicionar ao mapa
+    itens.forEach(item => {
+      const itemCopy = { ...item, filhos: [] };
+      itemsMap.set(String(item.id), itemCopy);
+    });
+
+    // Segundo, construir a hierarquia
+    itens.forEach(item => {
+      const itemCopy = itemsMap.get(String(item.id));
+      if (!itemCopy) return;
+
+      if (item.parentId) {
+        const parent = itemsMap.get(String(item.parentId));
+        if (parent) {
+          if (!parent.filhos) parent.filhos = [];
+          parent.filhos.push(itemCopy);
+        } else {
+          // Se o parent não existe, adicionar como raiz
+          roots.push(itemCopy);
+        }
+      } else {
+        // Item sem parent é raiz
+        roots.push(itemCopy);
+      }
+    });
+
+    return roots;
+  };
+
   const buscarDados = async () => {
     if (!filtros.dataInicio || !filtros.dataFim || !filtros.empresaId) {
       return;
@@ -73,7 +130,30 @@ export const DreRelatorioSection: React.FC = () => {
     setLoading(true);
     try {
       const response = await dreRelatorioService.buscarRelatorio(filtros);
-      console.log('DRE Response:', response);
+      console.log('📥 DRE Response original:', response);
+      console.log('📋 Estrutura dos itens (original):');
+      response.itens?.forEach((item, idx) => {
+        console.log(`  ${idx + 1}. ${item.codigo} - ${item.descricao}`);
+        console.log(`     ID: "${item.id}" (tipo: ${typeof item.id})`);
+        console.log(`     Valor: ${item.valor}`);
+        console.log(`     Percentual: ${item.percentual} (tipo: ${typeof item.percentual})`);
+        console.log(`     ParentID: "${item.parentId || 'null'}"`);
+        console.log(`     Filhos: ${item.filhos?.length || 0}`);
+      });
+
+      // Construir hierarquia se os itens estiverem planos
+      if (response.itens && response.itens.length > 0) {
+        // Verificar se já está hierarquizado ou se precisa construir
+        const temHierarquia = response.itens.some(item => item.filhos && item.filhos.length > 0);
+
+        if (!temHierarquia) {
+          console.log('🔨 Construindo hierarquia...');
+          const itensHierarquicos = construirHierarquia(response.itens);
+          console.log('✅ Hierarquia construída:', itensHierarquicos);
+          response.itens = itensHierarquicos;
+        }
+      }
+
       setDados(response);
     } catch (error) {
       console.error('Erro ao buscar DRE:', error);
@@ -102,40 +182,28 @@ export const DreRelatorioSection: React.FC = () => {
   };
 
   const formatarPercentual = (percentual: number) => {
-    return `${percentual.toFixed(2)}%`;
+    let valorFinal = percentual;
+
+    if (Math.abs(percentual) < 1 && percentual !== 0) {
+      valorFinal = percentual * 100;
+      console.log(`📊 Convertendo percentual: ${percentual} → ${valorFinal}%`);
+    }
+
+    return `${valorFinal.toFixed(2)}%`;
   };
 
   const toggleExpand = (itemId: string) => {
+    const id = String(itemId);
     const newExpanded = new Set(expandedItems);
-    if (newExpanded.has(itemId)) {
-      newExpanded.delete(itemId);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
     } else {
-      newExpanded.add(itemId);
+      newExpanded.add(id);
     }
     setExpandedItems(newExpanded);
   };
 
-  const expandirTodos = () => {
-    if (dados) {
-      const allIds = new Set<string>();
-      const collectIds = (itens: DreItemLinha[]) => {
-        itens.forEach(item => {
-          if (item.filhos && item.filhos.length > 0) {
-            allIds.add(item.id);
-            collectIds(item.filhos);
-          }
-        });
-      };
-      collectIds(dados.itens);
-      setExpandedItems(allIds);
-    }
-  };
-
-  const recolherTodos = () => {
-    setExpandedItems(new Set());
-  };
-
-  // Exporta��o CSV
+  // Exportação CSV
   const exportarCSV = () => {
     if (!dados || dados.itens.length === 0) {
       alert('N�o h� dados para exportar');
@@ -175,7 +243,7 @@ export const DreRelatorioSection: React.FC = () => {
     link.click();
   };
 
-  // Exporta��o XLSX
+  // Exportação XLSX
   const exportarXLSX = () => {
     if (!dados || dados.itens.length === 0) {
       alert('N�o h� dados para exportar');
@@ -236,7 +304,7 @@ export const DreRelatorioSection: React.FC = () => {
     XLSX.writeFile(workbook, `dre-${filtros.dataInicio}-${filtros.dataFim}.xlsx`);
   };
 
-  // Exporta��o PDF
+  // Exportação PDF
   const exportarPDF = () => {
     if (!dados || dados.itens.length === 0) {
       alert('N�o h� dados para exportar');
@@ -377,7 +445,8 @@ export const DreRelatorioSection: React.FC = () => {
 
   const renderItem = (item: DreItemLinha, nivel: number = 0) => {
     const hasChildren = item.filhos && item.filhos.length > 0;
-    const isExpanded = expandedItems.has(item.id);
+    const id = String(item.id);
+    const isExpanded = expandedItems.has(id);
     const isResultado = item.tipo === 'RESULTADO';
 
     return (
@@ -445,7 +514,7 @@ export const DreRelatorioSection: React.FC = () => {
       {/* Filtros */}
       {showFiltros && (
         <div className="bg-[var(--color-card)] rounded-lg p-6 shadow-sm border border-[var(--color-border)]">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Data Início */}
             <div>
               <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
@@ -502,16 +571,38 @@ export const DreRelatorioSection: React.FC = () => {
               </select>
             </div>
 
-            {/* Bot�o Limpar */}
-            <div className="flex items-end">
-              <button
-                onClick={limparFiltros}
-                className="w-full px-4 py-2 bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-border-hover)] transition-colors"
-              >
-                <FiX className="inline mr-2" />
-                Limpar Filtros
-              </button>
+            {/* Centro de Custo */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                Centro de Custo (Opcional)
+              </label>
+              <input
+                type="text"
+                value={filtros.centroCustoId || ''}
+                onChange={e => {
+                  const newFiltros = { ...filtros };
+                  if (e.target.value && e.target.value.trim() !== '') {
+                    newFiltros.centroCustoId = e.target.value.trim();
+                  } else {
+                    delete newFiltros.centroCustoId;
+                  }
+                  setFiltros(newFiltros);
+                }}
+                placeholder="ID do centro de custo"
+                className="w-full px-4 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+              />
             </div>
+          </div>
+
+          {/* Botão Limpar - linha separada */}
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={limparFiltros}
+              className="px-6 py-2 bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-border-hover)] transition-colors"
+            >
+              <FiX className="inline mr-2" />
+              Limpar Filtros
+            </button>
           </div>
         </div>
       )}
@@ -553,23 +644,9 @@ export const DreRelatorioSection: React.FC = () => {
         </div>
       )}
 
-      {/* Bot�es de A��o */}
+      {/* Botões de Ação */}
       {dados && dados.itens.length > 0 && (
         <div className="flex gap-3 flex-wrap">
-          <button
-            onClick={expandirTodos}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            <FiChevronDown size={18} />
-            Expandir Todos
-          </button>
-          <button
-            onClick={recolherTodos}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            <FiChevronRight size={18} />
-            Recolher Todos
-          </button>
           <button
             onClick={exportarCSV}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -605,25 +682,60 @@ export const DreRelatorioSection: React.FC = () => {
             <table className="w-full">
               <thead className="bg-[var(--color-bg)] border-b border-[var(--color-border)]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
-                    Código
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
-                    Descrição
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
-                    Valor
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
-                    %
-                  </th>
+                  <SortableTableHeader
+                    label="Código"
+                    sortKey="codigo"
+                    currentSortKey={sortConfig?.key}
+                    sortDirection={sortConfig?.direction}
+                    onSort={requestSort}
+                    align="left"
+                    className="uppercase tracking-wider text-xs font-medium"
+                  />
+                  <SortableTableHeader
+                    label="Descrição"
+                    sortKey="descricao"
+                    currentSortKey={sortConfig?.key}
+                    sortDirection={sortConfig?.direction}
+                    onSort={requestSort}
+                    align="left"
+                    className="uppercase tracking-wider text-xs font-medium"
+                  />
+                  <SortableTableHeader
+                    label="Valor"
+                    sortKey="valor"
+                    currentSortKey={sortConfig?.key}
+                    sortDirection={sortConfig?.direction}
+                    onSort={requestSort}
+                    align="right"
+                    className="uppercase tracking-wider text-xs font-medium"
+                  />
+                  <SortableTableHeader
+                    label="%"
+                    sortKey="percentual"
+                    currentSortKey={sortConfig?.key}
+                    sortDirection={sortConfig?.direction}
+                    onSort={requestSort}
+                    align="right"
+                    className="uppercase tracking-wider text-xs font-medium"
+                  />
                 </tr>
               </thead>
               <tbody className="bg-[var(--color-card)] divide-y divide-[var(--color-border)]">
-                {dados.itens.map(item => renderItem(item))}
+                {filteredSortedPaginatedData.map(item => renderItem(item))}
               </tbody>
             </table>
           </div>
+
+          {/* Controles de Paginação */}
+          <PaginationControls
+            config={paginationConfig}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            onFirstPage={goToFirstPage}
+            onLastPage={goToLastPage}
+            onNextPage={goToNextPage}
+            onPreviousPage={goToPreviousPage}
+          />
         </div>
       ) : (
         <div className="bg-[var(--color-card)] rounded-lg p-12 text-center border border-[var(--color-border)]">
