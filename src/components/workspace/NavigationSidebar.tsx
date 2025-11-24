@@ -154,6 +154,21 @@ export const menuItems: MenuItem[] = [
         label: 'Contas a Pagar',
         icon: <FiFileText size={14} />,
       },
+      {
+        id: 'relatorios-fluxo-caixa',
+        label: 'Fluxo de Caixa',
+        icon: <FiTrendingUp size={14} />,
+      },
+      {
+        id: 'relatorios-dre',
+        label: 'DRE',
+        icon: <FiBarChart2 size={14} />,
+      },
+      {
+        id: 'relatorios-dre-fluxo-comparativo',
+        label: 'DRE x Fluxo (Comparativo)',
+        icon: <FiBarChart2 size={14} />,
+      },
     ],
   },
   {
