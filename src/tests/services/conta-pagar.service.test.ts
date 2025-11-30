@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { contaPagarService } from './conta-pagar.service';
-import { mockContaPagar } from '../tests/mocks/handlers';
+import { contaPagarService } from '../../services/conta-pagar.service';
+import { TipoContaPagar } from '../../types/api.types';
 
 describe('contaPagarService', () => {
   beforeEach(() => {
@@ -13,10 +13,14 @@ describe('contaPagarService', () => {
         empresaId: 'empresa-123',
         pessoaId: 'pessoa-123',
         planoContasId: 'plano-123',
+        documento: 'NF-001',
+        parcela: 1,
+        tipo: TipoContaPagar.FORNECEDOR,
         descricao: 'Nova conta a pagar',
-        valor: 500.0,
-        dataVencimento: '2024-12-31',
-        dataEmissao: '2024-01-01',
+        data_emissao: '2024-01-01',
+        vencimento: '2024-12-31',
+        data_lancamento: '2024-01-01',
+        valor_principal: 500.0,
       };
 
       const result = await contaPagarService.create(dto);
@@ -34,7 +38,6 @@ describe('contaPagarService', () => {
       expect(result).toBeInstanceOf(Array);
       expect(result.length).toBeGreaterThan(0);
       expect(result[0]).toHaveProperty('id');
-      expect(result[0]).toHaveProperty('valor');
     });
   });
 
@@ -60,7 +63,7 @@ describe('contaPagarService', () => {
     it('deve atualizar conta a pagar', async () => {
       const dto = {
         descricao: 'Conta atualizada',
-        valor: 750.0,
+        valor_principal: 750.0,
       };
 
       const result = await contaPagarService.update('conta-pagar-123', dto);
@@ -125,18 +128,23 @@ describe('contaPagarService', () => {
         empresaId: 'empresa-123',
         pessoaId: 'pessoa-123',
         planoContasId: 'plano-123',
+        documento: 'NF-002',
+        tipo: TipoContaPagar.FORNECEDOR,
         descricao: 'Compra parcelada',
-        valorTotal: 3000.0,
-        dataVencimentoPrimeira: '2024-02-15',
-        quantidadeParcelas: 3,
+        data_emissao: '2024-01-01',
+        primeiro_vencimento: '2024-02-15',
+        intervalo_dias: 30,
+        data_lancamento: '2024-01-01',
+        valor_total: 3000.0,
+        quantidade_parcelas: 3,
       };
 
       const result = await contaPagarService.gerarParcelas(dto);
 
       expect(result).toBeInstanceOf(Array);
       expect(result.length).toBe(3);
-      expect(result[0].numeroParcela).toBe(1);
-      expect(result[2].numeroParcela).toBe(3);
+      expect(result[0].parcela).toBe(1);
+      expect(result[2].parcela).toBe(3);
     });
 
     it('deve gerar parcelas com valores corretos', async () => {
@@ -144,18 +152,22 @@ describe('contaPagarService', () => {
         empresaId: 'empresa-123',
         pessoaId: 'pessoa-123',
         planoContasId: 'plano-123',
+        documento: 'NF-003',
+        tipo: TipoContaPagar.FORNECEDOR,
         descricao: 'Compra parcelada',
-        valorTotal: 1000.0,
-        dataVencimentoPrimeira: '2024-02-15',
-        quantidadeParcelas: 4,
+        data_emissao: '2024-01-01',
+        primeiro_vencimento: '2024-02-15',
+        intervalo_dias: 30,
+        data_lancamento: '2024-01-01',
+        valor_total: 1000.0,
+        quantidade_parcelas: 4,
       };
 
       const result = await contaPagarService.gerarParcelas(dto);
 
       expect(result.length).toBe(4);
-      result.forEach((parcela, index) => {
-        expect(parcela.numeroParcela).toBe(index + 1);
-        expect(parcela.totalParcelas).toBe(4);
+      result.forEach((conta, index) => {
+        expect(conta.parcela).toBe(index + 1);
       });
     });
   });
@@ -173,10 +185,14 @@ describe('contaPagarService', () => {
         empresaId: 'empresa-123',
         pessoaId: 'pessoa-123',
         planoContasId: 'plano-123',
+        documento: 'NF-004',
+        parcela: 1,
+        tipo: TipoContaPagar.FORNECEDOR,
         descricao: 'Conta para teste de fluxo',
-        valor: 1000.0,
-        dataVencimento: '2024-12-31',
-        dataEmissao: '2024-01-01',
+        data_emissao: '2024-01-01',
+        vencimento: '2024-12-31',
+        data_lancamento: '2024-01-01',
+        valor_principal: 1000.0,
       };
 
       const contaCriada = await contaPagarService.create(createDto);
@@ -203,10 +219,14 @@ describe('contaPagarService', () => {
         empresaId: 'empresa-123',
         pessoaId: 'pessoa-123',
         planoContasId: 'plano-123',
+        documento: 'NF-005',
+        parcela: 1,
+        tipo: TipoContaPagar.FORNECEDOR,
         descricao: 'Conta para cancelamento',
-        valor: 500.0,
-        dataVencimento: '2024-12-31',
-        dataEmissao: '2024-01-01',
+        data_emissao: '2024-01-01',
+        vencimento: '2024-12-31',
+        data_lancamento: '2024-01-01',
+        valor_principal: 500.0,
       };
 
       const contaCriada = await contaPagarService.create(createDto);

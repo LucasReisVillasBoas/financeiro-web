@@ -14,7 +14,7 @@ import {
   validarData,
   formatarData,
   dataParaISO,
-} from './validators';
+} from '../../utils/validators';
 
 describe('validators', () => {
   describe('validarCPF', () => {

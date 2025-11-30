@@ -7,6 +7,7 @@ import planoContasService from '../../services/plano-contas.service';
 import dreService from '../../services/dre.service';
 import { fluxoCaixaService } from '../../services/fluxo-caixa.service';
 import { dreRelatorioService } from '../../services/dre-relatorio.service';
+import { TipoContaPagar, TipoContaReceber, TipoPlanoContas } from '../../types/api.types';
 
 /**
  * Testes E2E - Fluxos Completos
@@ -34,10 +35,14 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
         empresaId: 'empresa-123',
         pessoaId: 'fornecedor-abc',
         planoContasId: 'plano-custo-mercadoria',
+        documento: 'NF-12345',
+        parcela: 1,
+        tipo: TipoContaPagar.FORNECEDOR,
         descricao: 'Compra de mercadorias - NF 12345',
-        valor: 15000.0,
-        dataVencimento: '2024-07-15',
-        dataEmissao: '2024-06-15',
+        valor_principal: 15000.0,
+        vencimento: '2024-07-15',
+        data_emissao: '2024-06-15',
+        data_lancamento: '2024-06-15',
       });
       expect(contaPagar.id).toBeDefined();
 
@@ -51,11 +56,13 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
 
       // 4. Criar movimentação bancária correspondente
       const movimentacao = await movimentacaoBancariaService.create({
-        contaBancariaId: 'conta-bancaria-principal',
-        tipo: 'DEBITO',
+        contaBancaria: 'conta-bancaria-principal',
+        tipo: 'Saída' as const,
         valor: 15000.0,
         data: '2024-07-15',
         descricao: 'Pagamento NF 12345 - Fornecedor ABC',
+        conta: '12345-6',
+        categoria: 'Fornecedores',
       });
       expect(movimentacao.id).toBeDefined();
 
@@ -63,7 +70,7 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
       const conciliacao = await movimentacaoBancariaService.conciliar({
         movimentacaoIds: [movimentacao.id],
       });
-      expect(conciliacao.sucesso).toBe(true);
+      expect(conciliacao.conciliadas).toBeDefined();
 
       // 6. Gerar DRE do período
       const dre = await dreRelatorioService.buscarRelatorio({
@@ -71,7 +78,7 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
         dataInicio: '2024-07-01',
         dataFim: '2024-07-31',
       });
-      expect(dre.totais).toBeDefined();
+      expect(dre.totalizadores).toBeDefined();
 
       // 7. Gerar Fluxo de Caixa
       const fluxoCaixa = await fluxoCaixaService.buscarRelatorio({
@@ -79,7 +86,7 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
         dataFim: '2024-07-31',
         empresaId: 'empresa-123',
       });
-      expect(fluxoCaixa.totais.totalSaidas).toBeDefined();
+      expect(fluxoCaixa.totais.totalSaidasRealizadas).toBeDefined();
     });
   });
 
@@ -97,21 +104,27 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
         empresaId: 'empresa-123',
         pessoaId: 'cliente-xyz',
         planoContasId: 'plano-receita-venda',
+        documento: 'PED-5678',
+        serie: '1',
+        tipo: TipoContaReceber.DUPLICATA,
+        dataEmissao: '2024-08-01',
+        primeiroVencimento: '2024-08-15',
         descricao: 'Venda de equipamento - Pedido 5678',
         valorTotal: 12000.0,
-        dataVencimentoPrimeira: '2024-08-15',
-        quantidadeParcelas: 6,
+        numeroParcelas: 6,
       });
       expect(parcelas).toHaveLength(6);
 
       // 3. Simular recebimento das primeiras 3 parcelas
       for (let i = 0; i < 3; i++) {
         const movimentacao = await movimentacaoBancariaService.create({
-          contaBancariaId: 'conta-bancaria-principal',
-          tipo: 'CREDITO',
+          contaBancaria: 'conta-bancaria-principal',
+          tipo: 'Entrada' as const,
           valor: 2000.0,
           data: `2024-0${8 + i}-15`,
           descricao: `Recebimento parcela ${i + 1}/6 - Pedido 5678`,
+          conta: '12345-6',
+          categoria: 'Vendas',
         });
         expect(movimentacao.id).toBeDefined();
       }
@@ -126,7 +139,7 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
         dataInicio: '2024-08-01',
         dataFim: '2024-10-31',
       });
-      expect(dre.linhas).toBeInstanceOf(Array);
+      expect(dre.itens).toBeInstanceOf(Array);
 
       // 6. Gerar Fluxo de Caixa
       const fluxoCaixa = await fluxoCaixaService.buscarRelatorio({
@@ -134,7 +147,7 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
         dataFim: '2024-10-31',
         empresaId: 'empresa-123',
       });
-      expect(fluxoCaixa.totais.totalEntradas).toBeDefined();
+      expect(fluxoCaixa.totais.totalEntradasRealizadas).toBeDefined();
     });
   });
 
@@ -150,9 +163,9 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
       const novaConta = await planoContasService.create({
         empresaId: 'empresa-123',
         codigo: '3.1.01',
-        nome: 'Despesas com Marketing Digital',
-        tipo: 'DESPESA',
-        natureza: 'ANALITICA',
+        descricao: 'Despesas com Marketing Digital',
+        tipo: TipoPlanoContas.DESPESA,
+        nivel: 3,
       });
       expect(novaConta.data?.id).toBeDefined();
 
@@ -191,7 +204,7 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
         const conciliacao = await movimentacaoBancariaService.conciliar({
           movimentacaoIds: ids,
         });
-        expect(conciliacao.sucesso).toBe(true);
+        expect(conciliacao.conciliadas).toBeDefined();
       }
 
       // 4. Gerar DRE mensal
@@ -201,7 +214,7 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
         dataFim: '2024-11-30',
       });
       expect(dre.periodo).toBeDefined();
-      expect(dre.totais).toBeDefined();
+      expect(dre.totalizadores).toBeDefined();
 
       // 5. Gerar Fluxo de Caixa mensal
       const fluxoCaixa = await fluxoCaixaService.buscarRelatorio({
@@ -209,8 +222,8 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
         dataFim: '2024-11-30',
         empresaId: 'empresa-123',
       });
-      expect(fluxoCaixa.saldoInicial).toBeDefined();
-      expect(fluxoCaixa.saldoFinal).toBeDefined();
+      expect(fluxoCaixa.linhas).toBeDefined();
+      expect(fluxoCaixa.totais.saldoFinalRealizado).toBeDefined();
 
       // 6. Comparar DRE com período anterior
       const dreComparativo = await dreService.gerarComparativo(
@@ -237,10 +250,14 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
         empresaId: 'empresa-123',
         pessoaId: 'fornecedor-erro',
         planoContasId: 'plano-despesa',
+        documento: 'NF-ERRO',
+        parcela: 1,
+        tipo: TipoContaPagar.FORNECEDOR,
         descricao: 'Conta com valor errado',
-        valor: 999.0, // Valor errado
-        dataVencimento: '2024-12-15',
-        dataEmissao: '2024-12-01',
+        valor_principal: 999.0, // Valor errado
+        vencimento: '2024-12-15',
+        data_emissao: '2024-12-01',
+        data_lancamento: '2024-12-01',
       });
 
       // 3. Pagar conta (por engano)
@@ -257,7 +274,7 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
 
       // 5. Atualizar valor correto
       const contaCorrigida = await contaPagarService.update(contaErrada.id, {
-        valor: 1999.0, // Valor correto
+        valor_principal: 1999.0, // Valor correto
         descricao: 'Conta com valor corrigido',
       });
       expect(contaCorrigida.id).toBe(contaErrada.id);

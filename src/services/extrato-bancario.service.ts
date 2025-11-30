@@ -1,9 +1,9 @@
-import api from './api';
-import {
+import { apiService } from './api.service';
+import type {
   ApiResponse,
   ExtratoBancario,
   ResultadoImportacao,
-  FormatoExtrato
+  FormatoExtrato,
 } from '../types/api.types';
 
 export class ExtratoBancarioService {
@@ -20,71 +20,54 @@ export class ExtratoBancarioService {
     formData.append('contaBancariaId', contaBancariaId);
     formData.append('formato', formato);
 
-    const response = await api.post<ApiResponse<ResultadoImportacao>>(
+    return apiService.postFormData<ResultadoImportacao>(
       '/extratos-bancarios/importar',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
-
-    return response.data;
   }
 
   /**
    * Lista todos os extratos importados
    */
-  async findAll(contaBancariaId?: string): Promise<ApiResponse<ExtratoBancario[]>> {
-    const params = contaBancariaId ? { contaBancariaId } : {};
-    const response = await api.get<ApiResponse<ExtratoBancario[]>>(
-      '/extratos-bancarios',
-      { params }
+  async findAll(contaBancariaId?: string): Promise<ExtratoBancario[]> {
+    const queryString = contaBancariaId ? `?contaBancariaId=${contaBancariaId}` : '';
+    const response: ApiResponse<ExtratoBancario[]> = await apiService.get(
+      `/extratos-bancarios${queryString}`
     );
-    return response.data;
+    return response.data || [];
   }
 
   /**
    * Lista extratos pendentes de conciliação
    */
-  async findPendentes(contaBancariaId: string): Promise<ApiResponse<ExtratoBancario[]>> {
-    const response = await api.get<ApiResponse<ExtratoBancario[]>>(
-      '/extratos-bancarios/pendentes',
-      { params: { contaBancariaId } }
+  async findPendentes(contaBancariaId: string): Promise<ExtratoBancario[]> {
+    const response: ApiResponse<ExtratoBancario[]> = await apiService.get(
+      `/extratos-bancarios/pendentes?contaBancariaId=${contaBancariaId}`
     );
-    return response.data;
+    return response.data || [];
   }
 
   /**
    * Aceita sugestão de conciliação
    */
-  async aceitarSugestao(itemId: string): Promise<ApiResponse<void>> {
-    const response = await api.post<ApiResponse<void>>(
-      `/extratos-bancarios/${itemId}/aceitar`
-    );
-    return response.data;
+  async aceitarSugestao(itemId: string): Promise<void> {
+    await apiService.post(`/extratos-bancarios/${itemId}/aceitar`, {});
   }
 
   /**
    * Rejeita sugestão de conciliação
    */
-  async rejeitarSugestao(itemId: string): Promise<ApiResponse<void>> {
-    const response = await api.post<ApiResponse<void>>(
-      `/extratos-bancarios/${itemId}/rejeitar`
-    );
-    return response.data;
+  async rejeitarSugestao(itemId: string): Promise<void> {
+    await apiService.post(`/extratos-bancarios/${itemId}/rejeitar`, {});
   }
 
   /**
    * Ignora item do extrato
    */
-  async ignorarItem(itemId: string): Promise<ApiResponse<void>> {
-    const response = await api.post<ApiResponse<void>>(
-      `/extratos-bancarios/${itemId}/ignorar`
-    );
-    return response.data;
+  async ignorarItem(itemId: string): Promise<void> {
+    await apiService.post(`/extratos-bancarios/${itemId}/ignorar`, {});
   }
 }
 
-export default new ExtratoBancarioService();
+export const extratoBancarioService = new ExtratoBancarioService();
+export default extratoBancarioService;

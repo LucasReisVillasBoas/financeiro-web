@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { dreRelatorioService } from './dre-relatorio.service';
-import { server } from '../tests/mocks/server';
+import { dreRelatorioService } from '../../services/dre-relatorio.service';
+import { server } from '../mocks/server';
 import { http, HttpResponse } from 'msw';
 
 const API_BASE_URL = 'http://localhost:3002';
@@ -22,8 +22,8 @@ describe('dreRelatorioService', () => {
 
       expect(result).toBeDefined();
       expect(result.periodo).toBeDefined();
-      expect(result.linhas).toBeInstanceOf(Array);
-      expect(result.totais).toBeDefined();
+      expect(result.itens).toBeInstanceOf(Array);
+      expect(result.totalizadores).toBeDefined();
     });
 
     it('deve buscar relatório DRE com centro de custo', async () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { fluxoCaixaService } from './fluxo-caixa.service';
-import { server } from '../tests/mocks/server';
+import { fluxoCaixaService } from '../../services/fluxo-caixa.service';
+import { server } from '../mocks/server';
 import { http, HttpResponse } from 'msw';
 
 const API_BASE_URL = 'http://localhost:3002';
@@ -20,11 +20,9 @@ describe('fluxoCaixaService', () => {
       const result = await fluxoCaixaService.buscarRelatorio(filtros);
 
       expect(result).toBeDefined();
-      expect(result.periodo).toBeDefined();
-      expect(result.saldoInicial).toBeDefined();
-      expect(result.saldoFinal).toBeDefined();
       expect(result.linhas).toBeInstanceOf(Array);
       expect(result.totais).toBeDefined();
+      expect(result.totais.saldoFinalRealizado).toBeDefined();
     });
 
     it('deve buscar fluxo de caixa com conta bancária específica', async () => {
@@ -71,9 +69,9 @@ describe('fluxoCaixaService', () => {
 
       const result = await fluxoCaixaService.buscarRelatorio(filtros);
 
-      expect(result.totais).toHaveProperty('totalEntradas');
-      expect(result.totais).toHaveProperty('totalSaidas');
-      expect(result.totais).toHaveProperty('saldoPeriodo');
+      expect(result.totais).toHaveProperty('totalEntradasRealizadas');
+      expect(result.totais).toHaveProperty('totalSaidasRealizadas');
+      expect(result.totais).toHaveProperty('saldoFinalRealizado');
     });
   });
 
@@ -176,7 +174,7 @@ describe('fluxoCaixaService', () => {
         empresaId: 'empresa-123',
       });
       expect(fluxoMensal).toBeDefined();
-      expect(fluxoMensal.saldoFinal).toBeDefined();
+      expect(fluxoMensal.totais.saldoFinalRealizado).toBeDefined();
 
       // Fluxo de caixa trimestral
       const fluxoTrimestral = await fluxoCaixaService.buscarRelatorio({

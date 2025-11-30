@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import dreService from './dre.service';
+import dreService from '../../services/dre.service';
 
 describe('dreService', () => {
   beforeEach(() => {
@@ -17,17 +17,17 @@ describe('dreService', () => {
       const response = await dreService.gerarDre(filtro);
 
       expect(response.data).toBeDefined();
-      expect(response.data?.periodo).toBeDefined();
-      expect(response.data?.linhas).toBeInstanceOf(Array);
+      expect(response.data?.dataInicio).toBeDefined();
+      expect(response.data?.dataFim).toBeDefined();
       expect(response.data?.totais).toBeDefined();
     });
 
-    it('deve gerar DRE com consolidação mensal', async () => {
+    it('deve gerar DRE com consolidação por empresa', async () => {
       const filtro = {
         empresaId: 'empresa-123',
         dataInicio: '2024-01-01',
         dataFim: '2024-12-31',
-        consolidarPor: 'mensal',
+        consolidarPor: 'empresa' as const,
       };
 
       const response = await dreService.gerarDre(filtro);
@@ -44,7 +44,8 @@ describe('dreService', () => {
 
       const response = await dreService.gerarDre(filtro);
 
-      expect(response.data?.periodo).toBeDefined();
+      expect(response.data?.dataInicio).toBeDefined();
+      expect(response.data?.dataFim).toBeDefined();
     });
   });
 

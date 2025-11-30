@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { authService } from './auth.service';
-import { server } from '../tests/mocks/server';
+import { authService } from '../../services/auth.service';
+import { server } from '../mocks/server';
 import { http, HttpResponse } from 'msw';
-import { mockToken } from '../tests/mocks/handlers';
+import { mockToken } from '../mocks/handlers';
 
 const API_BASE_URL = 'http://localhost:3002';
 

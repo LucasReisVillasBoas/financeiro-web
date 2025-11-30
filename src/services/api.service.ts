@@ -73,6 +73,35 @@ class ApiService {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
 
+  async postFormData<T>(endpoint: string, formData: FormData): Promise<ApiResponse<T>> {
+    const token = this.getAuthToken();
+    const headers: Record<string, string> = {};
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({
+        message: 'Erro ao processar requisição',
+      }));
+
+      const errorMessage = error.message || error.error || 'Erro na requisição';
+      const apiError: any = new Error(errorMessage);
+      apiError.statusCode = response.status;
+      apiError.details = error;
+      throw apiError;
+    }
+
+    return response.json();
+  }
+
   async getBlob(endpoint: string): Promise<Blob> {
     const token = this.getAuthToken();
     const headers: Record<string, string> = {};

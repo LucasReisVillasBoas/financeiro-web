@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import planoContasService from './plano-contas.service';
-import { mockPlanoContas } from '../tests/mocks/handlers';
+import planoContasService from '../../services/plano-contas.service';
+import { TipoPlanoContas } from '../../types/api.types';
 
 describe('planoContasService', () => {
   beforeEach(() => {
@@ -12,9 +12,9 @@ describe('planoContasService', () => {
       const dto = {
         empresaId: 'empresa-123',
         codigo: '1.1.02',
-        nome: 'Despesas Administrativas',
-        tipo: 'DESPESA',
-        natureza: 'ANALITICA',
+        descricao: 'Despesas Administrativas',
+        tipo: TipoPlanoContas.DESPESA,
+        nivel: 3,
       };
 
       const response = await planoContasService.create(dto);
@@ -27,7 +27,7 @@ describe('planoContasService', () => {
   describe('update', () => {
     it('deve atualizar plano de contas', async () => {
       const dto = {
-        nome: 'Nome Atualizado',
+        descricao: 'Descrição Atualizada',
       };
 
       const response = await planoContasService.update('plano-123', dto);
@@ -56,7 +56,7 @@ describe('planoContasService', () => {
 
     it('deve listar com filtros', async () => {
       const filters = {
-        tipo: 'RECEITA',
+        tipo: TipoPlanoContas.RECEITA,
         ativo: true,
       };
 
@@ -178,9 +178,9 @@ describe('planoContasService', () => {
       const createDto = {
         empresaId: 'empresa-123',
         codigo: '2.1.01',
-        nome: 'Custo de Mercadorias',
-        tipo: 'CUSTO',
-        natureza: 'ANALITICA',
+        descricao: 'Custo de Mercadorias',
+        tipo: TipoPlanoContas.CUSTO,
+        nivel: 3,
       };
 
       const criadoResponse = await planoContasService.create(createDto);

@@ -30,31 +30,54 @@ export const mockContaPagar = {
   empresaId: 'empresa-123',
   pessoaId: 'pessoa-123',
   planoContasId: 'plano-123',
+  documento: 'NF-001',
+  serie: '1',
+  parcela: 1,
+  tipo: 'Fornecedor',
   descricao: 'Conta a Pagar Teste',
-  valor: 1000.0,
-  dataVencimento: '2024-12-31',
-  dataEmissao: '2024-01-01',
+  data_emissao: '2024-01-01',
+  vencimento: '2024-12-31',
+  data_lancamento: '2024-01-01',
+  valor_principal: 1000.0,
+  acrescimos: 0,
+  descontos: 0,
+  valor_total: 1000.0,
+  saldo: 1000.0,
   status: 'PENDENTE',
-  numeroParcela: 1,
-  totalParcelas: 1,
-  createdAt: '2024-01-01T00:00:00.000Z',
-  updatedAt: '2024-01-01T00:00:00.000Z',
+  pessoa: {
+    id: 'pessoa-123',
+    razaoNome: 'Fornecedor Teste',
+    documento: '12345678000199',
+  },
+  created_at: '2024-01-01T00:00:00.000Z',
+  updated_at: '2024-01-01T00:00:00.000Z',
 };
 
 export const mockContaReceber = {
   id: 'conta-receber-123',
   empresaId: 'empresa-123',
-  pessoaId: 'pessoa-456',
   planoContasId: 'plano-456',
+  documento: 'NF-001',
+  serie: '1',
+  parcela: 1,
+  tipo: 'BOLETO',
   descricao: 'Conta a Receber Teste',
-  valor: 2000.0,
-  dataVencimento: '2024-12-31',
   dataEmissao: '2024-01-01',
+  dataLancamento: '2024-01-01',
+  vencimento: '2024-12-31',
+  valorPrincipal: 2000.0,
+  valorAcrescimos: 0,
+  valorDescontos: 0,
+  valorTotal: 2000.0,
+  saldo: 2000.0,
   status: 'PENDENTE',
-  numeroParcela: 1,
-  totalParcelas: 1,
-  createdAt: '2024-01-01T00:00:00.000Z',
-  updatedAt: '2024-01-01T00:00:00.000Z',
+  criadoEm: '2024-01-01T00:00:00.000Z',
+  atualizadoEm: '2024-01-01T00:00:00.000Z',
+  pessoa: {
+    id: 'pessoa-456',
+    razaoNome: 'Cliente Teste',
+    documento: '12345678901',
+  },
 };
 
 export const mockContaBancaria = {
@@ -123,24 +146,39 @@ export const mockDreResponse = {
 };
 
 export const mockFluxoCaixaResponse = {
-  periodo: {
-    dataInicio: '2024-01-01',
-    dataFim: '2024-01-31',
-  },
-  saldoInicial: 10000,
-  saldoFinal: 15000,
   linhas: [
     {
       data: '2024-01-15',
-      entradas: 10000,
-      saidas: 5000,
-      saldo: 15000,
+      entradasRealizadas: 10000,
+      entradasPrevistas: 2000,
+      saidasRealizadas: 5000,
+      saidasPrevistas: 1000,
+      saldoDiarioRealizado: 5000,
+      saldoDiarioPrevisto: 1000,
+      saldoAcumuladoRealizado: 15000,
+      saldoAcumuladoPrevisto: 11000,
     },
   ],
   totais: {
-    totalEntradas: 10000,
-    totalSaidas: 5000,
-    saldoPeriodo: 5000,
+    totalEntradasRealizadas: 10000,
+    totalEntradasPrevistas: 2000,
+    totalSaidasRealizadas: 5000,
+    totalSaidasPrevistas: 1000,
+    saldoFinalRealizado: 15000,
+    saldoFinalPrevisto: 11000,
+  },
+  contaBancaria: {
+    id: 'conta-bancaria-123',
+    banco: 'Banco do Brasil',
+    agencia: '1234',
+    conta: '12345-6',
+    descricao: 'Conta Corrente Principal',
+    saldo_inicial: 10000,
+  },
+  empresa: {
+    id: 'empresa-123',
+    razao_social: 'Empresa Teste LTDA',
+    nome_fantasia: 'Empresa Teste',
   },
 };
 
@@ -195,7 +233,7 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/contas-pagar`, async ({ request }) => {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({
       message: 'Conta a pagar criada com sucesso',
       statusCode: 201,
@@ -204,7 +242,7 @@ export const handlers = [
   }),
 
   http.put(`${API_BASE_URL}/contas-pagar/:id`, async ({ request, params }) => {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({
       message: 'Conta a pagar atualizada com sucesso',
       statusCode: 200,
@@ -237,12 +275,12 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/contas-pagar/gerar-parcelas`, async ({ request }) => {
-    const body = (await request.json()) as { quantidadeParcelas: number };
-    const parcelas = Array.from({ length: body.quantidadeParcelas || 3 }, (_, i) => ({
+    const body = (await request.json()) as { quantidade_parcelas: number };
+    const numParcelas = body.quantidade_parcelas || 3;
+    const parcelas = Array.from({ length: numParcelas }, (_, i) => ({
       ...mockContaPagar,
       id: `parcela-${i + 1}`,
-      numeroParcela: i + 1,
-      totalParcelas: body.quantidadeParcelas || 3,
+      parcela: i + 1,
     }));
     return HttpResponse.json({
       message: 'Parcelas geradas com sucesso',
@@ -292,7 +330,7 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/contas-receber`, async ({ request }) => {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({
       message: 'Conta a receber criada com sucesso',
       statusCode: 201,
@@ -301,12 +339,12 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/contas-receber/parcelado`, async ({ request }) => {
-    const body = (await request.json()) as { quantidadeParcelas: number };
-    const parcelas = Array.from({ length: body.quantidadeParcelas || 3 }, (_, i) => ({
+    const body = (await request.json()) as { numeroParcelas: number };
+    const numParcelas = body.numeroParcelas || 3;
+    const parcelas = Array.from({ length: numParcelas }, (_, i) => ({
       ...mockContaReceber,
       id: `parcela-receber-${i + 1}`,
-      numeroParcela: i + 1,
-      totalParcelas: body.quantidadeParcelas || 3,
+      parcela: i + 1,
     }));
     return HttpResponse.json({
       message: 'Parcelas criadas com sucesso',
@@ -316,7 +354,7 @@ export const handlers = [
   }),
 
   http.put(`${API_BASE_URL}/contas-receber/:id`, async ({ request, params }) => {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({
       message: 'Conta a receber atualizada com sucesso',
       statusCode: 200,
@@ -373,7 +411,7 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/movimentacoes-bancarias`, async ({ request }) => {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({
       message: 'Movimentação criada com sucesso',
       statusCode: 201,
@@ -382,7 +420,7 @@ export const handlers = [
   }),
 
   http.put(`${API_BASE_URL}/movimentacoes-bancarias/:id`, async ({ request, params }) => {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({
       message: 'Movimentação atualizada com sucesso',
       statusCode: 200,
@@ -533,7 +571,7 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/plano-contas`, async ({ request }) => {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({
       message: 'Plano de contas criado com sucesso',
       statusCode: 201,
@@ -542,7 +580,7 @@ export const handlers = [
   }),
 
   http.patch(`${API_BASE_URL}/plano-contas/:id`, async ({ request, params }) => {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({
       message: 'Plano de contas atualizado com sucesso',
       statusCode: 200,

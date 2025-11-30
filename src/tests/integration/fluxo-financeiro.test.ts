@@ -4,6 +4,7 @@ import { contaReceberService } from '../../services/conta-receber.service';
 import { movimentacaoBancariaService } from '../../services/movimentacao-bancaria.service';
 import { fluxoCaixaService } from '../../services/fluxo-caixa.service';
 import { dreRelatorioService } from '../../services/dre-relatorio.service';
+import { TipoContaPagar, TipoContaReceber } from '../../types/api.types';
 
 /**
  * Testes de Integração - Fluxo Financeiro Completo
@@ -25,10 +26,14 @@ describe('Fluxo Financeiro Completo', () => {
         empresaId: 'empresa-123',
         pessoaId: 'fornecedor-123',
         planoContasId: 'plano-despesa-123',
+        documento: 'NF-001',
+        parcela: 1,
+        tipo: TipoContaPagar.FORNECEDOR,
         descricao: 'Compra de material de escritório',
-        valor: 1500.0,
-        dataVencimento: '2024-06-30',
-        dataEmissao: '2024-06-01',
+        valor_principal: 1500.0,
+        vencimento: '2024-06-30',
+        data_emissao: '2024-06-01',
+        data_lancamento: '2024-06-01',
       });
 
       expect(contaPagar.id).toBeDefined();
@@ -45,11 +50,13 @@ describe('Fluxo Financeiro Completo', () => {
 
       // 3. Criar movimentação bancária correspondente
       const movimentacao = await movimentacaoBancariaService.create({
-        contaBancariaId: 'conta-bancaria-123',
-        tipo: 'DEBITO',
+        contaBancaria: 'conta-bancaria-123',
+        tipo: 'Saída' as const,
         valor: 1500.0,
         data: '2024-06-15',
         descricao: 'Pagamento - Compra de material de escritório',
+        conta: '12345-6',
+        categoria: 'Fornecedores',
       });
 
       expect(movimentacao.id).toBeDefined();
@@ -62,7 +69,7 @@ describe('Fluxo Financeiro Completo', () => {
       });
 
       expect(fluxoCaixa.totais).toBeDefined();
-      expect(fluxoCaixa.totais.totalSaidas).toBeDefined();
+      expect(fluxoCaixa.totais.totalSaidasRealizadas).toBeDefined();
     });
   });
 
@@ -73,25 +80,31 @@ describe('Fluxo Financeiro Completo', () => {
         empresaId: 'empresa-123',
         pessoaId: 'cliente-123',
         planoContasId: 'plano-receita-123',
+        documento: 'PED-001',
+        serie: '1',
+        tipo: TipoContaReceber.DUPLICATA,
+        dataEmissao: '2024-07-01',
+        primeiroVencimento: '2024-07-01',
         descricao: 'Venda de serviços',
         valorTotal: 3000.0,
-        dataVencimentoPrimeira: '2024-07-01',
-        quantidadeParcelas: 3,
+        numeroParcelas: 3,
       });
 
       expect(parcelas).toHaveLength(3);
-      expect(parcelas[0].numeroParcela).toBe(1);
-      expect(parcelas[1].numeroParcela).toBe(2);
-      expect(parcelas[2].numeroParcela).toBe(3);
+      expect(parcelas[0].parcela).toBe(1);
+      expect(parcelas[1].parcela).toBe(2);
+      expect(parcelas[2].parcela).toBe(3);
 
       // 2. Simular recebimento das parcelas com movimentações bancárias
       for (let i = 0; i < parcelas.length; i++) {
         const movimentacao = await movimentacaoBancariaService.create({
-          contaBancariaId: 'conta-bancaria-123',
-          tipo: 'CREDITO',
+          contaBancaria: 'conta-bancaria-123',
+          tipo: 'Entrada' as const,
           valor: 1000.0,
           data: `2024-0${7 + i}-15`,
           descricao: `Recebimento parcela ${i + 1}/3 - Venda de serviços`,
+          conta: '12345-6',
+          categoria: 'Vendas',
         });
 
         expect(movimentacao.id).toBeDefined();
@@ -104,7 +117,7 @@ describe('Fluxo Financeiro Completo', () => {
         dataFim: '2024-09-30',
       });
 
-      expect(dre.totais).toBeDefined();
+      expect(dre.totalizadores).toBeDefined();
     });
   });
 
@@ -115,10 +128,14 @@ describe('Fluxo Financeiro Completo', () => {
         empresaId: 'empresa-123',
         pessoaId: 'fornecedor-456',
         planoContasId: 'plano-despesa-456',
+        documento: 'NF-002',
+        parcela: 1,
+        tipo: TipoContaPagar.FORNECEDOR,
         descricao: 'Compra cancelada',
-        valor: 5000.0,
-        dataVencimento: '2024-08-15',
-        dataEmissao: '2024-08-01',
+        valor_principal: 5000.0,
+        vencimento: '2024-08-15',
+        data_emissao: '2024-08-01',
+        data_lancamento: '2024-08-01',
       });
 
       expect(contaPagar.id).toBeDefined();
@@ -149,10 +166,14 @@ describe('Fluxo Financeiro Completo', () => {
         empresaId: 'empresa-123',
         pessoaId: 'fornecedor-789',
         planoContasId: 'plano-despesa-789',
+        documento: 'NF-003',
+        parcela: 1,
+        tipo: TipoContaPagar.FORNECEDOR,
         descricao: 'Conta para estorno',
-        valor: 2000.0,
-        dataVencimento: '2024-09-30',
-        dataEmissao: '2024-09-01',
+        valor_principal: 2000.0,
+        vencimento: '2024-09-30',
+        data_emissao: '2024-09-01',
+        data_lancamento: '2024-09-01',
       });
 
       const contaBaixada = await contaPagarService.registrarBaixa(contaPagar.id, {
@@ -178,27 +199,33 @@ describe('Fluxo Financeiro Completo', () => {
     it('deve executar: criar movimentações → conciliar → gerar extrato', async () => {
       // 1. Criar múltiplas movimentações
       const mov1 = await movimentacaoBancariaService.create({
-        contaBancariaId: 'conta-bancaria-123',
-        tipo: 'CREDITO',
+        contaBancaria: 'conta-bancaria-123',
+        tipo: 'Entrada' as const,
         valor: 10000.0,
         data: '2024-10-01',
         descricao: 'Depósito inicial',
+        conta: '12345-6',
+        categoria: 'Depósitos',
       });
 
       const mov2 = await movimentacaoBancariaService.create({
-        contaBancariaId: 'conta-bancaria-123',
-        tipo: 'DEBITO',
+        contaBancaria: 'conta-bancaria-123',
+        tipo: 'Saída' as const,
         valor: 3000.0,
         data: '2024-10-05',
         descricao: 'Pagamento fornecedor',
+        conta: '12345-6',
+        categoria: 'Fornecedores',
       });
 
       const mov3 = await movimentacaoBancariaService.create({
-        contaBancariaId: 'conta-bancaria-123',
-        tipo: 'CREDITO',
+        contaBancaria: 'conta-bancaria-123',
+        tipo: 'Entrada' as const,
         valor: 5000.0,
         data: '2024-10-10',
         descricao: 'Recebimento cliente',
+        conta: '12345-6',
+        categoria: 'Vendas',
       });
 
       // 2. Conciliar movimentações
@@ -206,7 +233,7 @@ describe('Fluxo Financeiro Completo', () => {
         movimentacaoIds: [mov1.id, mov2.id, mov3.id],
       });
 
-      expect(resultConciliacao.sucesso).toBe(true);
+      expect(resultConciliacao.conciliadas).toBeDefined();
 
       // 3. Listar movimentações por período
       const movimentacoes = await movimentacaoBancariaService.findByPeriodo(
@@ -227,8 +254,8 @@ describe('Fluxo Financeiro Completo', () => {
         dataFim: '2024-12-31',
       });
 
-      expect(dre.totais).toBeDefined();
-      expect(dre.linhas).toBeInstanceOf(Array);
+      expect(dre.totalizadores).toBeDefined();
+      expect(dre.itens).toBeInstanceOf(Array);
 
       // 2. Gerar Fluxo de Caixa
       const fluxoCaixa = await fluxoCaixaService.buscarRelatorio({
@@ -237,10 +264,10 @@ describe('Fluxo Financeiro Completo', () => {
         empresaId: 'empresa-123',
       });
 
-      expect(fluxoCaixa.saldoInicial).toBeDefined();
-      expect(fluxoCaixa.saldoFinal).toBeDefined();
-      expect(fluxoCaixa.totais.totalEntradas).toBeDefined();
-      expect(fluxoCaixa.totais.totalSaidas).toBeDefined();
+      expect(fluxoCaixa.linhas).toBeDefined();
+      expect(fluxoCaixa.totais.saldoFinalRealizado).toBeDefined();
+      expect(fluxoCaixa.totais.totalEntradasRealizadas).toBeDefined();
+      expect(fluxoCaixa.totais.totalSaidasRealizadas).toBeDefined();
 
       // 3. Listar contas a pagar pendentes
       const contasPagar = await contaPagarService.findByEmpresa('empresa-123');

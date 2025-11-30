@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { decodeJWT, getClienteIdFromToken, getUserDataFromToken } from './jwt.utils';
+import { decodeJWT, getClienteIdFromToken, getUserDataFromToken } from '../../utils/jwt.utils';
 
 // Valid JWT token for testing (não expira - apenas para teste)
 const validToken =

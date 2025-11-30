@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { apiService } from './api.service';
-import { server } from '../tests/mocks/server';
+import { apiService } from '../../services/api.service';
+import { server } from '../mocks/server';
 import { http, HttpResponse } from 'msw';
 
 const API_BASE_URL = 'http://localhost:3002';
