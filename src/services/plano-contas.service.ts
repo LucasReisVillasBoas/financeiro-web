@@ -124,7 +124,7 @@ class PlanoContasService {
   // Exportação
   async exportCSV(empresaId: string): Promise<Blob> {
     const token = localStorage.getItem('token');
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
 
     const response = await fetch(`${API_BASE_URL}${this.baseUrl}/empresa/${empresaId}/export/csv`, {
       headers: {
@@ -151,7 +151,7 @@ class PlanoContasService {
     dryRun: boolean = false
   ): Promise<ApiResponse<ImportResult>> {
     const token = localStorage.getItem('token');
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
 
     const formData = new FormData();
     formData.append('file', file);
