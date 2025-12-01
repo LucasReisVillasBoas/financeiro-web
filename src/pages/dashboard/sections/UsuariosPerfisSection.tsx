@@ -15,12 +15,14 @@ export const UsuariosPerfisSection: React.FC<UsuariosPerfisSectionProps> = ({ on
   const { getClienteId } = useAuth();
 
   const clienteId = getClienteId();
-  if (!clienteId) {
-    setError('Erro ao obter informações do usuário. Faça login novamente.');
-    setLoading(false);
-    return;
-  }
+
   useEffect(() => {
+    if (!clienteId) {
+      setError('Erro ao obter informações do usuário. Faça login novamente.');
+      setLoading(false);
+      return;
+    }
+
     const fetchPerfis = async () => {
       try {
         const perfisData = await perfilService.findAll(clienteId);
@@ -38,7 +40,7 @@ export const UsuariosPerfisSection: React.FC<UsuariosPerfisSectionProps> = ({ on
     };
 
     fetchPerfis();
-  }, []);
+  }, [clienteId]);
 
   const getStatus = (usuario: Perfil) => {
     return usuario.ativo ? 'Ativo' : 'Inativo';
@@ -47,7 +49,7 @@ export const UsuariosPerfisSection: React.FC<UsuariosPerfisSectionProps> = ({ on
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-          {/* <button className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors">
+        {/* <button className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors">
             Novo Perfil
           </button> */}
       </div>
@@ -64,11 +66,7 @@ export const UsuariosPerfisSection: React.FC<UsuariosPerfisSectionProps> = ({ on
         </div>
       </div>
 
-      {error && (
-        <div className="p-4 bg-red-100/30 text-red-800 rounded-md">
-          {error}
-        </div>
-      )}
+      {error && <div className="p-4 bg-red-100/30 text-red-800 rounded-md">{error}</div>}
 
       {loading ? (
         <div className="text-center py-8 text-[var(--color-text-secondary)]">

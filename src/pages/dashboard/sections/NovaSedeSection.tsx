@@ -126,16 +126,10 @@ export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) =
 
   return (
     <div className="max-w-4xl mx-auto">
-      {error && (
-        <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">
-          {error}
-        </div>
-      )}
+      {error && <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">{error}</div>}
 
       {success && (
-        <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">
-          {success}
-        </div>
+        <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">{success}</div>
       )}
 
       <form

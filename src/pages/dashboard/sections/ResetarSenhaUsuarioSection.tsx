@@ -92,16 +92,10 @@ export const ResetarSenhaUsuarioSection: React.FC<ResetarSenhaUsuarioSectionProp
 
   return (
     <div className="max-w-2xl mx-auto">
-      {error && (
-        <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">
-          {error}
-        </div>
-      )}
+      {error && <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">{error}</div>}
 
       {success && (
-        <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">
-          {success}
-        </div>
+        <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">{success}</div>
       )}
 
       <div className="bg-[var(--color-surface)] p-6 rounded-md shadow mb-6">
@@ -126,9 +120,7 @@ export const ResetarSenhaUsuarioSection: React.FC<ResetarSenhaUsuarioSectionProp
         className="space-y-6 bg-[var(--color-surface)] p-6 rounded-md shadow"
       >
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
-            Resetar Senha
-          </h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Resetar Senha</h3>
           <p className="text-sm text-[var(--color-text-muted)]">
             Digite a nova senha para o usuário. A senha deve ter pelo menos 6 caracteres.
           </p>

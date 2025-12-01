@@ -168,16 +168,10 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto">
-      {error && (
-        <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">
-          {error}
-        </div>
-      )}
+      {error && <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">{error}</div>}
 
       {success && (
-        <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">
-          {success}
-        </div>
+        <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">{success}</div>
       )}
 
       <form
@@ -223,7 +217,11 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
             type="date"
             disabled={true}
             placeholder=""
-            defaultValue={empresaData?.data_abertura ? new Date(empresaData.data_abertura).toISOString().split('T')[0] : ''}
+            defaultValue={
+              empresaData?.data_abertura
+                ? new Date(empresaData.data_abertura).toISOString().split('T')[0]
+                : ''
+            }
           />
         </div>
 

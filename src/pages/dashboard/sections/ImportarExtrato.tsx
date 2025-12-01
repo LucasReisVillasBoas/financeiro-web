@@ -27,10 +27,7 @@ interface ImportarExtratoProps {
   onImportSuccess?: (resultado: ResultadoImportacao) => void;
 }
 
-const ImportarExtrato: React.FC<ImportarExtratoProps> = ({
-  contasBancarias,
-  onImportSuccess,
-}) => {
+const ImportarExtrato: React.FC<ImportarExtratoProps> = ({ contasBancarias, onImportSuccess }) => {
   const [contaBancariaId, setContaBancariaId] = useState('');
   const [formato, setFormato] = useState<FormatoExtrato>(FormatoExtrato.OFX);
   const [arquivo, setArquivo] = useState<File | null>(null);
@@ -94,11 +91,7 @@ const ImportarExtrato: React.FC<ImportarExtratoProps> = ({
     setError('');
 
     try {
-      const response = await extratoBancarioService.importar(
-        contaBancariaId,
-        formato,
-        arquivo
-      );
+      const response = await extratoBancarioService.importar(contaBancariaId, formato, arquivo);
 
       setResultado(response.data!);
       setArquivo(null);
@@ -130,11 +123,11 @@ const ImportarExtrato: React.FC<ImportarExtratoProps> = ({
             <InputLabel>Conta Bancária</InputLabel>
             <Select
               value={contaBancariaId}
-              onChange={(e) => setContaBancariaId(e.target.value)}
+              onChange={e => setContaBancariaId(e.target.value)}
               label="Conta Bancária"
               disabled={loading}
             >
-              {contasBancarias.map((conta) => (
+              {contasBancarias.map(conta => (
                 <MenuItem key={conta.id} value={conta.id}>
                   {conta.banco} - {conta.descricao}
                 </MenuItem>
@@ -147,7 +140,7 @@ const ImportarExtrato: React.FC<ImportarExtratoProps> = ({
             <InputLabel>Formato do Arquivo</InputLabel>
             <Select
               value={formato}
-              onChange={(e) => {
+              onChange={e => {
                 setFormato(e.target.value as FormatoExtrato);
                 setArquivo(null);
               }}
@@ -178,13 +171,9 @@ const ImportarExtrato: React.FC<ImportarExtratoProps> = ({
               },
             }}
           >
-            <CloudUploadIcon
-              sx={{ fontSize: 48, color: 'primary.main', mb: 2 }}
-            />
+            <CloudUploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
             <Typography variant="h6" gutterBottom>
-              {arquivo
-                ? arquivo.name
-                : 'Arraste o arquivo aqui ou clique para selecionar'}
+              {arquivo ? arquivo.name : 'Arraste o arquivo aqui ou clique para selecionar'}
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
               Formatos aceitos: {formato}
@@ -198,12 +187,7 @@ const ImportarExtrato: React.FC<ImportarExtratoProps> = ({
               disabled={loading}
             />
             <label htmlFor="file-upload">
-              <Button
-                component="span"
-                variant="outlined"
-                disabled={loading}
-                sx={{ mt: 2 }}
-              >
+              <Button component="span" variant="outlined" disabled={loading} sx={{ mt: 2 }}>
                 Selecionar Arquivo
               </Button>
             </label>
@@ -265,7 +249,8 @@ const ImportarExtrato: React.FC<ImportarExtratoProps> = ({
                   <Box sx={{ mt: 2 }}>
                     <Typography variant="body2" display="flex" alignItems="center" gap={1}>
                       <CheckCircleIcon fontSize="small" color="success" />
-                      {resultado.comSugestao} transação(ões) possui(em) sugestões automáticas de conciliação
+                      {resultado.comSugestao} transação(ões) possui(em) sugestões automáticas de
+                      conciliação
                     </Typography>
                   </Box>
                 )}
@@ -288,7 +273,8 @@ const ImportarExtrato: React.FC<ImportarExtratoProps> = ({
                       sx={{ height: 10, borderRadius: 5 }}
                     />
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
-                      {((resultado.comSugestao / resultado.totalImportado) * 100).toFixed(1)}% com sugestões automáticas
+                      {((resultado.comSugestao / resultado.totalImportado) * 100).toFixed(1)}% com
+                      sugestões automáticas
                     </Typography>
                   </Box>
                 )}

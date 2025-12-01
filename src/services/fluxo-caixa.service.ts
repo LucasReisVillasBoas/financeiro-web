@@ -1,9 +1,5 @@
 import { apiService } from './api.service';
-import type {
-  FluxoCaixaResponse,
-  FluxoCaixaFiltros,
-  ApiResponse,
-} from '../types/api.types';
+import type { FluxoCaixaResponse, FluxoCaixaFiltros, ApiResponse } from '../types/api.types';
 
 class FluxoCaixaService {
   /**

@@ -200,7 +200,7 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
 
       // 3. Conciliar todas as movimentações pendentes
       if (movimentacoes.length > 0) {
-        const ids = movimentacoes.map((m) => m.id);
+        const ids = movimentacoes.map(m => m.id);
         const conciliacao = await movimentacaoBancariaService.conciliar({
           movimentacaoIds: ids,
         });

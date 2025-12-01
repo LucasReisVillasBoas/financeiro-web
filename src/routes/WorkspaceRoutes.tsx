@@ -1,11 +1,11 @@
-import React from "react";
-import { Routes, Route, Outlet, Navigate } from "react-router-dom";
-import { WorkspaceLayout } from "../components/workspace/WorkspaceLayout";
+import React from 'react';
+import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import { WorkspaceLayout } from '../components/workspace/WorkspaceLayout';
 
-import DashboardHome from "../pages/dashboard/DashboardHome";
-import AccountsReceivable from "../pages/dashboard/AccountsReceivable";
-import AccountsPayable from "../pages/dashboard/AccountsPayable";
-import NotFoundPage from "../pages/NotFoundPage";
+import DashboardHome from '../pages/dashboard/DashboardHome';
+import AccountsReceivable from '../pages/dashboard/AccountsReceivable';
+import AccountsPayable from '../pages/dashboard/AccountsPayable';
+import NotFoundPage from '../pages/NotFoundPage';
 
 export const WorkspaceRoutes: React.FC = () => {
   return (

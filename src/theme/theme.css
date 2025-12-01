@@ -3,9 +3,9 @@
   font-size: 14px; /* Mobile first */
 
   /* Base do layout */
-  --color-bg: #ffffff;                /* fundo geral */
-  --color-surface: #f8fafc;           /* cards, modais, tabelas */
-  --color-border: #e5e7eb;            /* bordas neutras */
+  --color-bg: #ffffff; /* fundo geral */
+  --color-surface: #f8fafc; /* cards, modais, tabelas */
+  --color-border: #e5e7eb; /* bordas neutras */
 
   /* Textos */
   --color-text: #111827;
@@ -19,7 +19,7 @@
   /* Paleta financeira */
   --color-primary: #2563eb;
   --color-primary-foreground: #ffffff;
-  --color-primary-hover: #f1faff;     /* hover pai */
+  --color-primary-hover: #f1faff; /* hover pai */
 
   --color-secondary: #10b981;
   --color-secondary-foreground: #ffffff;
@@ -43,15 +43,15 @@
   --color-chart-5: #3b82f6;
 
   /* Sidebar específico */
-  --color-sidebar-bg: #1f2937;        /* fundo cinza escuro */
-  --color-sidebar-text: #9ca3af;      /* texto cinza claro */
+  --color-sidebar-bg: #1f2937; /* fundo cinza escuro */
+  --color-sidebar-text: #9ca3af; /* texto cinza claro */
   --color-sidebar-text-hover: #e5e7eb; /* texto hover */
-  --color-sidebar-icon: #6b7280;      /* ícones */
-  --color-sidebar-hover: #374151;     /* hover background */
-  --color-sidebar-active: #2563eb;    /* item ativo */
-  --color-sidebar-border: #374151;    /* bordas */
-  --color-subitem-bg: #f1f5f9;        /* background levemente mais escuro */
-  --color-subitem-hover: #e2e8f0;     /* hover nos subitens */
+  --color-sidebar-icon: #6b7280; /* ícones */
+  --color-sidebar-hover: #374151; /* hover background */
+  --color-sidebar-active: #2563eb; /* item ativo */
+  --color-sidebar-border: #374151; /* bordas */
+  --color-subitem-bg: #f1f5f9; /* background levemente mais escuro */
+  --color-subitem-hover: #e2e8f0; /* hover nos subitens */
 }
 
 /* Desktop - aumenta tamanho da fonte */

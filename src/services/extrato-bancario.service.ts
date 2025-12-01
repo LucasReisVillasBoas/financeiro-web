@@ -20,10 +20,7 @@ export class ExtratoBancarioService {
     formData.append('contaBancariaId', contaBancariaId);
     formData.append('formato', formato);
 
-    return apiService.postFormData<ResultadoImportacao>(
-      '/extratos-bancarios/importar',
-      formData
-    );
+    return apiService.postFormData<ResultadoImportacao>('/extratos-bancarios/importar', formData);
   }
 
   /**

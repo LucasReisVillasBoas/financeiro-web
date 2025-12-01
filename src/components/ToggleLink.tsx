@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 interface ToggleLinkProps {
   text: string;
@@ -6,14 +6,10 @@ interface ToggleLinkProps {
   onClick: () => void;
 }
 
-export const ToggleLink: React.FC<ToggleLinkProps> = ({
-  text,
-  actionText,
-  onClick,
-}) => {
+export const ToggleLink: React.FC<ToggleLinkProps> = ({ text, actionText, onClick }) => {
   return (
     <div className="mt-4 text-center text-sm text-[var(--color-text-secondary)]">
-      {text}{" "}
+      {text}{' '}
       <button
         className="text-[var(--color-primary)] hover:text-[var(--color-link-hover)] font-medium"
         onClick={onClick}

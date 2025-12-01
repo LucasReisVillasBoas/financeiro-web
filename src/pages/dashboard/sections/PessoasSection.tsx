@@ -103,7 +103,7 @@ export const PessoasSection: React.FC<PessoasSectionProps> = ({ onNavigate }) =>
   const handleDelete = async (id: string) => {
     const pessoa = pessoas.find(e => e.id === id);
     if (!pessoa) return;
-    let mensagem = 'Deseja realmente excluir esta pessoa?';
+    const mensagem = 'Deseja realmente excluir esta pessoa?';
 
     setPessoaParaExcluir(pessoa);
     setModalMessage(mensagem);

@@ -101,16 +101,10 @@ export const NovoContatoSection: React.FC<NovoContatoSectionProps> = ({ onNaviga
 
   return (
     <div className="max-w-4xl mx-auto">
-      {error && (
-        <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">
-          {error}
-        </div>
-      )}
+      {error && <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">{error}</div>}
 
       {success && (
-        <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">
-          {success}
-        </div>
+        <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">{success}</div>
       )}
 
       <form
@@ -132,12 +126,7 @@ export const NovoContatoSection: React.FC<NovoContatoSectionProps> = ({ onNaviga
             placeholder="Digite a função/cargo"
             required
           />
-          <InputField
-            id="email"
-            label="E-mail"
-            type="email"
-            placeholder="contato@email.com"
-          />
+          <InputField id="email" label="E-mail" type="email" placeholder="contato@email.com" />
           <InputField
             id="telefone"
             label="Telefone"

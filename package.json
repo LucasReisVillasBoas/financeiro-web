@@ -11,12 +11,14 @@
     "format": "prettier --write 'src/**/*.{ts,tsx,css,md}'",
     "check:lint": "eslint 'src/**/*.{ts,tsx}'",
     "check:format": "prettier --check 'src/**/*.{ts,tsx,css,md}'",
-    "prepare": "husky install",
+    "prepare": "husky",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "docs:build": "node docs/manual/scripts/generate-pdf.js",
+    "docs:serve": "npx serve docs/manual/dist"
   },
   "dependencies": {
     "@radix-ui/react-navigation-menu": "^1.2.14",
@@ -29,6 +31,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "@rsbuild/core": "^1.5.6",
     "@rsbuild/plugin-react": "^1.4.0",
     "@testing-library/jest-dom": "^6.9.1",
@@ -51,6 +54,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint_d": "^14.3.0",
     "happy-dom": "^20.0.11",
+    "husky": "^9.1.7",
     "jsdom": "^27.2.0",
     "msw": "^2.12.3",
     "postcss": "^8.5.6",

@@ -240,7 +240,13 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
               onClick={() => handleItemClick(item)}
             >
               <div className="flex items-center gap-3">
-                <span className={activeItem === item.id && !item.children ? 'text-white' : 'text-[var(--color-sidebar-icon)]'}>
+                <span
+                  className={
+                    activeItem === item.id && !item.children
+                      ? 'text-white'
+                      : 'text-[var(--color-sidebar-icon)]'
+                  }
+                >
                   {item.icon}
                 </span>
                 <span className="text-sm font-medium">{item.label}</span>
@@ -273,7 +279,13 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
                           : 'text-[var(--color-sidebar-text)] hover:bg-[var(--color-sidebar-hover)] hover:text-[var(--color-sidebar-text-hover)]'
                       }`}
                     >
-                      <span className={activeItem === child.id ? 'text-white' : 'text-[var(--color-sidebar-icon)]'}>
+                      <span
+                        className={
+                          activeItem === child.id
+                            ? 'text-white'
+                            : 'text-[var(--color-sidebar-icon)]'
+                        }
+                      >
                         {child.icon}
                       </span>
                       <span className="text-xs font-medium">{child.label}</span>
