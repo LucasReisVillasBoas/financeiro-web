@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 interface InputFieldProps {
   label: string;
@@ -15,7 +15,7 @@ interface InputFieldProps {
 
 export const InputField: React.FC<InputFieldProps> = ({
   label,
-  type = "text",
+  type = 'text',
   placeholder,
   id,
   name,

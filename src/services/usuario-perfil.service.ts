@@ -17,10 +17,7 @@ export interface CreateUsuarioPerfilDto {
 
 class UsuarioPerfilService {
   async create(dto: CreateUsuarioPerfilDto): Promise<UsuarioPerfil> {
-    const response: ApiResponse<UsuarioPerfil> = await apiService.post(
-      '/usuario-perfil',
-      dto
-    );
+    const response: ApiResponse<UsuarioPerfil> = await apiService.post('/usuario-perfil', dto);
     return response.data!;
   }
 

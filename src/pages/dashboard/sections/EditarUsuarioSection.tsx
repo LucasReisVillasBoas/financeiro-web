@@ -24,7 +24,7 @@ export const EditarUsuarioSection: React.FC<EditarUsuarioSectionProps> = ({
 
       try {
         const data = await usuarioService.getOne(usuarioId);
-        console.log(data)
+        console.log(data);
         setUsuarioData(data);
 
         if (data?.telefone) {
@@ -105,16 +105,10 @@ export const EditarUsuarioSection: React.FC<EditarUsuarioSectionProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto">
-      {error && (
-        <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">
-          {error}
-        </div>
-      )}
+      {error && <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">{error}</div>}
 
       {success && (
-        <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">
-          {success}
-        </div>
+        <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">{success}</div>
       )}
 
       <form

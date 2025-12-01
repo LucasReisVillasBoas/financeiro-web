@@ -95,9 +95,7 @@ describe('movimentacaoBancariaService', () => {
 
   describe('delete', () => {
     it('deve excluir movimentação bancária', async () => {
-      await expect(
-        movimentacaoBancariaService.delete('movimentacao-123')
-      ).resolves.not.toThrow();
+      await expect(movimentacaoBancariaService.delete('movimentacao-123')).resolves.not.toThrow();
     });
   });
 

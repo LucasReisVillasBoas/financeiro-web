@@ -110,10 +110,11 @@ export const RelatoriosSection: React.FC = () => {
         case TipoRelatorio.CONTAS_BANCARIAS:
           dadosCarregados = await contaBancariaService.findAll();
           break;
-        case TipoRelatorio.PLANO_CONTAS:
+        case TipoRelatorio.PLANO_CONTAS: {
           const planoContasResponse = await planoContasService.findAll();
           dadosCarregados = planoContasResponse.data || [];
           break;
+        }
         case TipoRelatorio.CONTAS_RECEBER:
           dadosCarregados = await contaReceberService.findAll();
           break;
@@ -142,7 +143,6 @@ export const RelatoriosSection: React.FC = () => {
 
     setTotais({ total, ativos, inativos });
   };
-
 
   const exportarDados = (formato: FormatoExportacao) => {
     switch (formato) {

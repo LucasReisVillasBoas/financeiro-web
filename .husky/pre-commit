@@ -1,0 +1,1 @@
+pnpm check:lint && pnpm check:format

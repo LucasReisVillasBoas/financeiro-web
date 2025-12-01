@@ -1,0 +1,195 @@
+# Workflow para gerar e publicar o Manual do Usuario
+# Executa automaticamente em cada release ou manualmente
+
+name: Manual do Usuario - Build & Release
+
+on:
+  # Executa em cada release
+  release:
+    types: [published]
+
+  # Permite execucao manual
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versao do manual (ex: 1.0.0)'
+        required: false
+        default: ''
+
+jobs:
+  build-manual:
+    name: Gerar Manual PDF
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout codigo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Instalar dependencias
+        run: pnpm install
+
+      - name: Instalar md-to-pdf
+        run: npm install -g md-to-pdf
+
+      - name: Definir versao
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          elif [ -n "${{ github.event.release.tag_name }}" ]; then
+            echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Gerar Manual
+        run: |
+          export npm_package_version=${{ steps.version.outputs.VERSION }}
+          node docs/manual/scripts/generate-pdf.js
+
+      - name: Upload artefatos
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-usuario-${{ steps.version.outputs.VERSION }}
+          path: |
+            docs/manual/dist/*.pdf
+            docs/manual/dist/*.html
+            docs/manual/dist/*.md
+          retention-days: 90
+
+      - name: Anexar a Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            docs/manual/dist/*.pdf
+            docs/manual/dist/*.html
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-docs:
+    name: Publicar no GitHub Pages
+    needs: build-manual
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout codigo
+        uses: actions/checkout@v4
+
+      - name: Download artefatos
+        uses: actions/download-artifact@v4
+        with:
+          name: manual-usuario-${{ needs.build-manual.outputs.version }}
+          path: docs/manual/dist
+
+      - name: Preparar paginas
+        run: |
+          mkdir -p public
+          cp -r docs/manual/*.md public/
+          cp -r docs/manual/dist/* public/
+          # Cria index.html
+          cat > public/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="pt-BR">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Manual do Usuario - Sistema Financeiro</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 40px 20px;
+                background: #f7fafc;
+                color: #1a202c;
+              }
+              h1 { color: #1a365d; }
+              .card {
+                background: white;
+                border-radius: 8px;
+                padding: 20px;
+                margin: 20px 0;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+              }
+              .card h2 { margin-top: 0; color: #2c5282; }
+              a {
+                color: #3182ce;
+                text-decoration: none;
+              }
+              a:hover { text-decoration: underline; }
+              .download-btn {
+                display: inline-block;
+                background: #3182ce;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 6px;
+                font-weight: bold;
+                margin: 10px 10px 10px 0;
+              }
+              .download-btn:hover {
+                background: #2c5282;
+                text-decoration: none;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>Manual do Usuario</h1>
+            <p>Sistema Financeiro - Documentacao Oficial</p>
+
+            <div class="card">
+              <h2>Downloads</h2>
+              <a href="manual-usuario.pdf" class="download-btn">Baixar PDF</a>
+              <a href="manual.html" class="download-btn">Versao HTML</a>
+            </div>
+
+            <div class="card">
+              <h2>Guias por Modulo</h2>
+              <ul>
+                <li><a href="01-cadastros.md">Modulo de Cadastros</a></li>
+                <li><a href="02-lancamentos.md">Modulo de Lancamentos</a></li>
+                <li><a href="03-movimentacoes.md">Baixas e Movimentacoes</a></li>
+                <li><a href="04-relatorios.md">Relatorios</a></li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <h2>Manual Completo</h2>
+              <p><a href="README.md">Abrir Manual Completo (Markdown)</a></p>
+            </div>
+          </body>
+          </html>
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

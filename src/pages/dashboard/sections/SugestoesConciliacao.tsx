@@ -36,19 +36,13 @@ import {
   TrendingDown as TrendingDownIcon,
 } from '@mui/icons-material';
 import extratoBancarioService from '../../../services/extrato-bancario.service';
-import {
-  ExtratoBancario,
-  StatusExtratoItem,
-  TipoTransacao,
-} from '../../../types/api.types';
+import { ExtratoBancario, StatusExtratoItem, TipoTransacao } from '../../../types/api.types';
 
 interface SugestoesConciliacaoProps {
   contasBancarias: Array<{ id: string; descricao: string; banco: string }>;
 }
 
-const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({
-  contasBancarias,
-}) => {
+const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({ contasBancarias }) => {
   const [contaBancariaId, setContaBancariaId] = useState('');
   const [extratos, setExtratos] = useState<ExtratoBancario[]>([]);
   const [loading, setLoading] = useState(false);
@@ -164,12 +158,8 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({
     return 'error.main';
   };
 
-  const extratosPendentes = extratos.filter(
-    (e) => e.status === StatusExtratoItem.PENDENTE
-  );
-  const extratosComSugestao = extratos.filter(
-    (e) => e.status === StatusExtratoItem.SUGESTAO
-  );
+  const extratosPendentes = extratos.filter(e => e.status === StatusExtratoItem.PENDENTE);
+  const extratosComSugestao = extratos.filter(e => e.status === StatusExtratoItem.SUGESTAO);
 
   return (
     <Card>
@@ -184,11 +174,11 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({
             <InputLabel>Conta Bancária</InputLabel>
             <Select
               value={contaBancariaId}
-              onChange={(e) => setContaBancariaId(e.target.value)}
+              onChange={e => setContaBancariaId(e.target.value)}
               label="Conta Bancária"
               disabled={loading}
             >
-              {contasBancarias.map((conta) => (
+              {contasBancarias.map(conta => (
                 <MenuItem key={conta.id} value={conta.id}>
                   {conta.banco} - {conta.descricao}
                 </MenuItem>
@@ -238,9 +228,7 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({
           )}
 
           {!loading && contaBancariaId && extratos.length === 0 && (
-            <Alert severity="info">
-              Nenhum extrato pendente de conciliação para esta conta.
-            </Alert>
+            <Alert severity="info">Nenhum extrato pendente de conciliação para esta conta.</Alert>
           )}
 
           {/* Tabela de Extratos */}
@@ -259,7 +247,7 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {extratos.map((extrato) => (
+                  {extratos.map(extrato => (
                     <TableRow
                       key={extrato.id}
                       sx={{
@@ -271,9 +259,7 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({
                     >
                       <TableCell>{formatDate(extrato.dataTransacao)}</TableCell>
                       <TableCell>
-                        <Typography variant="body2">
-                          {extrato.descricao}
-                        </Typography>
+                        <Typography variant="body2">{extrato.descricao}</Typography>
                         {extrato.documento && (
                           <Typography variant="caption" color="text.secondary">
                             Doc: {extrato.documento}
@@ -290,15 +276,11 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({
                             )
                           }
                           label={
-                            extrato.tipoTransacao === TipoTransacao.CREDITO
-                              ? 'Crédito'
-                              : 'Débito'
+                            extrato.tipoTransacao === TipoTransacao.CREDITO ? 'Crédito' : 'Débito'
                           }
                           size="small"
                           color={
-                            extrato.tipoTransacao === TipoTransacao.CREDITO
-                              ? 'success'
-                              : 'error'
+                            extrato.tipoTransacao === TipoTransacao.CREDITO ? 'success' : 'error'
                           }
                         />
                       </TableCell>
@@ -385,10 +367,7 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Ignorar">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleIgnorarItem(extrato.id)}
-                            >
+                            <IconButton size="small" onClick={() => handleIgnorarItem(extrato.id)}>
                               <VisibilityOffIcon />
                             </IconButton>
                           </Tooltip>
@@ -403,12 +382,7 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({
         </Box>
 
         {/* Dialog de Detalhes */}
-        <Dialog
-          open={detailsOpen}
-          onClose={() => setDetailsOpen(false)}
-          maxWidth="md"
-          fullWidth
-        >
+        <Dialog open={detailsOpen} onClose={() => setDetailsOpen(false)} maxWidth="md" fullWidth>
           <DialogTitle>Detalhes da Transação</DialogTitle>
           <DialogContent>
             {selectedItem && (
@@ -434,9 +408,7 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({
                   </Typography>
                   <Typography variant="body2">
                     <strong>Tipo:</strong>{' '}
-                    {selectedItem.tipoTransacao === TipoTransacao.CREDITO
-                      ? 'Crédito'
-                      : 'Débito'}
+                    {selectedItem.tipoTransacao === TipoTransacao.CREDITO ? 'Crédito' : 'Débito'}
                   </Typography>
                 </Box>
 
@@ -457,20 +429,18 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({
                             selectedItem.sugestao.score >= 80
                               ? 'success'
                               : selectedItem.sugestao.score >= 60
-                              ? 'info'
-                              : 'warning'
+                                ? 'info'
+                                : 'warning'
                           }
                           size="small"
                         />
                       </Box>
 
                       <Typography variant="body2">
-                        <strong>Data:</strong>{' '}
-                        {formatDate(selectedItem.sugestao.movimentacao.data)}
+                        <strong>Data:</strong> {formatDate(selectedItem.sugestao.movimentacao.data)}
                       </Typography>
                       <Typography variant="body2">
-                        <strong>Descrição:</strong>{' '}
-                        {selectedItem.sugestao.movimentacao.descricao}
+                        <strong>Descrição:</strong> {selectedItem.sugestao.movimentacao.descricao}
                       </Typography>
                       <Typography variant="body2">
                         <strong>Valor:</strong>{' '}
@@ -484,12 +454,7 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({
                             Razões da Sugestão:
                           </Typography>
                           {selectedItem.sugestao.razoes.map((razao, index) => (
-                            <Chip
-                              key={index}
-                              label={razao}
-                              size="small"
-                              sx={{ mr: 1, mb: 1 }}
-                            />
+                            <Chip key={index} label={razao} size="small" sx={{ mr: 1, mb: 1 }} />
                           ))}
                         </Box>
                       )}
@@ -508,8 +473,7 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({
                         {formatDate(selectedItem.movimentacaoSugerida.dataMovimento)}
                       </Typography>
                       <Typography variant="body2">
-                        <strong>Descrição:</strong>{' '}
-                        {selectedItem.movimentacaoSugerida.descricao}
+                        <strong>Descrição:</strong> {selectedItem.movimentacaoSugerida.descricao}
                       </Typography>
                       <Typography variant="body2">
                         <strong>Valor:</strong>{' '}
@@ -525,18 +489,14 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({
             {selectedItem?.status === StatusExtratoItem.SUGESTAO && (
               <>
                 <Button
-                  onClick={() =>
-                    selectedItem && handleRejeitarSugestao(selectedItem.id)
-                  }
+                  onClick={() => selectedItem && handleRejeitarSugestao(selectedItem.id)}
                   color="error"
                   disabled={actionLoading}
                 >
                   Rejeitar
                 </Button>
                 <Button
-                  onClick={() =>
-                    selectedItem && handleAceitarSugestao(selectedItem.id)
-                  }
+                  onClick={() => selectedItem && handleAceitarSugestao(selectedItem.id)}
                   variant="contained"
                   color="success"
                   disabled={actionLoading}

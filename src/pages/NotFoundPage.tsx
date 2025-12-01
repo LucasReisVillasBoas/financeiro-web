@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
@@ -22,16 +22,14 @@ export default function NotFoundPage() {
       </div>
 
       {/* Mensagem principal */}
-      <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-center">
-        404
-      </h1>
+      <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-center">404</h1>
       <p className="text-lg md:text-xl text-center text-[var(--color-text-secondary)] mb-6">
         Ops! A página que você está procurando não foi encontrada.
       </p>
 
       {/* Botão de ação */}
       <button
-        onClick={() => navigate("/dashboard")}
+        onClick={() => navigate('/dashboard')}
         className="px-6 py-3 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] font-semibold rounded-md shadow-md hover:bg-[var(--color-primary-hover)] transition"
       >
         Voltar ao Dashboard
@@ -40,13 +38,13 @@ export default function NotFoundPage() {
       {/* Links secundários */}
       <div className="mt-6 flex flex-col md:flex-row gap-4 text-sm text-[var(--color-text-secondary)]">
         <button
-          onClick={() => navigate("/login")}
+          onClick={() => navigate('/login')}
           className="hover:underline text-[var(--color-link)]"
         >
           Página de Login
         </button>
         <button
-          onClick={() => navigate("/register")}
+          onClick={() => navigate('/register')}
           className="hover:underline text-[var(--color-link)]"
         >
           Criar Conta

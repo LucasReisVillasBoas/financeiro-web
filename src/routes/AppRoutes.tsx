@@ -1,19 +1,14 @@
-import React from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-import { AuthProvider } from "../context/AuthContext";
-import { PublicRoute } from "./PublicRoute";
-import { ProtectedRoute } from "./ProtectedRoute";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from '../context/AuthContext';
+import { PublicRoute } from './PublicRoute';
+import { ProtectedRoute } from './ProtectedRoute';
 
-import LoginPage from "../pages/auth/LoginPage";
-import RegisterPage from "../pages/auth/RegisterPage";
-import { MainWorkspace } from "../pages/dashboard/MainWorkspace";
-import NotFoundPage from "../pages/NotFoundPage";
-import { OnboardingEmpresa } from "../pages/onboarding/OnboardingEmpresa";
+import LoginPage from '../pages/auth/LoginPage';
+import RegisterPage from '../pages/auth/RegisterPage';
+import { MainWorkspace } from '../pages/dashboard/MainWorkspace';
+import NotFoundPage from '../pages/NotFoundPage';
+import { OnboardingEmpresa } from '../pages/onboarding/OnboardingEmpresa';
 
 export const AppRoutes: React.FC = () => {
   return (

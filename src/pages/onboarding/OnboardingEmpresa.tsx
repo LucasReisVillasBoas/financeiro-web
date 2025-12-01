@@ -230,11 +230,7 @@ export const OnboardingEmpresa: React.FC = () => {
           </p>
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-100/30 text-red-800 rounded-md">
-            {error}
-          </div>
-        )}
+        {error && <div className="mb-6 p-4 bg-red-100/30 text-red-800 rounded-md">{error}</div>}
 
         <div className="bg-[var(--color-surface)] p-8 rounded-xl shadow-lg border border-[var(--color-border)]">
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -280,7 +276,11 @@ export const OnboardingEmpresa: React.FC = () => {
                     label="Data de Abertura"
                     type="date"
                     placeholder=""
-                    value={formData.data_abertura ? new Date(formData.data_abertura).toISOString().split('T')[0] : ''}
+                    value={
+                      formData.data_abertura
+                        ? new Date(formData.data_abertura).toISOString().split('T')[0]
+                        : ''
+                    }
                     onChange={handleChange}
                   />
                 </div>

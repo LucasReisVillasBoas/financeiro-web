@@ -151,9 +151,7 @@ export const Sidebar: React.FC = () => {
     <aside className="w-64 h-screen bg-[var(--color-sidebar-bg)] shadow-md flex flex-col">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-[var(--color-sidebar-border)]">
-        <h1 className="font-semibold text-lg tracking-wide text-gray-100">
-          FinSys
-        </h1>
+        <h1 className="font-semibold text-lg tracking-wide text-gray-100">FinSys</h1>
       </div>
 
       {/* Menu */}
@@ -177,9 +175,7 @@ export const Sidebar: React.FC = () => {
                     <span className={isActive ? 'text-white' : 'text-[var(--color-sidebar-icon)]'}>
                       {item.icon}
                     </span>
-                    <span className="text-sm font-medium">
-                      {item.label}
-                    </span>
+                    <span className="text-sm font-medium">{item.label}</span>
                   </>
                 )}
               </NavLink>
@@ -225,12 +221,12 @@ export const Sidebar: React.FC = () => {
                     >
                       {({ isActive }) => (
                         <>
-                          <span className={isActive ? 'text-white' : 'text-[var(--color-sidebar-icon)]'}>
+                          <span
+                            className={isActive ? 'text-white' : 'text-[var(--color-sidebar-icon)]'}
+                          >
                             {child.icon}
                           </span>
-                          <span className="text-xs font-medium">
-                            {child.label}
-                          </span>
+                          <span className="text-xs font-medium">{child.label}</span>
                         </>
                       )}
                     </NavLink>

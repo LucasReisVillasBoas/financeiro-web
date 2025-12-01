@@ -1,9 +1,5 @@
 import { apiService } from './api.service';
-import type {
-  BaixaRecebimento,
-  CreateBaixaRecebimentoDto,
-  ApiResponse,
-} from '../types/api.types';
+import type { BaixaRecebimento, CreateBaixaRecebimentoDto, ApiResponse } from '../types/api.types';
 
 class BaixaRecebimentoService {
   async create(dto: CreateBaixaRecebimentoDto): Promise<BaixaRecebimento> {

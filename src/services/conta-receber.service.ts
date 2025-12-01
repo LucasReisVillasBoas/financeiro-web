@@ -47,10 +47,7 @@ class ContaReceberService {
   }
 
   async update(id: string, dto: UpdateContaReceberDto): Promise<ContaReceber> {
-    const response: ApiResponse<ContaReceber> = await apiService.put(
-      `/contas-receber/${id}`,
-      dto
-    );
+    const response: ApiResponse<ContaReceber> = await apiService.put(`/contas-receber/${id}`, dto);
     return response.data!;
   }
 

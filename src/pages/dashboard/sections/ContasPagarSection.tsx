@@ -392,9 +392,7 @@ export const ContasPagarSection: React.FC = () => {
                 <input
                   type="date"
                   value={baixaData.dataPagamento}
-                  onChange={e =>
-                    setBaixaData(prev => ({ ...prev, dataPagamento: e.target.value }))
-                  }
+                  onChange={e => setBaixaData(prev => ({ ...prev, dataPagamento: e.target.value }))}
                   className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                 />
               </div>
@@ -857,153 +855,157 @@ export const ContasPagarSection: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="w-full pb-48" style={{ overflow: 'visible', position: 'relative', minHeight: '200px' }}>
+        <div
+          className="w-full pb-48"
+          style={{ overflow: 'visible', position: 'relative', minHeight: '200px' }}
+        >
           <div style={{ overflow: 'visible' }}>
             <table className="w-full bg-[var(--color-surface)] rounded-md shadow">
-            <thead>
-              <tr className="border-b border-[var(--color-border)]">
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">Documento</th>
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">Parcela</th>
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">Tipo</th>
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">Descrição</th>
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">Pessoa</th>
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">Valor Total</th>
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">Saldo</th>
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">Vencimento</th>
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">Status</th>
-                <th className="text-center p-4 text-[var(--color-text-secondary)]">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {contas.map(conta => (
-                <tr
-                  key={conta.id}
-                  className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]"
-                >
-                  <td className="p-4 text-[var(--color-text)]">
-                    {conta.documento}
-                    {conta.serie && (
-                      <span className="text-sm text-[var(--color-text-secondary)]">
-                        {' '}
-                        ({conta.serie})
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-4 text-[var(--color-text)]">{conta.parcela}</td>
-                  <td className="p-4 text-[var(--color-text)]">{conta.tipo}</td>
-                  <td className="p-4 text-[var(--color-text)]">{conta.descricao}</td>
-                  <td className="p-4 text-[var(--color-text)]">{conta.pessoaNome || '-'}</td>
-                  <td className="p-4 text-[var(--color-text)]">
-                    {formatarMoeda(conta.valor_total)}
-                  </td>
-                  <td className="p-4 text-[var(--color-text)] font-semibold">
-                    {formatarMoeda(conta.saldo)}
-                  </td>
-                  <td className="p-4 text-[var(--color-text)]">
-                    {new Date(conta.vencimento).toLocaleDateString('pt-BR')}
-                  </td>
-                  <td className="p-4">
-                    <span
-                      className={`px-2 py-1 rounded text-sm ${getStatusBadgeClass(conta.status)}`}
-                    >
-                      {conta.status}
-                    </span>
-                  </td>
-                  <td className="p-4" style={{ position: 'relative' }}>
-                    <div className="flex justify-center">
-                      <button
-                        onClick={(e) => {
-                          const newOpenId = openMenuId === conta.id ? null : conta.id;
-                          setOpenMenuId(newOpenId);
-
-                          if (newOpenId) {
-                            const button = e.currentTarget;
-                            const rect = button.getBoundingClientRect();
-                            const spaceBelow = window.innerHeight - rect.bottom;
-                            const spaceAbove = rect.top;
-
-                            // Se não houver espaço suficiente embaixo (menos de 200px), abre para cima
-                            setMenuPosition(spaceBelow < 200 && spaceAbove > 200 ? 'top' : 'bottom');
-                          }
-                        }}
-                        className="p-2 hover:bg-[var(--color-bg)] rounded transition-colors"
-                        title="Ações"
-                      >
-                        <FiMoreVertical size={18} className="text-[var(--color-text)]" />
-                      </button>
-
-                      {openMenuId === conta.id && (
-                        <div
-                          ref={menuRef}
-                          className="absolute right-4 w-48 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md shadow-xl"
-                          style={{
-                            ...(menuPosition === 'bottom'
-                              ? { top: '100%', marginTop: '4px' }
-                              : { bottom: '100%', marginBottom: '4px' }
-                            ),
-                            zIndex: 9999
-                          }}
-                        >
-                          <div className="py-1">
-                            {(conta.status === 'Pendente' ||
-                              conta.status === 'Vencida' ||
-                              conta.status === 'ParcialmentePaga') && (
-                              <button
-                                onClick={() => {
-                                  handleRegistrarBaixa(conta);
-                                  setOpenMenuId(null);
-                                }}
-                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)] transition-colors text-left"
-                              >
-                                <FiCheckCircle size={16} className="text-green-600" />
-                                Pagar
-                              </button>
-                            )}
-                            {conta.status === 'Paga' && conta.movimentacaoBancariaId && (
-                              <button
-                                onClick={() => {
-                                  handleEstornarBaixa(conta);
-                                  setOpenMenuId(null);
-                                }}
-                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)] transition-colors text-left"
-                              >
-                                <FiRotateCcw size={16} className="text-blue-600" />
-                                Estornar Baixa
-                              </button>
-                            )}
-                            {conta.status !== 'Cancelada' && conta.status !== 'Paga' && (
-                              <button
-                                onClick={() => {
-                                  handleCancelar(conta);
-                                  setOpenMenuId(null);
-                                }}
-                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)] transition-colors text-left"
-                              >
-                                <FiXCircle size={16} className="text-gray-600" />
-                                Cancelar
-                              </button>
-                            )}
-                            {(conta.status === 'Pendente' || conta.status === 'Cancelada') && (
-                              <button
-                                onClick={() => {
-                                  handleDelete(conta);
-                                  setOpenMenuId(null);
-                                }}
-                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)] transition-colors text-left border-t border-[var(--color-border)]"
-                              >
-                                <FiTrash2 size={16} className="text-red-600" />
-                                Excluir
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </td>
+              <thead>
+                <tr className="border-b border-[var(--color-border)]">
+                  <th className="text-left p-4 text-[var(--color-text-secondary)]">Documento</th>
+                  <th className="text-left p-4 text-[var(--color-text-secondary)]">Parcela</th>
+                  <th className="text-left p-4 text-[var(--color-text-secondary)]">Tipo</th>
+                  <th className="text-left p-4 text-[var(--color-text-secondary)]">Descrição</th>
+                  <th className="text-left p-4 text-[var(--color-text-secondary)]">Pessoa</th>
+                  <th className="text-left p-4 text-[var(--color-text-secondary)]">Valor Total</th>
+                  <th className="text-left p-4 text-[var(--color-text-secondary)]">Saldo</th>
+                  <th className="text-left p-4 text-[var(--color-text-secondary)]">Vencimento</th>
+                  <th className="text-left p-4 text-[var(--color-text-secondary)]">Status</th>
+                  <th className="text-center p-4 text-[var(--color-text-secondary)]">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {contas.map(conta => (
+                  <tr
+                    key={conta.id}
+                    className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]"
+                  >
+                    <td className="p-4 text-[var(--color-text)]">
+                      {conta.documento}
+                      {conta.serie && (
+                        <span className="text-sm text-[var(--color-text-secondary)]">
+                          {' '}
+                          ({conta.serie})
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-4 text-[var(--color-text)]">{conta.parcela}</td>
+                    <td className="p-4 text-[var(--color-text)]">{conta.tipo}</td>
+                    <td className="p-4 text-[var(--color-text)]">{conta.descricao}</td>
+                    <td className="p-4 text-[var(--color-text)]">{conta.pessoaNome || '-'}</td>
+                    <td className="p-4 text-[var(--color-text)]">
+                      {formatarMoeda(conta.valor_total)}
+                    </td>
+                    <td className="p-4 text-[var(--color-text)] font-semibold">
+                      {formatarMoeda(conta.saldo)}
+                    </td>
+                    <td className="p-4 text-[var(--color-text)]">
+                      {new Date(conta.vencimento).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="p-4">
+                      <span
+                        className={`px-2 py-1 rounded text-sm ${getStatusBadgeClass(conta.status)}`}
+                      >
+                        {conta.status}
+                      </span>
+                    </td>
+                    <td className="p-4" style={{ position: 'relative' }}>
+                      <div className="flex justify-center">
+                        <button
+                          onClick={e => {
+                            const newOpenId = openMenuId === conta.id ? null : conta.id;
+                            setOpenMenuId(newOpenId);
+
+                            if (newOpenId) {
+                              const button = e.currentTarget;
+                              const rect = button.getBoundingClientRect();
+                              const spaceBelow = window.innerHeight - rect.bottom;
+                              const spaceAbove = rect.top;
+
+                              // Se não houver espaço suficiente embaixo (menos de 200px), abre para cima
+                              setMenuPosition(
+                                spaceBelow < 200 && spaceAbove > 200 ? 'top' : 'bottom'
+                              );
+                            }
+                          }}
+                          className="p-2 hover:bg-[var(--color-bg)] rounded transition-colors"
+                          title="Ações"
+                        >
+                          <FiMoreVertical size={18} className="text-[var(--color-text)]" />
+                        </button>
+
+                        {openMenuId === conta.id && (
+                          <div
+                            ref={menuRef}
+                            className="absolute right-4 w-48 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md shadow-xl"
+                            style={{
+                              ...(menuPosition === 'bottom'
+                                ? { top: '100%', marginTop: '4px' }
+                                : { bottom: '100%', marginBottom: '4px' }),
+                              zIndex: 9999,
+                            }}
+                          >
+                            <div className="py-1">
+                              {(conta.status === 'Pendente' ||
+                                conta.status === 'Vencida' ||
+                                conta.status === 'ParcialmentePaga') && (
+                                <button
+                                  onClick={() => {
+                                    handleRegistrarBaixa(conta);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)] transition-colors text-left"
+                                >
+                                  <FiCheckCircle size={16} className="text-green-600" />
+                                  Pagar
+                                </button>
+                              )}
+                              {conta.status === 'Paga' && conta.movimentacaoBancariaId && (
+                                <button
+                                  onClick={() => {
+                                    handleEstornarBaixa(conta);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)] transition-colors text-left"
+                                >
+                                  <FiRotateCcw size={16} className="text-blue-600" />
+                                  Estornar Baixa
+                                </button>
+                              )}
+                              {conta.status !== 'Cancelada' && conta.status !== 'Paga' && (
+                                <button
+                                  onClick={() => {
+                                    handleCancelar(conta);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)] transition-colors text-left"
+                                >
+                                  <FiXCircle size={16} className="text-gray-600" />
+                                  Cancelar
+                                </button>
+                              )}
+                              {(conta.status === 'Pendente' || conta.status === 'Cancelada') && (
+                                <button
+                                  onClick={() => {
+                                    handleDelete(conta);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)] transition-colors text-left border-t border-[var(--color-border)]"
+                                >
+                                  <FiTrash2 size={16} className="text-red-600" />
+                                  Excluir
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

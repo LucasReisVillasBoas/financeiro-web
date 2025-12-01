@@ -1,4 +1,4 @@
-import { useTheme } from "../providers/ThemeProvider";
+import { useTheme } from '../providers/ThemeProvider';
 
 export default function Home() {
   const { theme, toggleTheme } = useTheme();
@@ -10,7 +10,7 @@ export default function Home() {
         onClick={toggleTheme}
         className="mt-4 px-4 py-2 rounded bg-primary text-primary-foreground"
       >
-        Mudar para {theme === "light" ? "Dark" : "Light"} Mode
+        Mudar para {theme === 'light' ? 'Dark' : 'Light'} Mode
       </button>
       <div className="bg-receivable text-white p-4 rounded">Recebimento</div>
       <div className="bg-payable text-white p-4 rounded">Conta a pagar</div>

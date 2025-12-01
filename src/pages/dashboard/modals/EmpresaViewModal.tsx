@@ -90,7 +90,11 @@ export const EmpresaViewModal: React.FC<EmpresaViewModalProps> = ({ empresa, onC
 
             <DetailItem
               label="Data Abertura"
-              value={empresa.data_abertura ? new Date(empresa.data_abertura).toLocaleDateString('pt-BR') : 'Não informado'}
+              value={
+                empresa.data_abertura
+                  ? new Date(empresa.data_abertura).toLocaleDateString('pt-BR')
+                  : 'Não informado'
+              }
             />
             <DetailItem label="ID do Cliente" value={empresa.cliente_id} />
           </div>

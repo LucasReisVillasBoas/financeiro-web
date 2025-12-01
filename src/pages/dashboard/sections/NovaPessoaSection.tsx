@@ -432,15 +432,11 @@ export const NovaPessoaSection: React.FC<NovaPessoaSectionProps> = ({ onNavigate
                   className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                 >
                   <option value="">Selecione...</option>
-                  <option value={TipoContribuinte.CONTRIBUINTE_ICMS}>
-                    1 - Contribuinte ICMS
-                  </option>
+                  <option value={TipoContribuinte.CONTRIBUINTE_ICMS}>1 - Contribuinte ICMS</option>
                   <option value={TipoContribuinte.CONTRIBUINTE_ISENTO}>
                     2 - Contribuinte Isento
                   </option>
-                  <option value={TipoContribuinte.NAO_CONTRIBUINTE}>
-                    9 - Não Contribuinte
-                  </option>
+                  <option value={TipoContribuinte.NAO_CONTRIBUINTE}>9 - Não Contribuinte</option>
                 </select>
                 <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
                   Classificação fiscal conforme tabela SEFAZ

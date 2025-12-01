@@ -153,9 +153,7 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
       const associacoes: Promise<any>[] = [];
 
       for (const empresaId of selectedEmpresas) {
-        associacoes.push(
-          usuarioService.associarEmpresaFilial(novoUsuario.id, { empresaId })
-        );
+        associacoes.push(usuarioService.associarEmpresaFilial(novoUsuario.id, { empresaId }));
       }
 
       for (const filialId of selectedFiliais) {
@@ -215,16 +213,10 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
 
   return (
     <div className="max-w-4xl mx-auto">
-      {error && (
-        <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">
-          {error}
-        </div>
-      )}
+      {error && <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">{error}</div>}
 
       {success && (
-        <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">
-          {success}
-        </div>
+        <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">{success}</div>
       )}
 
       <form

@@ -216,11 +216,7 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
         </button>
       </div>
 
-      {error && (
-        <div className="p-4 bg-red-100/30 text-red-800 rounded-md">
-          {error}
-        </div>
-      )}
+      {error && <div className="p-4 bg-red-100/30 text-red-800 rounded-md">{error}</div>}
 
       {loading ? (
         <div className="text-center py-8 text-[var(--color-text-secondary)]">

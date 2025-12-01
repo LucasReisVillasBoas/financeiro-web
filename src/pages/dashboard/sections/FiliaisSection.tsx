@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { FiEdit, FiTrash2, FiPlus } from "react-icons/fi";
-import { empresaService } from "../../../services/empresa.service";
-import type { Filial } from "../../../types/api.types";
+import React, { useState, useEffect } from 'react';
+import { FiEdit, FiTrash2, FiPlus } from 'react-icons/fi';
+import { empresaService } from '../../../services/empresa.service';
+import type { Filial } from '../../../types/api.types';
 
 interface FiliaisSectionProps {
   empresaId: string;
@@ -10,7 +10,7 @@ interface FiliaisSectionProps {
 export const FiliaisSection: React.FC<FiliaisSectionProps> = ({ empresaId }) => {
   const [filiais, setFiliais] = useState<Filial[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (empresaId) {
@@ -24,25 +24,25 @@ export const FiliaisSection: React.FC<FiliaisSectionProps> = ({ empresaId }) => 
       const data = await empresaService.listFiliais(empresaId);
       setFiliais(data);
     } catch (err: any) {
-      setError(err.message || "Erro ao carregar filiais");
+      setError(err.message || 'Erro ao carregar filiais');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (filialId: string) => {
-    if (!confirm("Deseja realmente excluir esta filial?")) return;
+    if (!confirm('Deseja realmente excluir esta filial?')) return;
 
     try {
       await empresaService.deleteFilial(filialId);
-      setFiliais(filiais.filter((f) => f.id !== filialId));
+      setFiliais(filiais.filter(f => f.id !== filialId));
     } catch (err: any) {
-      alert(err.message || "Erro ao excluir filial");
+      alert(err.message || 'Erro ao excluir filial');
     }
   };
 
   const getStatus = (filial: Filial) => {
-    return filial.deleted_at ? "Inativa" : "Ativa";
+    return filial.deleted_at ? 'Inativa' : 'Ativa';
   };
 
   return (
@@ -54,11 +54,7 @@ export const FiliaisSection: React.FC<FiliaisSectionProps> = ({ empresaId }) => 
         </button>
       </div>
 
-      {error && (
-        <div className="p-4 bg-red-100/30 text-red-800 rounded-md">
-          {error}
-        </div>
-      )}
+      {error && <div className="p-4 bg-red-100/30 text-red-800 rounded-md">{error}</div>}
 
       {loading ? (
         <div className="text-center py-8 text-[var(--color-text-secondary)]">
@@ -85,18 +81,23 @@ export const FiliaisSection: React.FC<FiliaisSectionProps> = ({ empresaId }) => 
                   </td>
                 </tr>
               ) : (
-                filiais.map((filial) => (
-                  <tr key={filial.id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]">
+                filiais.map(filial => (
+                  <tr
+                    key={filial.id}
+                    className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]"
+                  >
                     <td className="p-4 text-[var(--color-text)]">{filial.razao_social}</td>
                     <td className="p-4 text-[var(--color-text)]">{filial.nome_fantasia}</td>
                     <td className="p-4 text-[var(--color-text)]">{filial.cnpj_cpf}</td>
-                    <td className="p-4 text-[var(--color-text)]">{filial.cidade || "-"}</td>
+                    <td className="p-4 text-[var(--color-text)]">{filial.cidade || '-'}</td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded text-sm ${
-                        getStatus(filial) === "Ativa"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}>
+                      <span
+                        className={`px-2 py-1 rounded text-sm ${
+                          getStatus(filial) === 'Ativa'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
                         {getStatus(filial)}
                       </span>
                     </td>

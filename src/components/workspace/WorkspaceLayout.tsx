@@ -1,7 +1,7 @@
-import React from "react";
-import { Sidebar } from "./Sidebar";
-import { Header } from "./Header";
-import { Outlet, useLocation } from "react-router-dom";
+import React from 'react';
+import { Sidebar } from './Sidebar';
+import { Header } from './Header';
+import { Outlet, useLocation } from 'react-router-dom';
 
 interface WorkspaceLayoutProps {
   title?: string;
@@ -10,10 +10,9 @@ interface WorkspaceLayoutProps {
 export const WorkspaceLayout: React.FC<WorkspaceLayoutProps> = ({ title }) => {
   const location = useLocation();
 
-  let headerTitle = title || "Dashboard";
-  if (location.pathname.includes("receivable"))
-    headerTitle = "Contas a Receber";
-  if (location.pathname.includes("payable")) headerTitle = "Contas a Pagar";
+  let headerTitle = title || 'Dashboard';
+  if (location.pathname.includes('receivable')) headerTitle = 'Contas a Receber';
+  if (location.pathname.includes('payable')) headerTitle = 'Contas a Pagar';
 
   return (
     <div className="flex h-screen bg-[var(--color-bg)]">

@@ -149,7 +149,9 @@ export const MainWorkspace: React.FC = () => {
       case 'pessoas-nova':
         return <NovaPessoaSection onNavigate={handleNavigate} />;
       case 'pessoas-editar':
-        return <EditarPessoaSection pessoaId={sectionParams.pessoaId} onNavigate={handleNavigate} />;
+        return (
+          <EditarPessoaSection pessoaId={sectionParams.pessoaId} onNavigate={handleNavigate} />
+        );
       case 'financeiro-bancos':
         return <ContasBancariasSection />;
       case 'financeiro-movimentacao':

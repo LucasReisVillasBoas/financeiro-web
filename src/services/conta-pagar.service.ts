@@ -33,10 +33,7 @@ class ContaPagarService {
   }
 
   async update(id: string, dto: UpdateContaPagarDto): Promise<ContaPagar> {
-    const response: ApiResponse<ContaPagar> = await apiService.put(
-      `/contas-pagar/${id}`,
-      dto
-    );
+    const response: ApiResponse<ContaPagar> = await apiService.put(`/contas-pagar/${id}`, dto);
     return response.data!;
   }
 
