@@ -155,6 +155,7 @@ export const OnboardingEmpresa: React.FC = () => {
       ...formData,
       telefone: formData.telefone ? formData.telefone.replace(/\D/g, '') : '',
       celular: formData.celular ? formData.celular.replace(/\D/g, '') : '',
+      cnpj_cpf: formData.cnpj_cpf.replace(/\D/g, ''),
     };
 
     try {
@@ -182,15 +183,15 @@ export const OnboardingEmpresa: React.FC = () => {
         await cidadeService.create({
           clienteId: clienteId,
           filialId: empresa.id,
-          codigoIbge: formData.codigo_ibge || undefined,
-          uf: dto.uf || undefined,
+          codigoIbge: formData.codigo_ibge || '',
+          uf: dto.uf || '',
           pais: 'Brasil',
-          nome: dto.cidade,
+          nome: dto.cidade || '',
           codigoBacen: bacen || undefined,
         });
       }
-      await usuarioService.associarEmpresaFilial(clienteId, {
-        empresaId: empresa.id,
+      await usuarioService.associarEmpresaOnboarding(clienteId, {
+        filialId: empresa.id,
       });
       navigate('/dashboard');
     } catch (err: any) {

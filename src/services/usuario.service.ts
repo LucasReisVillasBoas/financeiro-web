@@ -81,6 +81,17 @@ class UsuarioService {
     return response.data!;
   }
 
+  async associarEmpresaOnboarding(
+    usuarioId: string,
+    dto: AssociarEmpresaFilialDto
+  ): Promise<UsuarioEmpresaFilial> {
+    const response: ApiResponse<UsuarioEmpresaFilial> = await apiService.post(
+      `/usuario/${usuarioId}/onboarding/empresas`,
+      dto
+    );
+    return response.data!;
+  }
+
   async listarAssociacoes(usuarioId: string): Promise<UsuarioEmpresaFilial[]> {
     const response: ApiResponse<UsuarioEmpresaFilial[]> = await apiService.get(
       `/usuario/${usuarioId}/empresas`
