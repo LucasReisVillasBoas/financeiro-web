@@ -23,6 +23,10 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
     onNavigate('empresas-listar');
   };
 
+  const cleanDocument = (value: string): string => {
+    return value.replace(/\D/g, '');
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
@@ -39,15 +43,14 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
       return;
     }
 
-    const cnpjSede = formData.get('cnpj-sede') as string;
+    const cnpjSede = cleanDocument(formData.get('cnpj-sede') as string);
     const sede = await empresaService.findByDocument(cnpjSede);
 
     const dto: CreateFilialDto = {
       cliente_id: clienteId,
-      empresa_id: sede.id,
       razao_social: formData.get('razao-social') as string,
       nome_fantasia: formData.get('nome-fantasia') as string,
-      cnpj_cpf: formData.get('cnpj') as string,
+      cnpj_cpf: cleanDocument(formData.get('cnpj') as string),
       inscricao_estadual: formData.get('inscricao-estadual') as string,
       cep: formData.get('cep') as string,
       logradouro: formData.get('logradouro') as string,

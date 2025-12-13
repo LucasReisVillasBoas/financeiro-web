@@ -71,6 +71,14 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
       }
 
       setPessoa(data);
+      // Formata a data para YYYY-MM-DD (formato esperado pelo input type="date")
+      const formatDateForInput = (date: string | Date | undefined | null): string => {
+        if (!date) return '';
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return '';
+        return d.toISOString().split('T')[0];
+      };
+
       setFormData({
         filialId: data.filial?.id || '',
         tipo: data.documento && data.documento?.length > 12 ? 'Jurídica' : 'Física',
@@ -79,7 +87,7 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
         ieRg: data.ieRg || '',
         im: data.im || '',
         tipoContribuinte: data.tipoContribuinte || '',
-        dataNascimento: data.aniversario || '',
+        dataNascimento: formatDateForInput(data.aniversario),
         email: data.email || '',
         telefone: formatTelefone(data.telefone || ''),
         cep: formatCep(data.endereco?.cep || ''),
@@ -178,6 +186,27 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
     setFormData(prev => ({ ...prev, [name]: formatted }));
   };
 
+  const mapContribuinte = (tipo: string): TipoContribuinte => {
+    const normalized = tipo?.toLowerCase().trim();
+
+    switch (normalized) {
+      case '1':
+      case 'contribuinte':
+        return TipoContribuinte.CONTRIBUINTE_ICMS;
+
+      case '2':
+      case 'isento':
+        return TipoContribuinte.CONTRIBUINTE_ISENTO;
+
+      case '9':
+      case 'n/a':
+        return TipoContribuinte.NAO_CONTRIBUINTE;
+
+      default:
+        return TipoContribuinte.NAO_CONTRIBUINTE;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -190,10 +219,11 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
         filialId: formData.filialId || undefined,
         ieRg: formData.ieRg || undefined,
         im: formData.im || undefined,
-        tipoContribuinte: formData.tipoContribuinte || undefined,
+        tipoContribuinte: mapContribuinte(formData.tipoContribuinte),
         email: formData.email || undefined,
         telefone: formData.telefone ? formData.telefone.replace(/\D/g, '') : undefined,
         ativo: formData.ativo,
+        aniversario: formData.dataNascimento,
         // Campos de endereço
         cep: formData.cep ? formData.cep.replace(/\D/g, '') : undefined,
         logradouro: formData.logradouro || undefined,

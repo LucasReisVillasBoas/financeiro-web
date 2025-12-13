@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { InputField } from '../../../components/InputField';
 import { empresaService } from '../../../services/empresa.service';
-import type { CreateFilialDto, Empresa } from '../../../types/api.types';
+import type { Empresa, UpdateFilialDto } from '../../../types/api.types';
 import { useAuth } from '../../../context/AuthContext';
 import { contatoService } from '../../../services/contato.service';
 import { cidadeService } from '../../../services/cidade.service';
@@ -68,13 +68,8 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
       return;
     }
 
-    const empresas = await empresaService.findByCliente(clienteId);
-    const sede = empresas.find(e => e.sede === null);
-    const sedeId = sede ? sede.id : '';
-
-    const dto: CreateFilialDto = {
+    const dto: UpdateFilialDto = {
       cliente_id: clienteId,
-      empresa_id: sedeId,
       razao_social: (formData.get('razao-social') as string) || empresaData?.razao_social || '',
       nome_fantasia: (formData.get('nome-fantasia') as string) || empresaData?.nome_fantasia || '',
       cnpj_cpf: (formData.get('cnpj') as string) || empresaData?.cnpj_cpf || '',

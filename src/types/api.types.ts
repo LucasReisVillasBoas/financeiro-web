@@ -92,7 +92,6 @@ export interface Filial {
 }
 
 export interface CreateFilialDto {
-  empresa_id: string;
   cliente_id: string;
   razao_social: string;
   nome_fantasia: string;
