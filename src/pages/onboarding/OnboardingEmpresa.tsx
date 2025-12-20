@@ -2,8 +2,10 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InputField } from '../../components/InputField';
 import { SelectField, ESTADOS_BRASIL } from '../../components/SelectField';
+import { CepField } from '../../components/CepField';
 import { Alert } from '../../components/Alert';
 import { onboardingService, OnboardingEmpresaDto } from '../../services/onboarding.service';
+import type { CepData } from '../../services/cep.service';
 
 interface FormData {
   // Empresa
@@ -86,11 +88,6 @@ export const OnboardingEmpresa: React.FC = () => {
       .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
   };
 
-  const formatCep = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    return numbers.replace(/(\d{5})(\d{0,3})/, '$1-$2').replace(/-$/, '');
-  };
-
   const scrollToTop = () => {
     topRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -122,8 +119,6 @@ export const OnboardingEmpresa: React.FC = () => {
       finalValue = formatPhone(value);
     } else if (id === 'cnpj') {
       finalValue = formatCpfCnpj(value);
-    } else if (id === 'cep') {
-      finalValue = formatCep(value);
     }
 
     setFormData(prev => ({
@@ -141,6 +136,17 @@ export const OnboardingEmpresa: React.FC = () => {
     setFormData(prev => ({
       ...prev,
       [formKey]: value,
+    }));
+  };
+
+  const handleAddressFound = (data: CepData) => {
+    setFormData(prev => ({
+      ...prev,
+      logradouro: data.logradouro || prev.logradouro,
+      bairro: data.bairro || prev.bairro,
+      cidade: data.cidade || prev.cidade,
+      uf: data.uf || prev.uf,
+      codigo_ibge: data.ibge || prev.codigo_ibge,
     }));
   };
 
@@ -341,14 +347,11 @@ export const OnboardingEmpresa: React.FC = () => {
                 Endereço
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <InputField
-                  id="cep"
-                  label="CEP"
-                  placeholder="00000-000"
-                  required
-                  maxLength={9}
+                <CepField
                   value={formData.cep}
-                  onChange={handleChange}
+                  onChange={cep => setFormData(prev => ({ ...prev, cep }))}
+                  onAddressFound={handleAddressFound}
+                  required
                 />
                 <InputField
                   id="logradouro"

@@ -9,6 +9,7 @@ interface InputFieldProps {
   value?: string;
   defaultValue?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   required?: boolean;
   disabled?: boolean;
   maxLength?: number;
@@ -23,6 +24,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   value,
   defaultValue,
   onChange,
+  onBlur,
   required = false,
   disabled = false,
   maxLength,
@@ -44,6 +46,7 @@ export const InputField: React.FC<InputFieldProps> = ({
         value={value}
         defaultValue={defaultValue}
         onChange={onChange}
+        onBlur={onBlur}
         required={required}
         disabled={disabled}
         maxLength={maxLength}

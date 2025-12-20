@@ -4,6 +4,8 @@ import type { CreatePessoaDto, Empresa } from '../../../types/api.types';
 import { TipoPessoa, TipoContribuinte } from '../../../types/api.types';
 import { pessoaService, empresaService } from '../../../services';
 import { useAuth } from '../../../context/AuthContext';
+import { CepField } from '../../../components/CepField';
+import type { CepData } from '../../../services/cep.service';
 
 interface NovaPessoaSectionProps {
   onNavigate: (section: string, params?: Record<string, any>) => void;
@@ -134,6 +136,16 @@ export const NovaPessoaSection: React.FC<NovaPessoaSectionProps> = ({ onNavigate
     const value = e.target.value;
     const formatted = formatCep(value);
     setFormData(prev => ({ ...prev, cep: formatted }));
+  };
+
+  const handleAddressFound = (data: CepData) => {
+    setFormData(prev => ({
+      ...prev,
+      logradouro: data.logradouro || prev.logradouro,
+      bairro: data.bairro || prev.bairro,
+      cidade: data.cidade || prev.cidade,
+      uf: data.uf || prev.uf,
+    }));
   };
 
   const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -511,18 +523,11 @@ export const NovaPessoaSection: React.FC<NovaPessoaSectionProps> = ({ onNavigate
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* CEP */}
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">CEP</label>
-              <input
-                type="text"
-                name="cep"
-                value={formData.cep}
-                onChange={handleCepChange}
-                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                placeholder="00000-000"
-                maxLength={9}
-              />
-            </div>
+            <CepField
+              value={formData.cep}
+              onChange={cep => setFormData(prev => ({ ...prev, cep }))}
+              onAddressFound={handleAddressFound}
+            />
 
             {/* Logradouro */}
             <div className="md:col-span-2">

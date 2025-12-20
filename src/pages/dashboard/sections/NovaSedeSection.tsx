@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { InputField } from '../../../components/InputField';
+import { SelectField, ESTADOS_BRASIL } from '../../../components/SelectField';
+import { CepField } from '../../../components/CepField';
 import { empresaService } from '../../../services/empresa.service';
 import type { CreateEmpresaDto } from '../../../types/api.types';
 import { useAuth } from '../../../context/AuthContext';
@@ -7,6 +9,7 @@ import { contatoService } from '../../../services/contato.service';
 import { cidadeService } from '../../../services/cidade.service';
 import { usuarioService } from '../../../services/usuario.service';
 import { perfilService } from '../../../services/perfil.service';
+import type { CepData } from '../../../services/cep.service';
 
 interface NovaSedeSecionProps {
   onNavigate: (section: string) => void;
@@ -18,6 +21,36 @@ export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) =
   const [success, setSuccess] = useState('');
   const [bacen, setBacen] = useState('');
   const { getClienteId } = useAuth();
+
+  // Estado para campos de endereço
+  const [endereco, setEndereco] = useState({
+    cep: '',
+    logradouro: '',
+    bairro: '',
+    cidade: '',
+    uf: '',
+    ibge: '',
+  });
+
+  const handleEnderecoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setEndereco(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleEstadoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setEndereco(prev => ({ ...prev, uf: e.target.value }));
+  };
+
+  const handleAddressFound = (data: CepData) => {
+    setEndereco(prev => ({
+      ...prev,
+      logradouro: data.logradouro || prev.logradouro,
+      bairro: data.bairro || prev.bairro,
+      cidade: data.cidade || prev.cidade,
+      uf: data.uf || prev.uf,
+      ibge: data.ibge || prev.ibge,
+    }));
+  };
 
   const handleCancel = () => {
     onNavigate('empresas-listar');
@@ -45,17 +78,17 @@ export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) =
       nome_fantasia: formData.get('nome-fantasia') as string,
       cnpj_cpf: formData.get('cnpj') as string,
       inscricao_estadual: formData.get('inscricao-estadual') as string,
-      cep: formData.get('cep') as string,
-      logradouro: formData.get('logradouro') as string,
+      cep: endereco.cep.replace(/\D/g, ''),
+      logradouro: endereco.logradouro,
       numero: formData.get('numero') as string,
       complemento: formData.get('complemento') as string,
-      bairro: formData.get('bairro') as string,
-      cidade: formData.get('cidade') as string,
-      uf: formData.get('estado') as string,
+      bairro: endereco.bairro,
+      cidade: endereco.cidade,
+      uf: endereco.uf,
       telefone: formData.get('telefone') as string,
       celular: formData.get('celular') as string,
       email: formData.get('email') as string,
-      codigo_ibge: formData.get('ibge') as string,
+      codigo_ibge: endereco.ibge,
       data_abertura: formData.get('data-abertura')
         ? new Date(formData.get('data-abertura') as string)
         : undefined,
@@ -95,7 +128,7 @@ export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) =
       await cidadeService.create({
         clienteId: clienteId,
         filialId: empresa.id,
-        codigoIbge: formData.get('ibge') as string,
+        codigoIbge: endereco.ibge,
         uf: dto.uf || '',
         pais: 'Brasil',
         nome: dto.cidade || '',
@@ -108,6 +141,7 @@ export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) =
 
       setSuccess('Empresa (sede) cadastrada com sucesso!');
       setBacen('');
+      setEndereco({ cep: '', logradouro: '', bairro: '', cidade: '', uf: '', ibge: '' });
       form.reset();
 
       setTimeout(() => {
@@ -175,12 +209,18 @@ export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) =
         <div className="border-t border-[var(--color-border)] pt-6">
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Endereço</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InputField id="cep" label="CEP" type="text" placeholder="00000-000" />
+            <CepField
+              value={endereco.cep}
+              onChange={cep => setEndereco(prev => ({ ...prev, cep }))}
+              onAddressFound={handleAddressFound}
+            />
             <InputField
               id="logradouro"
               label="Logradouro"
               type="text"
               placeholder="Rua, Avenida..."
+              value={endereco.logradouro}
+              onChange={handleEnderecoChange}
             />
             <InputField id="numero" label="Número" type="text" placeholder="Nº" />
             <InputField
@@ -189,11 +229,37 @@ export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) =
               type="text"
               placeholder="Apto, Sala..."
             />
-            <InputField id="bairro" label="Bairro" type="text" placeholder="Digite o bairro" />
-            <InputField id="cidade" label="Cidade" type="text" placeholder="Digite a cidade" />
-            <InputField id="estado" label="Estado" type="text" placeholder="UF" />
-            <InputField id="ibge" label="Código IBGE" placeholder="Digite o código IBGE" />
-
+            <InputField
+              id="bairro"
+              label="Bairro"
+              type="text"
+              placeholder="Digite o bairro"
+              value={endereco.bairro}
+              onChange={handleEnderecoChange}
+            />
+            <InputField
+              id="cidade"
+              label="Cidade"
+              type="text"
+              placeholder="Digite a cidade"
+              value={endereco.cidade}
+              onChange={handleEnderecoChange}
+            />
+            <SelectField
+              id="uf"
+              label="Estado"
+              placeholder="Selecione o estado"
+              options={ESTADOS_BRASIL}
+              value={endereco.uf}
+              onChange={handleEstadoChange}
+            />
+            <InputField
+              id="ibge"
+              label="Código IBGE"
+              placeholder="Digite o código IBGE"
+              value={endereco.ibge}
+              onChange={handleEnderecoChange}
+            />
             <InputField
               id="codigo-bacen"
               label="Código BACEN"

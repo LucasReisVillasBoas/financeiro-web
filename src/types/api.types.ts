@@ -91,6 +91,14 @@ export interface Filial {
   deleted_at?: string;
 }
 
+export interface CreateFilialContatoDto {
+  nome: string;
+  email?: string;
+  telefone?: string;
+  celular?: string;
+  funcao?: string;
+}
+
 export interface CreateFilialDto {
   empresa_id: string;
   cliente_id: string;
@@ -111,6 +119,7 @@ export interface CreateFilialDto {
   celular?: string;
   email?: string;
   data_abertura?: Date;
+  contato?: CreateFilialContatoDto;
 }
 
 export interface UpdateFilialDto extends Partial<CreateFilialDto> {}

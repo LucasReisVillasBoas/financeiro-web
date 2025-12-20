@@ -285,9 +285,14 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
                           <FiEdit size={18} />
                         </button>
                         <button
-                          className="p-2 hover:bg-red-100:bg-red-900 rounded transition-colors text-red-600"
-                          onClick={() => handleDelete(empresa.id)}
-                          title="Excluir"
+                          className={`p-2 rounded transition-colors ${
+                            !empresa.sede
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'hover:bg-red-100 text-red-600'
+                          }`}
+                          onClick={() => empresa.sede && handleDelete(empresa.id)}
+                          disabled={!empresa.sede}
+                          title={!empresa.sede ? 'Não é possível excluir a sede' : 'Excluir'}
                         >
                           <FiTrash2 size={18} />
                         </button>

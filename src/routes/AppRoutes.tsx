@@ -2,7 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
 import { PublicRoute } from './PublicRoute';
-import { ProtectedRoute } from './ProtectedRoute';
+import { RequiresEmpresaRoute } from './RequiresEmpresaRoute';
+import { OnboardingRoute } from './OnboardingRoute';
 
 import LoginPage from '../pages/auth/LoginPage';
 import RegisterPage from '../pages/auth/RegisterPage';
@@ -33,23 +34,23 @@ export const AppRoutes: React.FC = () => {
             }
           />
 
-          {/* Onboarding */}
+          {/* Onboarding - Only for users without empresa */}
           <Route
             path="/onboarding/empresa"
             element={
-              <ProtectedRoute>
+              <OnboardingRoute>
                 <OnboardingEmpresa />
-              </ProtectedRoute>
+              </OnboardingRoute>
             }
           />
 
-          {/* Protected Workspace */}
+          {/* Protected Workspace - Requires Empresa */}
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
+              <RequiresEmpresaRoute>
                 <MainWorkspace />
-              </ProtectedRoute>
+              </RequiresEmpresaRoute>
             }
           />
 

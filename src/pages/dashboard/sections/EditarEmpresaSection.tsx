@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { InputField } from '../../../components/InputField';
+import { SelectField, ESTADOS_BRASIL } from '../../../components/SelectField';
+import { CepField } from '../../../components/CepField';
 import { empresaService } from '../../../services/empresa.service';
-import type { CreateFilialDto, Empresa } from '../../../types/api.types';
+import type { Empresa } from '../../../types/api.types';
 import { useAuth } from '../../../context/AuthContext';
-import { contatoService } from '../../../services/contato.service';
-import { cidadeService } from '../../../services/cidade.service';
+import type { CepData } from '../../../services/cep.service';
 
 interface EditarEmpresaSectionProps {
   empresaId: string;
@@ -24,6 +25,42 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
   const [empresaData, setEmpresaData] = useState<Empresa | null>(null);
   const { getClienteId } = useAuth();
 
+  // Estado para campos editáveis
+  const [dadosEmpresa, setDadosEmpresa] = useState({
+    razao_social: '',
+    nome_fantasia: '',
+    inscricao_estadual: '',
+    data_abertura: '',
+    cnpj_cpf: '', // Apenas para exibição formatada
+  });
+
+  // Estado para campos de endereço
+  const [endereco, setEndereco] = useState({
+    cep: '',
+    logradouro: '',
+    bairro: '',
+    cidade: '',
+    uf: '',
+    ibge: '',
+  });
+
+  const formatCep = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    return numbers.replace(/(\d{5})(\d{0,3})/, '$1-$2').replace(/-$/, '');
+  };
+
+  const formatCnpjCpf = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length === 11) {
+      // CPF: 000.000.000-00
+      return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    } else if (numbers.length === 14) {
+      // CNPJ: 00.000.000/0000-00
+      return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    }
+    return value;
+  };
+
   useEffect(() => {
     const fetchEmpresaData = async () => {
       if (!empresaId) return;
@@ -32,12 +69,32 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
         const data = await empresaService.findOne(empresaId);
         setEmpresaData(data);
 
+        // Preencher dados da empresa
+        setDadosEmpresa({
+          razao_social: data.razao_social || '',
+          nome_fantasia: data.nome_fantasia || '',
+          inscricao_estadual: data.inscricao_estadual || '',
+          data_abertura: data.data_abertura
+            ? new Date(data.data_abertura).toISOString().split('T')[0]
+            : '',
+          cnpj_cpf: data.cnpj_cpf ? formatCnpjCpf(data.cnpj_cpf) : '',
+        });
+
         if (data.telefone) {
           setTelefone(formatPhone(data.telefone));
         }
         if (data.celular) {
           setCelular(formatPhone(data.celular));
         }
+        // Preencher estado do endereço
+        setEndereco({
+          cep: data.cep ? formatCep(data.cep) : '',
+          logradouro: data.logradouro || '',
+          bairro: data.bairro || '',
+          cidade: data.cidade || '',
+          uf: data.uf || '',
+          ibge: data.codigo_ibge || '',
+        });
       } catch (error) {
         setError('Erro ao buscar dados da empresa');
       }
@@ -68,63 +125,28 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
       return;
     }
 
-    const empresas = await empresaService.findByCliente(clienteId);
-    const sede = empresas.find(e => e.sede === null);
-    const sedeId = sede ? sede.id : '';
-
-    const dto: CreateFilialDto = {
+    const dto = {
       cliente_id: clienteId,
-      empresa_id: sedeId,
-      razao_social: (formData.get('razao-social') as string) || empresaData?.razao_social || '',
-      nome_fantasia: (formData.get('nome-fantasia') as string) || empresaData?.nome_fantasia || '',
-      cnpj_cpf: (formData.get('cnpj') as string) || empresaData?.cnpj_cpf || '',
-      inscricao_estadual:
-        (formData.get('inscricao-estadual') as string) || empresaData?.inscricao_estadual || '',
-      cep: formData.get('cep') as string,
-      logradouro: formData.get('logradouro') as string,
-      numero: formData.get('numero') as string,
-      complemento: formData.get('complemento') as string,
-      bairro: formData.get('bairro') as string,
-      cidade: formData.get('cidade') as string,
-      uf: formData.get('estado') as string,
-      telefone: telefone,
-      celular: celular,
-      email: formData.get('email') as string,
-      codigo_ibge: formData.get('ibge') as string,
+      razao_social: dadosEmpresa.razao_social,
+      nome_fantasia: dadosEmpresa.nome_fantasia,
+      cnpj_cpf: empresaData?.cnpj_cpf || '', // Mantém o original sem formatação
+      inscricao_estadual: dadosEmpresa.inscricao_estadual || undefined,
+      cep: endereco.cep.replace(/\D/g, '') || undefined,
+      logradouro: endereco.logradouro || undefined,
+      numero: (formData.get('numero') as string) || undefined,
+      complemento: (formData.get('complemento') as string) || undefined,
+      bairro: endereco.bairro || undefined,
+      cidade: endereco.cidade || undefined,
+      uf: endereco.uf || undefined,
+      telefone: telefone.replace(/\D/g, '') || undefined,
+      celular: celular.replace(/\D/g, '') || undefined,
+      email: (formData.get('email') as string) || undefined,
+      codigo_ibge: endereco.ibge || undefined,
+      data_abertura: dadosEmpresa.data_abertura ? new Date(dadosEmpresa.data_abertura) : undefined,
     };
 
     try {
-      if (empresaData?.sede) {
-        await empresaService.updateFilial(empresaId, dto);
-      } else {
-        await empresaService.update(empresaId, dto);
-      }
-
-      try {
-        const contato = await contatoService.findOneByTelefone(dto.celular || dto.telefone || '');
-        if (contato?.id) {
-          await contatoService.update(contato.id, {
-            telefone: dto.telefone || '',
-            celular: dto.celular || '',
-            email: dto.email || '',
-          });
-        }
-      } catch (contatoErr) {
-        console.warn('Erro ao atualizar contato:', contatoErr);
-      }
-
-      try {
-        const cidade = await cidadeService.findByCodigoIbge(empresaData?.codigo_ibge || '');
-        if (cidade?.id) {
-          await cidadeService.update(cidade.id, {
-            nome: dto.cidade || '',
-            uf: dto.uf || '',
-            codigoBacen: bacen || '0',
-          });
-        }
-      } catch (cidadeErr) {
-        console.warn('Erro ao atualizar cidade:', cidadeErr);
-      }
+      await empresaService.update(empresaId, dto);
 
       setSuccess('Empresa atualizada com sucesso!');
       onNavigate('empresas-listar');
@@ -166,6 +188,38 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
     setBacen(e.target.value);
   };
 
+  const handleDadosEmpresaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    const fieldMap: Record<string, string> = {
+      'razao-social': 'razao_social',
+      'nome-fantasia': 'nome_fantasia',
+      'inscricao-estadual': 'inscricao_estadual',
+      'data-abertura': 'data_abertura',
+    };
+    const fieldName = fieldMap[id] || id;
+    setDadosEmpresa(prev => ({ ...prev, [fieldName]: value }));
+  };
+
+  const handleEnderecoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setEndereco(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleEstadoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setEndereco(prev => ({ ...prev, uf: e.target.value }));
+  };
+
+  const handleAddressFound = (data: CepData) => {
+    setEndereco(prev => ({
+      ...prev,
+      logradouro: data.logradouro || prev.logradouro,
+      bairro: data.bairro || prev.bairro,
+      cidade: data.cidade || prev.cidade,
+      uf: data.uf || prev.uf,
+      ibge: data.ibge || prev.ibge,
+    }));
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       {error && <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">{error}</div>}
@@ -184,63 +238,58 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
             label="Razão Social"
             type="text"
             placeholder="Digite a razão social"
-            disabled={true}
-            defaultValue={empresaData?.razao_social || ''}
+            value={dadosEmpresa.razao_social}
+            onChange={handleDadosEmpresaChange}
           />
           <InputField
             id="nome-fantasia"
             label="Nome Fantasia"
             type="text"
-            disabled={true}
             placeholder="Digite o nome fantasia"
-            defaultValue={empresaData?.nome_fantasia || ''}
+            value={dadosEmpresa.nome_fantasia}
+            onChange={handleDadosEmpresaChange}
           />
           <InputField
             id="cnpj"
-            label="CNPJ"
+            label="CNPJ/CPF"
             type="text"
             disabled={true}
             placeholder="00.000.000/0000-00"
-            defaultValue={empresaData?.cnpj_cpf || ''}
+            value={dadosEmpresa.cnpj_cpf}
           />
           <InputField
             id="inscricao-estadual"
             label="Inscrição Estadual"
             type="text"
-            disabled={true}
             placeholder="Digite a IE"
-            defaultValue={empresaData?.inscricao_estadual || ''}
+            value={dadosEmpresa.inscricao_estadual}
+            onChange={handleDadosEmpresaChange}
           />
           <InputField
             id="data-abertura"
             label="Data de Abertura"
             type="date"
-            disabled={true}
             placeholder=""
-            defaultValue={
-              empresaData?.data_abertura
-                ? new Date(empresaData.data_abertura).toISOString().split('T')[0]
-                : ''
-            }
+            value={dadosEmpresa.data_abertura}
+            onChange={handleDadosEmpresaChange}
           />
         </div>
 
         <div className="border-t border-[var(--color-border)] pt-6">
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Endereço</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InputField
-              id="cep"
-              label="CEP"
-              type="text"
-              placeholder="00000-000"
-              defaultValue={empresaData?.cep || ''}
+            <CepField
+              value={endereco.cep}
+              onChange={cep => setEndereco(prev => ({ ...prev, cep }))}
+              onAddressFound={handleAddressFound}
             />
             <InputField
               id="logradouro"
               label="Logradouro"
               type="text"
               placeholder="Rua, Avenida..."
-              defaultValue={empresaData?.logradouro || ''}
+              value={endereco.logradouro}
+              onChange={handleEnderecoChange}
             />
             <InputField
               id="numero"
@@ -261,29 +310,32 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
               label="Bairro"
               type="text"
               placeholder="Digite o bairro"
-              defaultValue={empresaData?.bairro || ''}
+              value={endereco.bairro}
+              onChange={handleEnderecoChange}
             />
             <InputField
               id="cidade"
               label="Cidade"
               type="text"
               placeholder="Digite a cidade"
-              defaultValue={empresaData?.cidade || ''}
+              value={endereco.cidade}
+              onChange={handleEnderecoChange}
             />
-            <InputField
-              id="estado"
+            <SelectField
+              id="uf"
               label="Estado"
-              type="text"
-              placeholder="UF"
-              defaultValue={empresaData?.uf || ''}
+              placeholder="Selecione o estado"
+              options={ESTADOS_BRASIL}
+              value={endereco.uf}
+              onChange={handleEstadoChange}
             />
             <InputField
               id="ibge"
               label="Código IBGE"
               placeholder="Digite o código IBGE"
-              defaultValue={empresaData?.codigo_ibge || ''}
+              value={endereco.ibge}
+              onChange={handleEnderecoChange}
             />
-
             <InputField
               id="codigo-bacen"
               label="Código BACEN"

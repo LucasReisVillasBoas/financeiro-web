@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { InputField } from '../../../components/InputField';
+import { SelectField, ESTADOS_BRASIL } from '../../../components/SelectField';
+import { CepField } from '../../../components/CepField';
 import { empresaService } from '../../../services/empresa.service';
-import type { CreateFilialDto } from '../../../types/api.types';
+import type { CreateFilialDto, Empresa } from '../../../types/api.types';
 import { useAuth } from '../../../context/AuthContext';
-import { contatoService } from '../../../services/contato.service';
-import { cidadeService } from '../../../services/cidade.service';
 import { usuarioService } from '../../../services/usuario.service';
 import { perfilService } from '../../../services/perfil.service';
+import type { CepData } from '../../../services/cep.service';
 
 interface NovaFilialSectionProps {
   onNavigate: (section: string) => void;
@@ -14,10 +15,109 @@ interface NovaFilialSectionProps {
 
 export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate }) => {
   const [loading, setLoading] = useState(false);
+  const [loadingSede, setLoadingSede] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [bacen, setBacen] = useState('');
+  const [sede, setSede] = useState<Empresa | null>(null);
+  const [cnpj, setCnpj] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [celular, setCelular] = useState('');
   const { getClienteId } = useAuth();
+
+  // Funções de formatação
+  const formatCnpj = (value: string): string => {
+    const numbers = value.replace(/\D/g, '');
+    return numbers
+      .replace(/(\d{2})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1/$2')
+      .replace(/(\d{4})(\d)/, '$1-$2')
+      .substring(0, 18);
+  };
+
+  const formatPhone = (value: string): string => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 10) {
+      return numbers
+        .replace(/^(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4})(\d)/, '$1-$2');
+    } else {
+      return numbers
+        .replace(/^(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{5})(\d)/, '$1-$2')
+        .substring(0, 15);
+    }
+  };
+
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCnpj(formatCnpj(e.target.value));
+  };
+
+  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTelefone(formatPhone(e.target.value));
+  };
+
+  const handleCelularChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCelular(formatPhone(e.target.value));
+  };
+
+  // Buscar a sede automaticamente
+  useEffect(() => {
+    const fetchSede = async () => {
+      const clienteId = getClienteId();
+      if (!clienteId) {
+        setError('Erro ao obter informações do usuário.');
+        setLoadingSede(false);
+        return;
+      }
+
+      try {
+        const empresas = await empresaService.findByCliente(clienteId);
+        const sedeEmpresa = empresas.find(e => !e.sede);
+        if (sedeEmpresa) {
+          setSede(sedeEmpresa);
+        } else {
+          setError('Nenhuma sede encontrada. Cadastre uma sede primeiro.');
+        }
+      } catch (err: any) {
+        setError(err.message || 'Erro ao buscar sede');
+      } finally {
+        setLoadingSede(false);
+      }
+    };
+
+    fetchSede();
+  }, [getClienteId]);
+
+  // Estado para campos de endereço
+  const [endereco, setEndereco] = useState({
+    cep: '',
+    logradouro: '',
+    bairro: '',
+    cidade: '',
+    uf: '',
+    ibge: '',
+  });
+
+  const handleEnderecoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setEndereco(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleEstadoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setEndereco(prev => ({ ...prev, uf: e.target.value }));
+  };
+
+  const handleAddressFound = (data: CepData) => {
+    setEndereco(prev => ({
+      ...prev,
+      logradouro: data.logradouro || prev.logradouro,
+      bairro: data.bairro || prev.bairro,
+      cidade: data.cidade || prev.cidade,
+      uf: data.uf || prev.uf,
+      ibge: data.ibge || prev.ibge,
+    }));
+  };
 
   const handleCancel = () => {
     onNavigate('empresas-listar');
@@ -39,31 +139,49 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
       return;
     }
 
-    const cnpjSede = formData.get('cnpj-sede') as string;
-    const sede = await empresaService.findByDocument(cnpjSede);
+    if (!sede) {
+      setError('Sede não encontrada. Não é possível cadastrar filial.');
+      setLoading(false);
+      return;
+    }
+
+    const nomeFantasia = formData.get('nome-fantasia') as string;
+    const emailValue = formData.get('email') as string;
+
+    const inscricaoEstadual = formData.get('inscricao-estadual') as string;
+    const numeroValue = formData.get('numero') as string;
+    const complementoValue = formData.get('complemento') as string;
+    const dataAbertura = formData.get('data-abertura') as string;
 
     const dto: CreateFilialDto = {
-      cliente_id: clienteId,
       empresa_id: sede.id,
+      cliente_id: clienteId,
       razao_social: formData.get('razao-social') as string,
-      nome_fantasia: formData.get('nome-fantasia') as string,
-      cnpj_cpf: formData.get('cnpj') as string,
-      inscricao_estadual: formData.get('inscricao-estadual') as string,
-      cep: formData.get('cep') as string,
-      logradouro: formData.get('logradouro') as string,
-      numero: formData.get('numero') as string,
-      complemento: formData.get('complemento') as string,
-      bairro: formData.get('bairro') as string,
-      cidade: formData.get('cidade') as string,
-      uf: formData.get('estado') as string,
-      telefone: formData.get('telefone') as string,
-      celular: formData.get('celular') as string,
-      email: formData.get('email') as string,
-      codigo_ibge: formData.get('ibge') as string,
-      data_abertura: formData.get('data-abertura')
-        ? new Date(formData.get('data-abertura') as string)
-        : undefined,
+      nome_fantasia: nomeFantasia,
+      cnpj_cpf: cnpj.replace(/\D/g, ''),
+      inscricao_estadual: inscricaoEstadual || undefined,
+      cep: endereco.cep.replace(/\D/g, '') || undefined,
+      logradouro: endereco.logradouro || undefined,
+      numero: numeroValue || undefined,
+      complemento: complementoValue || undefined,
+      bairro: endereco.bairro || undefined,
+      cidade: endereco.cidade || undefined,
+      uf: endereco.uf || undefined,
+      data_abertura: dataAbertura ? new Date(dataAbertura) : undefined,
     };
+
+    // Adiciona contato apenas se tiver dados
+    if (nomeFantasia) {
+      dto.contato = {
+        nome: nomeFantasia,
+        email: emailValue || undefined,
+        telefone: telefone.replace(/\D/g, '') || undefined,
+        celular: celular.replace(/\D/g, '') || undefined,
+        funcao: 'Contato Principal',
+      };
+    }
+
+    console.log('DTO enviado:', JSON.stringify(dto, null, 2));
 
     try {
       const perfil = await perfilService.findAll(clienteId);
@@ -84,29 +202,14 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
         });
       }
       const empresa = await empresaService.createFilial(sede.id, dto);
-      await contatoService.create({
-        clienteId: clienteId,
-        filialId: empresa.id,
-        funcao: 'Contato Principal',
-        celular: dto.celular || '',
-        nome: dto.nome_fantasia,
-        email: dto.email || '',
-        telefone: dto.telefone || '',
-      });
-      await cidadeService.create({
-        clienteId: clienteId,
-        filialId: empresa.id,
-        codigoIbge: formData.get('ibge') as string,
-        uf: dto.uf || '',
-        pais: 'Brasil',
-        nome: dto.cidade || '',
-        codigoBacen: bacen || '',
-      });
       await usuarioService.associarEmpresaFilial(clienteId, {
         filialId: empresa.id,
       });
       setSuccess('Filial cadastrada com sucesso!');
-      setBacen('');
+      setCnpj('');
+      setTelefone('');
+      setCelular('');
+      setEndereco({ cep: '', logradouro: '', bairro: '', cidade: '', uf: '', ibge: '' });
       form.reset();
     } catch (err: any) {
       setError(err.message || 'Erro ao cadastrar filial');
@@ -115,9 +218,6 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
     }
   };
 
-  const handleBacenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setBacen(e.target.value);
-  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -127,6 +227,15 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
         <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">{success}</div>
       )}
 
+      {loadingSede ? (
+        <div className="text-center py-8 text-[var(--color-text-secondary)]">
+          Carregando informações da sede...
+        </div>
+      ) : !sede ? (
+        <div className="text-center py-8 text-[var(--color-text-secondary)]">
+          Nenhuma sede encontrada.
+        </div>
+      ) : (
       <form
         onSubmit={handleSubmit}
         className="space-y-6 bg-[var(--color-surface)] p-6 rounded-md shadow"
@@ -136,7 +245,8 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
             id="cnpj-sede"
             label="CNPJ Sede"
             type="text"
-            placeholder="00.000.000/0000-00"
+            value={formatCnpj(sede.cnpj_cpf || '')}
+            disabled={true}
           />
           <InputField
             id="razao-social"
@@ -150,7 +260,14 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
             type="text"
             placeholder="Digite o nome fantasia"
           />
-          <InputField id="cnpj" label="CNPJ" type="text" placeholder="00.000.000/0000-00" />
+          <InputField
+            id="cnpj"
+            label="CNPJ"
+            type="text"
+            placeholder="00.000.000/0000-00"
+            value={cnpj}
+            onChange={handleCnpjChange}
+          />
           <InputField
             id="inscricao-estadual"
             label="Inscrição Estadual"
@@ -163,12 +280,18 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
         <div className="border-t border-[var(--color-border)] pt-6">
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Endereço</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InputField id="cep" label="CEP" type="text" placeholder="00000-000" />
+            <CepField
+              value={endereco.cep}
+              onChange={cep => setEndereco(prev => ({ ...prev, cep }))}
+              onAddressFound={handleAddressFound}
+            />
             <InputField
               id="logradouro"
               label="Logradouro"
               type="text"
               placeholder="Rua, Avenida..."
+              value={endereco.logradouro}
+              onChange={handleEnderecoChange}
             />
             <InputField id="numero" label="Número" type="text" placeholder="Nº" />
             <InputField
@@ -177,17 +300,36 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
               type="text"
               placeholder="Apto, Sala..."
             />
-            <InputField id="bairro" label="Bairro" type="text" placeholder="Digite o bairro" />
-            <InputField id="cidade" label="Cidade" type="text" placeholder="Digite a cidade" />
-            <InputField id="estado" label="Estado" type="text" placeholder="UF" />
-            <InputField id="ibge" label="Código IBGE" placeholder="Digite o código IBGE" />
-
             <InputField
-              id="codigo-bacen"
-              label="Código BACEN"
-              placeholder="Digite o código BACEN"
-              value={bacen}
-              onChange={handleBacenChange}
+              id="bairro"
+              label="Bairro"
+              type="text"
+              placeholder="Digite o bairro"
+              value={endereco.bairro}
+              onChange={handleEnderecoChange}
+            />
+            <InputField
+              id="cidade"
+              label="Cidade"
+              type="text"
+              placeholder="Digite a cidade"
+              value={endereco.cidade}
+              onChange={handleEnderecoChange}
+            />
+            <SelectField
+              id="uf"
+              label="Estado"
+              placeholder="Selecione o estado"
+              options={ESTADOS_BRASIL}
+              value={endereco.uf}
+              onChange={handleEstadoChange}
+            />
+            <InputField
+              id="ibge"
+              label="Código IBGE"
+              placeholder="Digite o código IBGE"
+              value={endereco.ibge}
+              onChange={handleEnderecoChange}
             />
           </div>
         </div>
@@ -195,8 +337,22 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
         <div className="border-t border-[var(--color-border)] pt-6">
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Contato</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InputField id="telefone" label="Telefone" type="tel" placeholder="(00) 0000-0000" />
-            <InputField id="celular" label="Celular" type="tel" placeholder="(00) 0000-0000" />
+            <InputField
+              id="telefone"
+              label="Telefone"
+              type="tel"
+              placeholder="(00) 0000-0000"
+              value={telefone}
+              onChange={handleTelefoneChange}
+            />
+            <InputField
+              id="celular"
+              label="Celular"
+              type="tel"
+              placeholder="(00) 00000-0000"
+              value={celular}
+              onChange={handleCelularChange}
+            />
             <InputField id="email" label="E-mail" type="email" placeholder="empresa@email.com" />
           </div>
         </div>
@@ -218,6 +374,7 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
           </button>
         </div>
       </form>
+      )}
     </div>
   );
 };

@@ -23,6 +23,40 @@ const getStatus = (empresa: Empresa) => {
   return empresa.deleted_at ? 'Inativa' : 'Ativa';
 };
 
+// Funções de formatação
+const formatCnpjCpf = (value: string | null | undefined): string => {
+  if (!value) return 'Não informado';
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length === 11) {
+    // CPF: 000.000.000-00
+    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  } else if (numbers.length === 14) {
+    // CNPJ: 00.000.000/0000-00
+    return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  }
+  return value;
+};
+
+const formatCep = (value: string | null | undefined): string => {
+  if (!value) return 'Não informado';
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length === 8) {
+    return numbers.replace(/(\d{5})(\d{3})/, '$1-$2');
+  }
+  return value;
+};
+
+const formatPhone = (value: string | null | undefined): string => {
+  if (!value) return 'Não informado';
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length === 10) {
+    return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+  } else if (numbers.length === 11) {
+    return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  }
+  return value;
+};
+
 export const EmpresaViewModal: React.FC<EmpresaViewModalProps> = ({ empresa, onClose }) => {
   const fullAddress = [
     empresa.logradouro,
@@ -62,7 +96,6 @@ export const EmpresaViewModal: React.FC<EmpresaViewModalProps> = ({ empresa, onC
             <h4 className="text-lg font-semibold text-[var(--color-primary)] border-b border-[var(--color-primary)] pb-1 mb-3">
               Informações Gerais
             </h4>
-            <DetailItem label="ID" value={empresa.id} />
             <DetailItem label="Razão Social" value={empresa.razao_social} />
             <DetailItem label="Nome Fantasia" value={empresa.nome_fantasia} />
 
@@ -96,14 +129,13 @@ export const EmpresaViewModal: React.FC<EmpresaViewModalProps> = ({ empresa, onC
                   : 'Não informado'
               }
             />
-            <DetailItem label="ID do Cliente" value={empresa.cliente_id} />
           </div>
 
           <div className="space-y-3">
             <h4 className="text-lg font-semibold text-[var(--color-primary)] border-b border-[var(--color-primary)] pb-1 mb-3">
               Documentos
             </h4>
-            <DetailItem label="CNPJ/CPF" value={empresa.cnpj_cpf} />
+            <DetailItem label="CNPJ/CPF" value={formatCnpjCpf(empresa.cnpj_cpf)} />
             <DetailItem label="Inscrição Estadual" value={empresa.inscricao_estadual} />
             <DetailItem label="Inscrição Municipal" value={empresa.inscricao_municipal} />
           </div>
@@ -113,8 +145,8 @@ export const EmpresaViewModal: React.FC<EmpresaViewModalProps> = ({ empresa, onC
               Contatos
             </h4>
             <DetailItem label="E-mail" value={empresa.email} />
-            <DetailItem label="Telefone" value={empresa.telefone} />
-            <DetailItem label="Celular" value={empresa.celular} />
+            <DetailItem label="Telefone" value={formatPhone(empresa.telefone)} />
+            <DetailItem label="Celular" value={formatPhone(empresa.celular)} />
           </div>
 
           <div className="space-y-3">
@@ -131,7 +163,7 @@ export const EmpresaViewModal: React.FC<EmpresaViewModalProps> = ({ empresa, onC
               </p>
             </div>
 
-            <DetailItem label="CEP" value={empresa.cep} />
+            <DetailItem label="CEP" value={formatCep(empresa.cep)} />
             <DetailItem label="Logradouro" value={empresa.logradouro} />
             <DetailItem label="Número" value={empresa.numero} />
             <DetailItem label="Complemento" value={empresa.complemento} />
