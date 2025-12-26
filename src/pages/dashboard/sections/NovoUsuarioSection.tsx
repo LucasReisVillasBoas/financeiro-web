@@ -3,6 +3,7 @@ import { InputField } from '../../../components/InputField';
 import { usuarioService } from '../../../services/usuario.service';
 import { empresaService } from '../../../services/empresa.service';
 import { perfilService } from '../../../services/perfil.service';
+import { useAuth } from '../../../context/AuthContext';
 import type { UsuarioCreateDto } from '../../../services/usuario.service';
 import type { Empresa, Filial } from '../../../types/api.types';
 
@@ -11,6 +12,7 @@ interface NovoUsuarioSectionProps {
 }
 
 export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNavigate }) => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -23,14 +25,15 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!user?.clienteId) {
+        setLoadingEmpresas(false);
+        return;
+      }
+
       try {
         setLoadingEmpresas(true);
-        const user = await usuarioService.getById();
-        if (!user) {
-          throw new Error('Usuário não encontrado');
-        }
 
-        const empresasList = await empresaService.findByCliente(user.id);
+        const empresasList = await empresaService.findByCliente(user.clienteId);
         setEmpresas(empresasList.filter(emp => !emp.sede));
 
         const filiaisMap = new Map<string, Filial[]>();
@@ -48,7 +51,7 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
     };
 
     fetchData();
-  }, []);
+  }, [user?.clienteId]);
 
   const handleCancel = () => {
     onNavigate('usuarios-listar');
@@ -166,15 +169,20 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
         await Promise.all(associacoes);
       }
 
-      const perfil = await perfilService.create({
-        clienteId: novoUsuario.id,
-        nome: perfilNome,
-        permissoes: {
-          usuarios: ['visualizar'],
-          empresas: ['visualizar'],
-          relatorios: ['visualizar'],
-        },
-      });
+      // Cria perfil para cada empresa/filial selecionada
+      const empresaIds = [...selectedEmpresas, ...selectedFiliais];
+      for (const empresaId of empresaIds) {
+        await perfilService.create({
+          clienteId: novoUsuario.id,
+          empresaId: empresaId,
+          nome: perfilNome,
+          permissoes: {
+            usuarios: ['visualizar'],
+            empresas: ['visualizar'],
+            relatorios: ['visualizar'],
+          },
+        });
+      }
       setSuccess('Usuário cadastrado e associado com sucesso!');
       form.reset();
       setTelefone('');

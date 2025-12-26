@@ -115,7 +115,12 @@ export const OnboardingEmpresa: React.FC = () => {
     let finalValue = value;
 
     // Aplicar máscaras
-    if (id === 'telefone' || id === 'celular' || id === 'contato-telefone' || id === 'contato-celular') {
+    if (
+      id === 'telefone' ||
+      id === 'celular' ||
+      id === 'contato-telefone' ||
+      id === 'contato-celular'
+    ) {
       finalValue = formatPhone(value);
     } else if (id === 'cnpj') {
       finalValue = formatCpfCnpj(value);
@@ -245,7 +250,9 @@ export const OnboardingEmpresa: React.FC = () => {
       contato: {
         nome: formData.contato_nome,
         funcao: formData.contato_funcao || undefined,
-        telefone: formData.contato_telefone ? formData.contato_telefone.replace(/\D/g, '') : undefined,
+        telefone: formData.contato_telefone
+          ? formData.contato_telefone.replace(/\D/g, '')
+          : undefined,
         celular: formData.contato_celular ? formData.contato_celular.replace(/\D/g, '') : undefined,
         email: formData.contato_email,
       },
@@ -272,9 +279,7 @@ export const OnboardingEmpresa: React.FC = () => {
     <div className="min-h-screen bg-[var(--color-bg)] py-12 px-4">
       <div ref={topRef} className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
-            Bem-vindo!
-          </h1>
+          <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">Bem-vindo!</h1>
           <p className="text-[var(--color-text-secondary)]">
             Vamos começar cadastrando sua empresa
           </p>

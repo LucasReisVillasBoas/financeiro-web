@@ -24,8 +24,8 @@ export const DashboardSection: React.FC = () => {
       ]);
 
       const totalAReceber = contasReceber
-        .filter((conta: ContaReceber) => conta.status === 'Pendente')
-        .reduce((acc: number, conta: ContaReceber) => acc + conta.valor, 0);
+        .filter((conta: ContaReceber) => conta.status === 'PENDENTE')
+        .reduce((acc: number, conta: ContaReceber) => acc + conta.valorTotal, 0);
       setTotalRecebivel(totalAReceber);
 
       const totalAPagar = contasPagar
@@ -38,8 +38,8 @@ export const DashboardSection: React.FC = () => {
         .reduce((acc: number, conta: ContaPagar) => acc + conta.valor_total, 0);
 
       const totalRecebidas = contasReceber
-        .filter((conta: ContaReceber) => conta.status === 'Recebida')
-        .reduce((acc: number, conta: ContaReceber) => acc + conta.valor, 0);
+        .filter((conta: ContaReceber) => conta.status === 'LIQUIDADO')
+        .reduce((acc: number, conta: ContaReceber) => acc + conta.valorTotal, 0);
 
       setContasQuitadas(totalPagas + totalRecebidas);
 
@@ -53,8 +53,8 @@ export const DashboardSection: React.FC = () => {
         .reduce((acc: number, conta: ContaPagar) => acc + conta.valor_total, 0);
 
       const contasReceberVencidas = contasReceber
-        .filter((conta: ContaReceber) => conta.status === 'Pendente' && conta.vencimento < hoje)
-        .reduce((acc: number, conta: ContaReceber) => acc + conta.valor, 0);
+        .filter((conta: ContaReceber) => conta.status === 'LIQUIDADO' && conta.vencimento < hoje)
+        .reduce((acc: number, conta: ContaReceber) => acc + conta.valorTotal, 0);
 
       setPendencias(contasPagarVencidas + contasReceberVencidas);
     } catch (err) {

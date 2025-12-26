@@ -38,9 +38,7 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
   const formatPhone = (value: string): string => {
     const numbers = value.replace(/\D/g, '');
     if (numbers.length <= 10) {
-      return numbers
-        .replace(/^(\d{2})(\d)/, '($1) $2')
-        .replace(/(\d{4})(\d)/, '$1-$2');
+      return numbers.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d)/, '$1-$2');
     } else {
       return numbers
         .replace(/^(\d{2})(\d)/, '($1) $2')
@@ -218,7 +216,6 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
     }
   };
 
-
   return (
     <div className="max-w-4xl mx-auto">
       {error && <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">{error}</div>}
@@ -236,144 +233,146 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
           Nenhuma sede encontrada.
         </div>
       ) : (
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-6 bg-[var(--color-surface)] p-6 rounded-md shadow"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <InputField
-            id="cnpj-sede"
-            label="CNPJ Sede"
-            type="text"
-            value={formatCnpj(sede.cnpj_cpf || '')}
-            disabled={true}
-          />
-          <InputField
-            id="razao-social"
-            label="Razão Social"
-            type="text"
-            placeholder="Digite a razão social"
-          />
-          <InputField
-            id="nome-fantasia"
-            label="Nome Fantasia"
-            type="text"
-            placeholder="Digite o nome fantasia"
-          />
-          <InputField
-            id="cnpj"
-            label="CNPJ"
-            type="text"
-            placeholder="00.000.000/0000-00"
-            value={cnpj}
-            onChange={handleCnpjChange}
-          />
-          <InputField
-            id="inscricao-estadual"
-            label="Inscrição Estadual"
-            type="text"
-            placeholder="Digite a IE"
-          />
-          <InputField id="data-abertura" label="Data de Abertura" type="date" placeholder="" />
-        </div>
-
-        <div className="border-t border-[var(--color-border)] pt-6">
-          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Endereço</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <CepField
-              value={endereco.cep}
-              onChange={cep => setEndereco(prev => ({ ...prev, cep }))}
-              onAddressFound={handleAddressFound}
-            />
-            <InputField
-              id="logradouro"
-              label="Logradouro"
-              type="text"
-              placeholder="Rua, Avenida..."
-              value={endereco.logradouro}
-              onChange={handleEnderecoChange}
-            />
-            <InputField id="numero" label="Número" type="text" placeholder="Nº" />
-            <InputField
-              id="complemento"
-              label="Complemento"
-              type="text"
-              placeholder="Apto, Sala..."
-            />
-            <InputField
-              id="bairro"
-              label="Bairro"
-              type="text"
-              placeholder="Digite o bairro"
-              value={endereco.bairro}
-              onChange={handleEnderecoChange}
-            />
-            <InputField
-              id="cidade"
-              label="Cidade"
-              type="text"
-              placeholder="Digite a cidade"
-              value={endereco.cidade}
-              onChange={handleEnderecoChange}
-            />
-            <SelectField
-              id="uf"
-              label="Estado"
-              placeholder="Selecione o estado"
-              options={ESTADOS_BRASIL}
-              value={endereco.uf}
-              onChange={handleEstadoChange}
-            />
-            <InputField
-              id="ibge"
-              label="Código IBGE"
-              placeholder="Digite o código IBGE"
-              value={endereco.ibge}
-              onChange={handleEnderecoChange}
-            />
-          </div>
-        </div>
-
-        <div className="border-t border-[var(--color-border)] pt-6">
-          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Contato</h3>
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 bg-[var(--color-surface)] p-6 rounded-md shadow"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <InputField
-              id="telefone"
-              label="Telefone"
-              type="tel"
-              placeholder="(00) 0000-0000"
-              value={telefone}
-              onChange={handleTelefoneChange}
+              id="cnpj-sede"
+              label="CNPJ Sede"
+              type="text"
+              value={formatCnpj(sede.cnpj_cpf || '')}
+              disabled={true}
             />
             <InputField
-              id="celular"
-              label="Celular"
-              type="tel"
-              placeholder="(00) 00000-0000"
-              value={celular}
-              onChange={handleCelularChange}
+              id="razao-social"
+              label="Razão Social"
+              type="text"
+              placeholder="Digite a razão social"
             />
-            <InputField id="email" label="E-mail" type="email" placeholder="empresa@email.com" />
+            <InputField
+              id="nome-fantasia"
+              label="Nome Fantasia"
+              type="text"
+              placeholder="Digite o nome fantasia"
+            />
+            <InputField
+              id="cnpj"
+              label="CNPJ"
+              type="text"
+              placeholder="00.000.000/0000-00"
+              value={cnpj}
+              onChange={handleCnpjChange}
+            />
+            <InputField
+              id="inscricao-estadual"
+              label="Inscrição Estadual"
+              type="text"
+              placeholder="Digite a IE"
+            />
+            <InputField id="data-abertura" label="Data de Abertura" type="date" placeholder="" />
           </div>
-        </div>
 
-        <div className="flex justify-end gap-4 pt-6">
-          <button
-            type="button"
-            className="px-6 py-2 border border-[var(--color-border)] text-[var(--color-text)] rounded-md hover:bg-[var(--color-bg)] transition-colors"
-            onClick={handleCancel}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Cadastrando...' : 'Cadastrar Filial'}
-          </button>
-        </div>
-      </form>
+          <div className="border-t border-[var(--color-border)] pt-6">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
+              Endereço
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CepField
+                value={endereco.cep}
+                onChange={cep => setEndereco(prev => ({ ...prev, cep }))}
+                onAddressFound={handleAddressFound}
+              />
+              <InputField
+                id="logradouro"
+                label="Logradouro"
+                type="text"
+                placeholder="Rua, Avenida..."
+                value={endereco.logradouro}
+                onChange={handleEnderecoChange}
+              />
+              <InputField id="numero" label="Número" type="text" placeholder="Nº" />
+              <InputField
+                id="complemento"
+                label="Complemento"
+                type="text"
+                placeholder="Apto, Sala..."
+              />
+              <InputField
+                id="bairro"
+                label="Bairro"
+                type="text"
+                placeholder="Digite o bairro"
+                value={endereco.bairro}
+                onChange={handleEnderecoChange}
+              />
+              <InputField
+                id="cidade"
+                label="Cidade"
+                type="text"
+                placeholder="Digite a cidade"
+                value={endereco.cidade}
+                onChange={handleEnderecoChange}
+              />
+              <SelectField
+                id="uf"
+                label="Estado"
+                placeholder="Selecione o estado"
+                options={ESTADOS_BRASIL}
+                value={endereco.uf}
+                onChange={handleEstadoChange}
+              />
+              <InputField
+                id="ibge"
+                label="Código IBGE"
+                placeholder="Digite o código IBGE"
+                value={endereco.ibge}
+                onChange={handleEnderecoChange}
+              />
+            </div>
+          </div>
+
+          <div className="border-t border-[var(--color-border)] pt-6">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Contato</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InputField
+                id="telefone"
+                label="Telefone"
+                type="tel"
+                placeholder="(00) 0000-0000"
+                value={telefone}
+                onChange={handleTelefoneChange}
+              />
+              <InputField
+                id="celular"
+                label="Celular"
+                type="tel"
+                placeholder="(00) 00000-0000"
+                value={celular}
+                onChange={handleCelularChange}
+              />
+              <InputField id="email" label="E-mail" type="email" placeholder="empresa@email.com" />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-4 pt-6">
+            <button
+              type="button"
+              className="px-6 py-2 border border-[var(--color-border)] text-[var(--color-text)] rounded-md hover:bg-[var(--color-bg)] transition-colors"
+              onClick={handleCancel}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Cadastrando...' : 'Cadastrar Filial'}
+            </button>
+          </div>
+        </form>
       )}
     </div>
   );
