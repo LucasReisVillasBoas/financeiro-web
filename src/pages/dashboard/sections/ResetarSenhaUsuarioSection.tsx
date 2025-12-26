@@ -121,9 +121,15 @@ export const ResetarSenhaUsuarioSection: React.FC<ResetarSenhaUsuarioSectionProp
       >
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Resetar Senha</h3>
-          <p className="text-sm text-[var(--color-text-muted)]">
-            Digite a nova senha para o usuário. A senha deve ter pelo menos 6 caracteres.
-          </p>
+          <div className="text-sm text-[var(--color-text-muted)]">
+            <p>Digite a nova senha para o usuário. A senha deve ter pelo menos:</p>
+            <ul className="list-disc list-inside mt-1 space-y-0.5">
+              <li>8 caracteres</li>
+              <li>1 letra maiúscula</li>
+              <li>1 número</li>
+              <li>1 caractere especial</li>
+            </ul>
+          </div>
 
           <InputField
             id="novaSenha"

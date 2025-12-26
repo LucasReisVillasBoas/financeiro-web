@@ -3,6 +3,7 @@ import type { Perfil, ApiResponse } from '../types/api.types';
 
 export interface PerfilCreateDto {
   clienteId: string;
+  empresaId?: string;
   nome: string;
   permissoes: Record<string, string[]>;
 }

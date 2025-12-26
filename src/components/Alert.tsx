@@ -10,7 +10,10 @@ interface AlertProps {
   onDismiss?: () => void;
 }
 
-const variantStyles: Record<AlertVariant, { border: string; bg: string; text: string; icon: string }> = {
+const variantStyles: Record<
+  AlertVariant,
+  { border: string; bg: string; text: string; icon: string }
+> = {
   error: {
     border: 'border-red-700',
     bg: 'bg-red-50',
@@ -99,9 +102,7 @@ export const Alert: React.FC<AlertProps> = ({
       <div className="flex">
         <div className={`flex-shrink-0 ${styles.icon}`}>{icon}</div>
         <div className="ml-3 flex-1">
-          {title && (
-            <h3 className={`text-sm font-semibold ${styles.text} mb-2`}>{title}</h3>
-          )}
+          {title && <h3 className={`text-sm font-semibold ${styles.text} mb-2`}>{title}</h3>}
           {messageList.length === 1 ? (
             <p className={`text-sm ${styles.text}`}>{messageList[0]}</p>
           ) : (
