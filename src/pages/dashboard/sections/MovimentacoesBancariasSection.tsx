@@ -55,17 +55,13 @@ export const MovimentacoesBancariasSection: React.FC = () => {
     return new Date(data).toLocaleString('pt-BR');
   };
 
-  console.log(movimentacoes);
-
   const totalEntradas = movimentacoes
     .filter(m => m.tipoMovimento === 'Entrada')
     .reduce((acc, m) => acc + m.valor, 0);
 
-  console.log(totalEntradas);
   const totalSaidas = movimentacoes
     .filter(m => m.tipoMovimento === 'Saída')
     .reduce((acc, m) => acc + m.valor, 0);
-  console.log(totalSaidas);
 
   const saldoPeriodo = totalEntradas - totalSaidas;
   const qtdEntradas = movimentacoes.filter(m => m.tipoMovimento === 'Entrada').length;
@@ -169,7 +165,6 @@ export const MovimentacoesBancariasSection: React.FC = () => {
   };
 
   const handleExportar = () => {
-    console.log('Exportar movimentações');
     // TODO: Implementar exportação
   };
 

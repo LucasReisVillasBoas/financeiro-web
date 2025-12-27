@@ -70,6 +70,10 @@ class UsuarioService {
     return response.data!;
   }
 
+  async delete(id: string): Promise<void> {
+    await apiService.delete(`/usuario/${id}`);
+  }
+
   async associarEmpresaFilial(
     usuarioId: string,
     dto: AssociarEmpresaFilialDto

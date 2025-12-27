@@ -179,8 +179,6 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
       };
     }
 
-    console.log('DTO enviado:', JSON.stringify(dto, null, 2));
-
     try {
       const perfil = await perfilService.findAll(clienteId);
       if (perfil.length !== 0 && perfil.map(p => p.nome).includes('Administrador') === false) {

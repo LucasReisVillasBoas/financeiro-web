@@ -2,7 +2,6 @@ import React from 'react';
 import {
   FiUsers,
   FiShield,
-  FiSettings,
   FiUser,
   FiUserPlus,
   FiDollarSign,
@@ -20,6 +19,7 @@ import { GiMoneyStack, GiBank } from 'react-icons/gi';
 import { MdOutlineDashboard } from 'react-icons/md';
 import { RiBuilding4Line } from 'react-icons/ri';
 import { useUserEmpresas } from '../../hooks/useUserEmpresas';
+import { useAuth } from '../../context/AuthContext';
 
 export interface MenuItem {
   id: string;
@@ -69,14 +69,19 @@ export const menuItems: MenuItem[] = [
     ],
   },
   {
-    id: 'auxiliares',
-    label: 'Cadastro Auxiliares',
-    icon: <FiSettings size={16} />,
+    id: 'contatos',
+    label: 'Contatos',
+    icon: <FiUser size={16} />,
     children: [
       {
         id: 'auxiliares-contatos',
-        label: 'Contatos',
-        icon: <FiUser size={14} />,
+        label: 'Listar Contatos',
+        icon: <FiList size={14} />,
+      },
+      {
+        id: 'auxiliares-contatos-novo',
+        label: 'Novo Contato',
+        icon: <FiPlus size={14} />,
       },
     ],
   },
@@ -189,6 +194,7 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
 }) => {
   const [openMenus, setOpenMenus] = React.useState<Record<string, boolean>>({});
   const { hasEmpresas, loading } = useUserEmpresas();
+  const { hasModuleAccess } = useAuth();
 
   const toggleMenu = (itemId: string) => {
     setOpenMenus(prev => ({ ...prev, [itemId]: !prev[itemId] }));
@@ -203,7 +209,18 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
   };
 
   const getFilteredMenuItems = () => {
-    return menuItems.map(item => {
+    // Filtra itens baseado nas permissoes do usuario
+    const itemsWithPermissions = menuItems.filter(item => {
+      // Dashboard e Sair sempre visiveis
+      if (item.id === 'dashboard' || item.id === 'sair') {
+        return true;
+      }
+      // Verifica se o usuario tem acesso ao modulo
+      return hasModuleAccess(item.id);
+    });
+
+    // Aplica filtro de empresas (Nova vs Listar)
+    return itemsWithPermissions.map(item => {
       if (item.id === 'empresas' && item.children) {
         if (hasEmpresas) {
           return {
@@ -220,7 +237,7 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
     });
   };
 
-  const filteredMenuItems = loading ? menuItems : getFilteredMenuItems();
+  const filteredMenuItems = loading ? [] : getFilteredMenuItems();
 
   return (
     <aside className="w-64 h-screen bg-[var(--color-sidebar-bg)] shadow-md flex flex-col">

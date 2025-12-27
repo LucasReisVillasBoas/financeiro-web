@@ -24,7 +24,6 @@ export const EditarUsuarioSection: React.FC<EditarUsuarioSectionProps> = ({
 
       try {
         const data = await usuarioService.getOne(usuarioId);
-        console.log(data);
         setUsuarioData(data);
 
         if (data?.telefone) {

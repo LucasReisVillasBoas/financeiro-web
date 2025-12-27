@@ -51,7 +51,6 @@ export const PessoasSection: React.FC<PessoasSectionProps> = ({ onNavigate }) =>
       setError('');
       if (user?.clienteId) {
         const data = await pessoaService.findByCliente(user.clienteId);
-        console.log('Pessoas carregadas:', data);
         const pessoasMapeadas = Array.isArray(data) ? data.map(mapPessoaFromApi) : [];
         setPessoas(pessoasMapeadas);
       }

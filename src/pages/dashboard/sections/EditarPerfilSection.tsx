@@ -19,7 +19,7 @@ export const EditarPerfilSection: React.FC<EditarPerfilSectionProps> = ({
   const [perfilData, setPerfilData] = useState<Perfil | null>(null);
   const { getClienteId } = useAuth();
 
-  const modulosDisponiveis = ['usuarios', 'empresas', 'relatorios', 'financeiro'];
+  const modulosDisponiveis = ['usuarios', 'empresas', 'contatos', 'relatorios', 'financeiro'];
   const acoesDisponiveis = ['visualizar', 'criar', 'editar', 'excluir'];
 
   const [permissoes, setPermissoes] = useState<Record<string, string[]>>({});

@@ -46,7 +46,7 @@ export const UsuariosSection: React.FC<UsuariosSectionProps> = ({ onNavigate }) 
         console.warn('Erro ao deletar perfis:', error);
       }
 
-      await usuarioService.update(usuarioParaExcluir.id, { ativo: false });
+      await usuarioService.delete(usuarioParaExcluir.id);
       setUsuarios(prevUsuarios => prevUsuarios.filter(u => u.id !== usuarioParaExcluir.id));
       setUsuarioParaExcluir(null);
     } catch (error) {

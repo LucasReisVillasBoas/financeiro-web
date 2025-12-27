@@ -179,6 +179,7 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
           permissoes: {
             usuarios: ['visualizar'],
             empresas: ['visualizar'],
+            contatos: ['visualizar'],
             relatorios: ['visualizar'],
           },
         });
