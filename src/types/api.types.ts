@@ -9,8 +9,11 @@ export interface LoginRequest {
   password: string;
 }
 
+export type Permissoes = Record<string, string[]>;
+
 export interface LoginResponse {
   token: string;
+  permissoes?: Permissoes;
 }
 
 export interface User {

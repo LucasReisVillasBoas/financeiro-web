@@ -33,8 +33,6 @@ const DashboardHome: React.FC = () => {
         .reduce((acc: number, conta: ContaPagar) => acc + conta.valor_total, 0);
       setTotalPagar(totalAPagar);
 
-      console.log(contasPagar);
-
       const totalPagas = contasPagar
         .filter((conta: ContaPagar) => conta.status === 'Paga')
         .reduce((acc: number, conta: ContaPagar) => acc + conta.valor_total, 0);

@@ -32,6 +32,16 @@ class ApiService {
         message: 'Erro ao processar requisição',
       }));
 
+      // Tratamento especial para erro 403 (Forbidden)
+      if (response.status === 403) {
+        const apiError: any = new Error(
+          'Seu perfil não tem permissão para realizar essa ação. Entre em contato com um administrador.'
+        );
+        apiError.statusCode = 403;
+        apiError.details = error;
+        throw apiError;
+      }
+
       // Extrai a mensagem de erro da resposta da API
       const errorMessage = error.message || error.error || 'Erro na requisição';
 
@@ -92,6 +102,16 @@ class ApiService {
         message: 'Erro ao processar requisição',
       }));
 
+      // Tratamento especial para erro 403 (Forbidden)
+      if (response.status === 403) {
+        const apiError: any = new Error(
+          'Seu perfil não tem permissão para realizar essa ação. Entre em contato com um administrador.'
+        );
+        apiError.statusCode = 403;
+        apiError.details = error;
+        throw apiError;
+      }
+
       const errorMessage = error.message || error.error || 'Erro na requisição';
       const apiError: any = new Error(errorMessage);
       apiError.statusCode = response.status;
@@ -119,6 +139,16 @@ class ApiService {
       const error = await response.json().catch(() => ({
         message: 'Erro ao processar requisição',
       }));
+
+      // Tratamento especial para erro 403 (Forbidden)
+      if (response.status === 403) {
+        const apiError: any = new Error(
+          'Seu perfil não tem permissão para realizar essa ação. Entre em contato com um administrador.'
+        );
+        apiError.statusCode = 403;
+        apiError.details = error;
+        throw apiError;
+      }
 
       const errorMessage = error.message || error.error || 'Erro na requisição';
       const apiError: any = new Error(errorMessage);

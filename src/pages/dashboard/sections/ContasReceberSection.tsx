@@ -98,7 +98,6 @@ export const ContasReceberSection: React.FC = () => {
     try {
       setLoading(true);
       const data = await contaReceberService.findAll();
-      console.log('Contas a Receber carregadas:', data);
       setContas(data);
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar contas bancárias');

@@ -130,26 +130,13 @@ export const DreRelatorioSection: React.FC = () => {
     setLoading(true);
     try {
       const response = await dreRelatorioService.buscarRelatorio(filtros);
-      console.log('📥 DRE Response original:', response);
-      console.log('📋 Estrutura dos itens (original):');
-      response.itens?.forEach((item, idx) => {
-        console.log(`  ${idx + 1}. ${item.codigo} - ${item.descricao}`);
-        console.log(`     ID: "${item.id}" (tipo: ${typeof item.id})`);
-        console.log(`     Valor: ${item.valor}`);
-        console.log(`     Percentual: ${item.percentual} (tipo: ${typeof item.percentual})`);
-        console.log(`     ParentID: "${item.parentId || 'null'}"`);
-        console.log(`     Filhos: ${item.filhos?.length || 0}`);
-      });
-
       // Construir hierarquia se os itens estiverem planos
       if (response.itens && response.itens.length > 0) {
         // Verificar se já está hierarquizado ou se precisa construir
         const temHierarquia = response.itens.some(item => item.filhos && item.filhos.length > 0);
 
         if (!temHierarquia) {
-          console.log('🔨 Construindo hierarquia...');
           const itensHierarquicos = construirHierarquia(response.itens);
-          console.log('✅ Hierarquia construída:', itensHierarquicos);
           response.itens = itensHierarquicos;
         }
       }
@@ -186,7 +173,6 @@ export const DreRelatorioSection: React.FC = () => {
 
     if (Math.abs(percentual) < 1 && percentual !== 0) {
       valorFinal = percentual * 100;
-      console.log(`📊 Convertendo percentual: ${percentual} → ${valorFinal}%`);
     }
 
     return `${valorFinal.toFixed(2)}%`;
