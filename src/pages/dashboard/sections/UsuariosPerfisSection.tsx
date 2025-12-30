@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FiEdit, FiUserCheck } from 'react-icons/fi';
-import type { Perfil } from '../../../types/api.types';
-import { perfilService } from '../../../services/perfil.service';
+import { FiEdit, FiUserCheck, FiTrash2 } from 'react-icons/fi';
+import {
+  usuarioPerfilService,
+  type UsuarioPerfilDetalhado,
+} from '../../../services/usuario-perfil.service';
 import { useAuth } from '../../../context/AuthContext';
 
 interface UsuariosPerfisSectionProps {
@@ -9,12 +11,22 @@ interface UsuariosPerfisSectionProps {
 }
 
 export const UsuariosPerfisSection: React.FC<UsuariosPerfisSectionProps> = ({ onNavigate }) => {
-  const [perfis, setPerfis] = useState<Perfil[]>([]);
+  const [usuariosPerfis, setUsuariosPerfis] = useState<UsuarioPerfilDetalhado[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { getClienteId } = useAuth();
+  const { getClienteId, user } = useAuth();
 
   const clienteId = getClienteId();
+
+  // Verifica se o usuário logado tem algum perfil "Administrador"
+  const isAdmin = usuariosPerfis.some(
+    up => up.usuario.id === user?.id && up.perfil.nome === 'Administrador'
+  );
+
+  // Filtra os perfis: admin vê todos, outros veem apenas o próprio
+  const perfisFiltrados = isAdmin
+    ? usuariosPerfis
+    : usuariosPerfis.filter(up => up.usuario.id === user?.id);
 
   useEffect(() => {
     if (!clienteId) {
@@ -23,27 +35,37 @@ export const UsuariosPerfisSection: React.FC<UsuariosPerfisSectionProps> = ({ on
       return;
     }
 
-    const fetchPerfis = async () => {
+    const fetchUsuariosPerfis = async () => {
       try {
-        const perfisData = await perfilService.findAll(clienteId);
-        if (perfisData.length === 0) {
-          setPerfis([]);
-        } else {
-          setPerfis(perfisData);
-        }
+        const data = await usuarioPerfilService.findByCliente(clienteId);
+        setUsuariosPerfis(data);
       } catch (err) {
-        setError('Erro ao carregar perfis');
-        console.error('Erro ao buscar perfis:', err);
+        setError('Erro ao carregar perfis de usuários');
+        console.error('Erro ao buscar perfis de usuários:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPerfis();
+    fetchUsuariosPerfis();
   }, [clienteId]);
 
-  const getStatus = (usuario: Perfil) => {
-    return usuario.ativo ? 'Ativo' : 'Inativo';
+  const getStatusUsuario = (ativo: boolean) => {
+    return ativo ? 'Ativo' : 'Inativo';
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir este perfil de usuário?')) {
+      return;
+    }
+
+    try {
+      await usuarioPerfilService.delete(id);
+      setUsuariosPerfis(prev => prev.filter(up => up.id !== id));
+    } catch (err) {
+      console.error('Erro ao excluir perfil:', err);
+      setError('Erro ao excluir perfil de usuário');
+    }
   };
 
   return (
@@ -61,7 +83,7 @@ export const UsuariosPerfisSection: React.FC<UsuariosPerfisSectionProps> = ({ on
             <FiUserCheck className="text-[var(--color-primary)]" />
           </div>
           <p className="text-2xl font-bold text-[var(--color-text-primary)] mt-2">
-            {perfis.length}
+            {perfisFiltrados.length}
           </p>
         </div>
       </div>
@@ -70,54 +92,92 @@ export const UsuariosPerfisSection: React.FC<UsuariosPerfisSectionProps> = ({ on
 
       {loading ? (
         <div className="text-center py-8 text-[var(--color-text-secondary)]">
-          Carregando usuários...
+          Carregando perfis de usuários...
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full bg-[var(--color-surface)] rounded-md shadow">
             <thead>
               <tr className="border-b border-[var(--color-border)]">
-                <th className="text-left p-4 text-[var(--color-text-secondary)]">Nome</th>
+                <th className="text-left p-4 text-[var(--color-text-secondary)]">Usuário</th>
+                <th className="text-left p-4 text-[var(--color-text-secondary)]">Empresa(s)</th>
+                <th className="text-left p-4 text-[var(--color-text-secondary)]">Perfil</th>
                 <th className="text-left p-4 text-[var(--color-text-secondary)]">Status</th>
                 <th className="text-center p-4 text-[var(--color-text-secondary)]">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {perfis.length === 0 ? (
+              {perfisFiltrados.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-8 text-center text-[var(--color-text-secondary)]">
-                    Nenhum perfil cadastrado
+                    Nenhum perfil de usuário cadastrado
                   </td>
                 </tr>
               ) : (
-                perfis.map(perfil => (
+                perfisFiltrados.map(up => (
                   <tr
-                    key={perfil.id}
+                    key={up.id}
                     className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]"
                   >
-                    <td className="p-4 text-[var(--color-text)]">{perfil.nome}</td>
+                    <td className="p-4 text-[var(--color-text)]">
+                      <div>
+                        <div className="font-medium">{up.usuario.nome}</div>
+                        <div className="text-sm text-[var(--color-text-secondary)]">
+                          {up.usuario.login}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4 text-[var(--color-text)]">
+                      <div className="flex flex-wrap gap-1">
+                        {up.empresas.map(empresa => (
+                          <span
+                            key={empresa.id}
+                            className={`inline-flex items-center px-2 py-1 rounded text-xs ${
+                              empresa.isFilial
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-purple-100 text-purple-800'
+                            }`}
+                          >
+                            {empresa.nome_fantasia || empresa.razao_social}
+                            <span className="ml-1 opacity-70">
+                              ({empresa.isFilial ? 'Filial' : 'Sede'})
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="p-4 text-[var(--color-text)]">{up.perfil.nome}</td>
                     <td className="p-4">
                       <span
                         className={`px-2 py-1 rounded text-sm ${
-                          getStatus(perfil) === 'Ativo'
+                          getStatusUsuario(up.usuario.ativo) === 'Ativo'
                             ? 'bg-green-100 text-green-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {getStatus(perfil)}
+                        {getStatusUsuario(up.usuario.ativo)}
                       </span>
                     </td>
                     <td className="p-4">
                       <div className="flex justify-center gap-2">
                         <button
                           onClick={() =>
-                            onNavigate('usuarios-perfis-editar', { perfilId: perfil.id })
+                            onNavigate('usuarios-perfis-editar', { perfilId: up.perfil.id })
                           }
                           className="p-2 hover:bg-[var(--color-primary-hover)] rounded transition-colors"
-                          title="Editar"
+                          title="Editar Perfil"
                         >
                           <FiEdit size={18} />
                         </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDelete(up.id)}
+                            className="p-2 hover:bg-red-100 text-red-600 rounded transition-colors"
+                            title="Excluir Perfil"
+                          >
+                            <FiTrash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

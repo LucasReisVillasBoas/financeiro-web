@@ -9,6 +9,27 @@ export interface UsuarioPerfil {
   ativo: boolean;
 }
 
+export interface UsuarioPerfilDetalhado {
+  id: string;
+  ativo: boolean;
+  usuario: {
+    id: string;
+    nome: string;
+    login: string;
+    ativo: boolean;
+  };
+  empresas: Array<{
+    id: string;
+    nome_fantasia: string;
+    razao_social: string;
+    isFilial: boolean;
+  }>;
+  perfil: {
+    id: string;
+    nome: string;
+  };
+}
+
 export interface CreateUsuarioPerfilDto {
   usuarioId: string;
   empresaId: string;
@@ -24,6 +45,13 @@ class UsuarioPerfilService {
   async findByUsuario(usuarioId: string): Promise<UsuarioPerfil[]> {
     const response: ApiResponse<UsuarioPerfil[]> = await apiService.get(
       `/usuario-perfil/usuario/${usuarioId}`
+    );
+    return response.data || [];
+  }
+
+  async findByCliente(clienteId: string): Promise<UsuarioPerfilDetalhado[]> {
+    const response: ApiResponse<UsuarioPerfilDetalhado[]> = await apiService.get(
+      `/usuario-perfil/cliente/${clienteId}`
     );
     return response.data || [];
   }
