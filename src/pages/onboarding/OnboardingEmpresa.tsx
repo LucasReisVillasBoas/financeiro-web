@@ -6,6 +6,7 @@ import { CepField } from '../../components/CepField';
 import { Alert } from '../../components/Alert';
 import { onboardingService, OnboardingEmpresaDto } from '../../services/onboarding.service';
 import type { CepData } from '../../services/cep.service';
+import { useAuth } from '../../context/AuthContext';
 
 interface FormData {
   // Empresa
@@ -37,6 +38,7 @@ export const OnboardingEmpresa: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const topRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState<FormData>({
@@ -260,7 +262,8 @@ export const OnboardingEmpresa: React.FC = () => {
 
     try {
       await onboardingService.createEmpresa(payload);
-      navigate('/dashboard');
+      await logout();
+      navigate('/login');
     } catch (err: any) {
       console.error('Erro no onboarding:', err);
       const errorMessages = err.details?.message;
