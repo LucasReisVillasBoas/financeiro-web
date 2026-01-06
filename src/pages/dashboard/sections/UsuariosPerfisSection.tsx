@@ -146,7 +146,16 @@ export const UsuariosPerfisSection: React.FC<UsuariosPerfisSectionProps> = ({ on
                         ))}
                       </div>
                     </td>
-                    <td className="p-4 text-[var(--color-text)]">{up.perfil.nome}</td>
+                    <td className="p-4 text-[var(--color-text)]">
+                      <div className="flex items-center gap-2">
+                        <span>{up.perfil.nome}</span>
+                        {up.perfil.masterAdmin && (
+                          <span className="px-2 py-0.5 bg-purple-600 text-white text-xs font-medium rounded-full">
+                            Master Admin
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="p-4">
                       <span
                         className={`px-2 py-1 rounded text-sm ${
@@ -164,16 +173,34 @@ export const UsuariosPerfisSection: React.FC<UsuariosPerfisSectionProps> = ({ on
                           onClick={() =>
                             onNavigate('usuarios-perfis-editar', { perfilId: up.perfil.id })
                           }
-                          className="p-2 hover:bg-[var(--color-primary-hover)] rounded transition-colors"
-                          title="Editar Perfil"
+                          className={`p-2 rounded transition-colors ${
+                            up.perfil.masterAdmin
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'hover:bg-[var(--color-primary-hover)]'
+                          }`}
+                          title={
+                            up.perfil.masterAdmin
+                              ? 'Master Admin não pode ser editado'
+                              : 'Editar Perfil'
+                          }
+                          disabled={up.perfil.masterAdmin}
                         >
                           <FiEdit size={18} />
                         </button>
                         {isAdmin && (
                           <button
-                            onClick={() => handleDelete(up.id)}
-                            className="p-2 hover:bg-red-100 text-red-600 rounded transition-colors"
-                            title="Excluir Perfil"
+                            onClick={() => !up.perfil.masterAdmin && handleDelete(up.id)}
+                            className={`p-2 rounded transition-colors ${
+                              up.perfil.masterAdmin
+                                ? 'text-gray-400 cursor-not-allowed'
+                                : 'hover:bg-red-100 text-red-600'
+                            }`}
+                            title={
+                              up.perfil.masterAdmin
+                                ? 'Master Admin não pode ser excluído'
+                                : 'Excluir Perfil'
+                            }
+                            disabled={up.perfil.masterAdmin}
                           >
                             <FiTrash2 size={18} />
                           </button>

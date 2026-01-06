@@ -1,11 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { InputField } from '../../../components/InputField';
+import { SelectField, ROLES_USUARIO } from '../../../components/SelectField';
 import { usuarioService } from '../../../services/usuario.service';
 import { empresaService } from '../../../services/empresa.service';
 import { perfilService } from '../../../services/perfil.service';
 import { useAuth } from '../../../context/AuthContext';
 import type { UsuarioCreateDto } from '../../../services/usuario.service';
 import type { Empresa, Filial } from '../../../types/api.types';
+
+// Módulos disponíveis no sistema
+const MODULOS_DISPONIVEIS = [
+  { value: 'empresas', label: 'Empresas', descricao: 'Gestão de empresas e filiais' },
+  { value: 'financeiro', label: 'Financeiro', descricao: 'Contas a pagar/receber, movimentações' },
+  { value: 'usuarios', label: 'Usuários', descricao: 'Gestão de usuários e perfis' },
+  { value: 'relatorios', label: 'Relatórios', descricao: 'Relatórios e exportações' },
+  { value: 'contatos', label: 'Contatos', descricao: 'Gestão de contatos' },
+  { value: 'cidades', label: 'Cidades', descricao: 'Cadastro de cidades' },
+  { value: 'pessoas', label: 'Pessoas', descricao: 'Cadastro de pessoas/clientes' },
+  { value: 'auditoria', label: 'Auditoria', descricao: 'Logs de auditoria' },
+];
+
+// Níveis de permissão hierárquicos
+const NIVEIS_PERMISSAO = [
+  { value: '', label: 'Sem acesso', acoes: [] },
+  { value: 'visualizar', label: 'Visualizar', acoes: ['visualizar', 'listar'] },
+  { value: 'editar', label: 'Editar', acoes: ['visualizar', 'listar', 'editar'] },
+  { value: 'criar', label: 'Criar', acoes: ['visualizar', 'listar', 'editar', 'criar'] },
+  { value: 'excluir', label: 'Excluir', acoes: ['visualizar', 'listar', 'editar', 'criar', 'excluir'] },
+  {
+    value: 'completa',
+    label: 'Completa',
+    acoes: ['visualizar', 'listar', 'editar', 'criar', 'excluir', 'exportar'],
+  },
+];
 
 interface NovoUsuarioSectionProps {
   onNavigate: (section: string) => void;
@@ -17,6 +44,8 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [telefone, setTelefone] = useState('');
+  const [perfil, setPerfil] = useState('');
+  const [permissoesPorModulo, setPermissoesPorModulo] = useState<Record<string, string>>({});
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [empresasComFiliais, setEmpresasComFiliais] = useState<Map<string, Filial[]>>(new Map());
   const [selectedEmpresas, setSelectedEmpresas] = useState<Set<string>>(new Set());
@@ -84,6 +113,29 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
     setSelectedFiliais(newSelected);
   };
 
+  const handleNivelChange = (modulo: string, nivel: string) => {
+    setPermissoesPorModulo(prev => ({
+      ...prev,
+      [modulo]: nivel,
+    }));
+  };
+
+  // Converte níveis selecionados para o formato de permissões do backend
+  const converterParaPermissoes = (): Record<string, string[]> => {
+    const permissoes: Record<string, string[]> = {};
+
+    Object.entries(permissoesPorModulo).forEach(([modulo, nivel]) => {
+      if (nivel) {
+        const nivelConfig = NIVEIS_PERMISSAO.find(n => n.value === nivel);
+        if (nivelConfig && nivelConfig.acoes.length > 0) {
+          permissoes[modulo] = [...nivelConfig.acoes];
+        }
+      }
+    });
+
+    return permissoes;
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
@@ -118,7 +170,7 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
       ],
     };
 
-    const perfilNome = formData.get('perfil') as string;
+    const perfilNome = perfil;
 
     if (!dto.nome || !dto.email || !dto.login || !dto.senha || !dto.cargo || !dto.telefone) {
       setError('Por favor, preencha todos os campos obrigatórios.');
@@ -128,6 +180,15 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
 
     if (!perfilNome) {
       setError('Por favor, informe o perfil do usuário.');
+      setLoading(false);
+      return;
+    }
+
+    const permissoes = converterParaPermissoes();
+    const temPermissoes = Object.keys(permissoes).length > 0;
+
+    if (!temPermissoes) {
+      setError('Por favor, selecione pelo menos uma permissão para o usuário.');
       setLoading(false);
       return;
     }
@@ -169,24 +230,21 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
         await Promise.all(associacoes);
       }
 
-      // Cria perfil para cada empresa/filial selecionada
+      // Cria perfil para cada empresa/filial selecionada com as permissões configuradas
       const empresaIds = [...selectedEmpresas, ...selectedFiliais];
       for (const empresaId of empresaIds) {
         await perfilService.create({
           clienteId: novoUsuario.id,
           empresaId: empresaId,
           nome: perfilNome,
-          permissoes: {
-            usuarios: ['visualizar'],
-            empresas: ['visualizar'],
-            contatos: ['visualizar'],
-            relatorios: ['visualizar'],
-          },
+          permissoes: permissoes,
         });
       }
       setSuccess('Usuário cadastrado e associado com sucesso!');
       form.reset();
       setTelefone('');
+      setPerfil('');
+      setPermissoesPorModulo({});
       setSelectedEmpresas(new Set());
       setSelectedFiliais(new Set());
 
@@ -262,15 +320,56 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
             placeholder="(00)00000-0000"
             value={telefone}
             onChange={handleTelefoneChange}
-          />
-          <InputField id="cargo" label="Cargo" type="text" placeholder="Digite o cargo" />
-          <InputField
-            id="perfil"
-            label="Perfil"
-            type="text"
-            placeholder="Ex: Editor, Visualizador, Administrador"
             required
           />
+          <InputField id="cargo" label="Cargo" type="text" placeholder="Digite o cargo" required />
+          <SelectField
+            id="perfil"
+            label="Perfil"
+            placeholder="Selecione o perfil"
+            options={ROLES_USUARIO}
+            value={perfil}
+            onChange={e => setPerfil(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* Seção de Permissões */}
+        <div className="space-y-4 pt-6 border-t border-[var(--color-border)]">
+          <div>
+            <h3 className="text-lg font-medium text-[var(--color-text)]">Permissões por Módulo</h3>
+            <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+              Selecione o nível de acesso para cada módulo. Cada nível inclui as permissões dos
+              níveis anteriores.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {MODULOS_DISPONIVEIS.map(modulo => (
+              <div
+                key={modulo.value}
+                className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border border-[var(--color-border)] rounded-md bg-[var(--color-bg)]"
+              >
+                <div className="flex-1">
+                  <h4 className="font-medium text-[var(--color-text)] text-sm">{modulo.label}</h4>
+                  <p className="text-xs text-[var(--color-text-secondary)]">{modulo.descricao}</p>
+                </div>
+                <div className="sm:w-40">
+                  <select
+                    value={permissoesPorModulo[modulo.value] || ''}
+                    onChange={e => handleNivelChange(modulo.value, e.target.value)}
+                    className="w-full px-3 py-1.5 text-sm rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  >
+                    {NIVEIS_PERMISSAO.map(nivel => (
+                      <option key={nivel.value} value={nivel.value}>
+                        {nivel.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Seção de Cidade */}
@@ -355,7 +454,7 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
                       <div className="font-medium text-[var(--color-text)]">
                         {empresa.nome_fantasia}
                       </div>
-                      <div className="text-sm text-white">
+                      <div className="text-sm text-[var(--color-text-secondary)]">
                         {empresa.razao_social} - {empresa.cnpj_cpf}
                       </div>
                     </div>
@@ -364,7 +463,9 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
                   {empresasComFiliais.get(empresa.id) &&
                     empresasComFiliais.get(empresa.id)!.length > 0 && (
                       <div className="ml-7 space-y-2 border-l-2 border-[var(--color-border)] pl-4">
-                        <div className="text-sm font-medium text-white">Filiais:</div>
+                        <div className="text-sm font-medium text-[var(--color-text-secondary)]">
+                          Filiais:
+                        </div>
                         {empresasComFiliais.get(empresa.id)!.map(filial => (
                           <div key={filial.id} className="space-y-2">
                             <label className="flex items-start gap-2 cursor-pointer">
@@ -378,7 +479,9 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
                                 <div className="text-sm text-[var(--color-text)]">
                                   {filial.nome_fantasia}
                                 </div>
-                                <div className="text-xs text-white">{filial.cnpj_cpf}</div>
+                                <div className="text-xs text-[var(--color-text-secondary)]">
+                                  {filial.cnpj_cpf}
+                                </div>
                               </div>
                             </label>
                           </div>

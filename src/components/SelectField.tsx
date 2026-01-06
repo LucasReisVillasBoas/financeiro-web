@@ -57,6 +57,16 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   );
 };
 
+// Roles de usuário
+export const ROLES_USUARIO = [
+  { value: 'Administrador', label: 'Administrador - Acesso total ao sistema' },
+  { value: 'Editor', label: 'Editor - Pode criar e editar dados' },
+  { value: 'Visualizador', label: 'Visualizador - Apenas leitura' },
+  { value: 'Financeiro', label: 'Financeiro - Acesso a operações financeiras' },
+  { value: 'Contador', label: 'Contador - Acesso a relatórios contábeis' },
+  { value: 'ADMIN', label: 'ADMIN - Usado em backup/sistema' },
+];
+
 // Estados brasileiros
 export const ESTADOS_BRASIL = [
   { value: 'AC', label: 'Acre' },

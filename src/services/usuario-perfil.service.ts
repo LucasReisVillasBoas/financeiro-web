@@ -27,6 +27,7 @@ export interface UsuarioPerfilDetalhado {
   perfil: {
     id: string;
     nome: string;
+    masterAdmin?: boolean;
   };
 }
 

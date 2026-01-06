@@ -401,6 +401,7 @@ export interface Perfil {
   clienteId: string;
   nome: string;
   permissoes: Record<string, string[]>;
+  masterAdmin?: boolean;
   ativo: boolean;
   deleted_at?: string;
 }
