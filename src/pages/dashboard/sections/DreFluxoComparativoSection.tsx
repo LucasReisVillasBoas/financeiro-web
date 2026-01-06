@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   FiDownload,
   FiFilter,
@@ -11,6 +11,7 @@ import { RiBuilding4Line } from 'react-icons/ri';
 import * as XLSX from 'xlsx';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
+import type { TDocumentDefinitions } from 'pdfmake/interfaces';
 import type {
   DreResponse,
   DreFiltros,
@@ -24,7 +25,7 @@ import { empresaService } from '../../../services';
 import { useAuth } from '../../../context/AuthContext';
 
 // Configure pdfMake fonts
-(pdfMake as any).vfs = pdfFonts;
+(pdfMake as unknown as { vfs: typeof pdfFonts }).vfs = pdfFonts;
 
 interface ComparativoFiltros {
   dataInicio: string;
@@ -58,17 +59,7 @@ export const DreFluxoComparativoSection: React.FC = () => {
     dataFim: ultimoDiaMes.toISOString().split('T')[0],
   });
 
-  useEffect(() => {
-    carregarEmpresas();
-  }, []);
-
-  useEffect(() => {
-    if (filtros.dataInicio && filtros.dataFim) {
-      buscarDados();
-    }
-  }, [filtros]);
-
-  const carregarEmpresas = async () => {
+  const carregarEmpresas = useCallback(async () => {
     try {
       if (user?.clienteId) {
         const data = await empresaService.findByCliente(user.clienteId);
@@ -85,9 +76,9 @@ export const DreFluxoComparativoSection: React.FC = () => {
     } catch (error) {
       console.error('Erro ao carregar empresas:', error);
     }
-  };
+  }, [user?.clienteId, filtros.empresaId]);
 
-  const buscarDados = async () => {
+  const buscarDados = useCallback(async () => {
     if (!filtros.dataInicio || !filtros.dataFim || !filtros.empresaId) {
       return;
     }
@@ -120,7 +111,17 @@ export const DreFluxoComparativoSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtros]);
+
+  useEffect(() => {
+    carregarEmpresas();
+  }, [carregarEmpresas]);
+
+  useEffect(() => {
+    if (filtros.dataInicio && filtros.dataFim) {
+      buscarDados();
+    }
+  }, [filtros, buscarDados]);
 
   const calcularComparativo = (dre: DreResponse, fluxo: FluxoCaixaResponse) => {
     const comparativos: DadosComparativos[] = [];
@@ -234,7 +235,7 @@ export const DreFluxoComparativoSection: React.FC = () => {
       return;
     }
 
-    const worksheetData: any[][] = [
+    const worksheetData: (string | number)[][] = [
       ['Comparativo: DRE (Competência) x Fluxo de Caixa (Caixa)'],
       [`Período: ${formatarData(filtros.dataInicio)} a ${formatarData(filtros.dataFim)}`],
       [],
@@ -265,7 +266,7 @@ export const DreFluxoComparativoSection: React.FC = () => {
       return;
     }
 
-    const tableBody: any[] = [
+    const tableBody: (string | { text: string; style?: string; alignment?: string })[][] = [
       [
         { text: 'Categoria', style: 'tableHeader' },
         { text: 'Competência (DRE)', style: 'tableHeader', alignment: 'right' },
@@ -285,7 +286,7 @@ export const DreFluxoComparativoSection: React.FC = () => {
       ]);
     });
 
-    const documentDefinition: any = {
+    const documentDefinition: TDocumentDefinitions = {
       pageOrientation: 'portrait',
       content: [
         {

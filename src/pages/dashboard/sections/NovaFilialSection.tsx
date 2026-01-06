@@ -77,8 +77,9 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
         } else {
           setError('Nenhuma sede encontrada. Cadastre uma sede primeiro.');
         }
-      } catch (err: any) {
-        setError(err.message || 'Erro ao buscar sede');
+      } catch (err: unknown) {
+        const error = err as { message?: string };
+        setError(error.message || 'Erro ao buscar sede');
       } finally {
         setLoadingSede(false);
       }
@@ -207,8 +208,9 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
       setCelular('');
       setEndereco({ cep: '', logradouro: '', bairro: '', cidade: '', uf: '', ibge: '' });
       form.reset();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao cadastrar filial');
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || 'Erro ao cadastrar filial');
     } finally {
       setLoading(false);
     }

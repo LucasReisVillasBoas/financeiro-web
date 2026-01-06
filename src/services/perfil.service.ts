@@ -16,7 +16,10 @@ export interface PerfilUpdateDto {
 class PerfilService {
   async create(dto: PerfilCreateDto): Promise<Perfil> {
     const response: ApiResponse<Perfil> = await apiService.post('/perfis', dto);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao criar perfil');
+    }
+    return response.data;
   }
 
   async findAll(clienteId: string): Promise<Perfil[]> {
@@ -26,12 +29,18 @@ class PerfilService {
 
   async findOne(id: string, clienteId: string): Promise<Perfil> {
     const response: ApiResponse<Perfil> = await apiService.get(`/perfis/${clienteId}/${id}`);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Perfil não encontrado');
+    }
+    return response.data;
   }
 
   async update(clienteId: string, id: string, dto: PerfilUpdateDto): Promise<Perfil> {
     const response: ApiResponse<Perfil> = await apiService.patch(`/perfis/${clienteId}/${id}`, dto);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao atualizar perfil');
+    }
+    return response.data;
   }
 
   async remove(clienteId: string, id: string): Promise<void> {

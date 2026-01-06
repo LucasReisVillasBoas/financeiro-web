@@ -44,11 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         };
         setUser(user);
         localStorage.setItem('user', JSON.stringify(user));
-      } else {
-        console.log('userData inválido ou incompleto');
       }
-    } else {
-      console.log('Nenhum token encontrado');
     }
 
     if (storedPermissoes) {
@@ -74,11 +70,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           };
           setUser(user);
           localStorage.setItem('user', JSON.stringify(user));
-        } else {
-          console.log('userData inválido após login');
         }
-      } else {
-        console.log('Token não encontrado após login');
       }
 
       // Define permissões

@@ -24,7 +24,7 @@ export const ResetarSenhaUsuarioSection: React.FC<ResetarSenhaUsuarioSectionProp
       try {
         const data = await usuarioService.getOne(usuarioId);
         setUsuarioData(data);
-      } catch (error) {
+      } catch {
         setError('Erro ao buscar dados do usuário');
       }
     };
@@ -79,8 +79,8 @@ export const ResetarSenhaUsuarioSection: React.FC<ResetarSenhaUsuarioSectionProp
       setTimeout(() => {
         onNavigate('usuarios-listar');
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao resetar senha');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao resetar senha');
     } finally {
       setLoading(false);
     }

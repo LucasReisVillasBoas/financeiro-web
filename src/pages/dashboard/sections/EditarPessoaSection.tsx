@@ -9,7 +9,7 @@ import type { CepData } from '../../../services/cep.service';
 
 interface EditarPessoaSectionProps {
   pessoaId: string;
-  onNavigate: (section: string, params?: Record<string, any>) => void;
+  onNavigate: (section: string, params?: Record<string, unknown>) => void;
 }
 
 export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
@@ -19,7 +19,7 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
   const { user } = useAuth();
   const [pessoa, setPessoa] = useState<Pessoa | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [_saving, _setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [filiais, setFiliais] = useState<Empresa[]>([]);
@@ -48,6 +48,7 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
   useEffect(() => {
     loadPessoa();
     loadFiliais();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pessoaId]);
 
   const loadFiliais = async () => {
@@ -93,9 +94,9 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
         uf: data.endereco?.uf || '',
         ativo: data.ativo,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao carregar pessoa:', err);
-      setError(err.message || 'Erro ao carregar pessoa');
+      setError(err instanceof Error ? err.message : 'Erro ao carregar pessoa');
     } finally {
       setLoading(false);
     }
@@ -168,7 +169,7 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
     setFormData(prev => ({ ...prev, cpf_cnpj: formatted }));
   };
 
-  const handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const _handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const formatted = formatCep(value);
     setFormData(prev => ({ ...prev, cep: formatted }));
@@ -225,9 +226,9 @@ export const EditarPessoaSection: React.FC<EditarPessoaSectionProps> = ({
       setTimeout(() => {
         onNavigate('pessoas-listar');
       }, 1500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao cadastrar pessoa:', err);
-      setError(err.message || 'Erro ao cadastrar pessoa');
+      setError(err instanceof Error ? err.message : 'Erro ao cadastrar pessoa');
     } finally {
       setLoading(false);
     }

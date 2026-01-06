@@ -9,7 +9,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { EmpresaViewModal } from '../modals/EmpresaViewModal';
 
 interface EmpresasListSectionProps {
-  onNavigate: (sectionId: string, params?: Record<string, any>) => void;
+  onNavigate: (sectionId: string, params?: Record<string, unknown>) => void;
 }
 
 export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavigate }) => {
@@ -26,6 +26,7 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
 
   useEffect(() => {
     loadEmpresas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadEmpresas = async () => {
@@ -40,8 +41,8 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
 
       const data = await empresaService.findByCliente(clienteId);
       setEmpresas(data);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar empresas');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar empresas');
     } finally {
       setLoading(false);
     }
@@ -116,8 +117,8 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
 
       await loadEmpresas();
       setEmpresaParaExcluir(null);
-    } catch (err: any) {
-      setModalMessage(err.message || 'Erro ao excluir empresa');
+    } catch (err: unknown) {
+      setModalMessage(err instanceof Error ? err.message : 'Erro ao excluir empresa');
       setIsAlertModal(true);
       setShowConfirmModal(true);
     } finally {

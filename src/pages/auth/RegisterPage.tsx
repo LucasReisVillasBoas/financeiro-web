@@ -78,8 +78,9 @@ export default function RegisterPage() {
 
       sessionStorage.setItem('onboarding_clienteId', user.id);
       window.location.href = '/onboarding/empresa';
-    } catch (err: any) {
-      setError(err.message || 'Erro ao criar conta. Tente novamente.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao criar conta. Tente novamente.';
+      setError(message);
     } finally {
       setLoading(false);
     }

@@ -14,7 +14,10 @@ class MovimentacaoBancariaService {
       '/movimentacoes-bancarias',
       dto
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao criar movimentação bancária');
+    }
+    return response.data;
   }
 
   async findAll(): Promise<MovimentacaoBancaria[]> {
@@ -42,7 +45,10 @@ class MovimentacaoBancariaService {
     const response: ApiResponse<MovimentacaoBancaria> = await apiService.get(
       `/movimentacoes-bancarias/${id}`
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Movimentação bancária não encontrada');
+    }
+    return response.data;
   }
 
   async update(id: string, dto: UpdateMovimentacaoBancariaDto): Promise<MovimentacaoBancaria> {
@@ -50,7 +56,10 @@ class MovimentacaoBancariaService {
       `/movimentacoes-bancarias/${id}`,
       dto
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao atualizar movimentação bancária');
+    }
+    return response.data;
   }
 
   async delete(id: string): Promise<void> {
@@ -62,7 +71,10 @@ class MovimentacaoBancariaService {
       '/movimentacoes-bancarias/conciliar',
       dto
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao conciliar movimentações');
+    }
+    return response.data;
   }
 
   async desconciliar(dto: ConciliarMovimentacoesDto): Promise<ConciliacaoResponse> {
@@ -70,7 +82,10 @@ class MovimentacaoBancariaService {
       '/movimentacoes-bancarias/desconciliar',
       dto
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao desconciliar movimentações');
+    }
+    return response.data;
   }
 }
 

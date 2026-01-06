@@ -1,9 +1,21 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
 
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   message: string;
   statusCode: number;
   data?: T;
+}
+
+interface ApiError extends Error {
+  statusCode: number;
+  details: unknown;
+}
+
+function createApiError(message: string, statusCode: number, details: unknown): ApiError {
+  const error = new Error(message) as ApiError;
+  error.statusCode = statusCode;
+  error.details = details;
+  return error;
 }
 
 class ApiService {
@@ -42,29 +54,21 @@ class ApiService {
       if (response.status === 401) {
         this.clearAuthData();
         window.location.href = '/login';
-        const apiError: any = new Error('Sessão expirada. Faça login novamente.');
-        apiError.statusCode = 401;
-        apiError.details = error;
-        throw apiError;
+        throw createApiError('Sessão expirada. Faça login novamente.', 401, error);
       }
 
       // Tratamento especial para erro 403 (Forbidden)
       if (response.status === 403) {
-        const apiError: any = new Error(
-          'Seu perfil não tem permissão para realizar essa ação. Entre em contato com um administrador.'
+        throw createApiError(
+          'Seu perfil não tem permissão para realizar essa ação. Entre em contato com um administrador.',
+          403,
+          error
         );
-        apiError.statusCode = 403;
-        apiError.details = error;
-        throw apiError;
       }
 
       // Extrai a mensagem de erro da resposta da API
       const errorMessage = error.message || error.error || 'Erro na requisição';
-
-      const apiError: any = new Error(errorMessage);
-      apiError.statusCode = response.status;
-      apiError.details = error;
-      throw apiError;
+      throw createApiError(errorMessage, response.status, error);
     }
 
     return response.json();
@@ -74,21 +78,21 @@ class ApiService {
     return this.request<T>(endpoint, { method: 'GET' });
   }
 
-  async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+  async post<T>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async put<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
+  async put<T>(endpoint: string, data: unknown): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
-  async patch<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
+  async patch<T>(endpoint: string, data: unknown): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'PATCH',
       body: JSON.stringify(data),
@@ -122,27 +126,20 @@ class ApiService {
       if (response.status === 401) {
         this.clearAuthData();
         window.location.href = '/login';
-        const apiError: any = new Error('Sessão expirada. Faça login novamente.');
-        apiError.statusCode = 401;
-        apiError.details = error;
-        throw apiError;
+        throw createApiError('Sessão expirada. Faça login novamente.', 401, error);
       }
 
       // Tratamento especial para erro 403 (Forbidden)
       if (response.status === 403) {
-        const apiError: any = new Error(
-          'Seu perfil não tem permissão para realizar essa ação. Entre em contato com um administrador.'
+        throw createApiError(
+          'Seu perfil não tem permissão para realizar essa ação. Entre em contato com um administrador.',
+          403,
+          error
         );
-        apiError.statusCode = 403;
-        apiError.details = error;
-        throw apiError;
       }
 
       const errorMessage = error.message || error.error || 'Erro na requisição';
-      const apiError: any = new Error(errorMessage);
-      apiError.statusCode = response.status;
-      apiError.details = error;
-      throw apiError;
+      throw createApiError(errorMessage, response.status, error);
     }
 
     return response.json();
@@ -170,27 +167,20 @@ class ApiService {
       if (response.status === 401) {
         this.clearAuthData();
         window.location.href = '/login';
-        const apiError: any = new Error('Sessão expirada. Faça login novamente.');
-        apiError.statusCode = 401;
-        apiError.details = error;
-        throw apiError;
+        throw createApiError('Sessão expirada. Faça login novamente.', 401, error);
       }
 
       // Tratamento especial para erro 403 (Forbidden)
       if (response.status === 403) {
-        const apiError: any = new Error(
-          'Seu perfil não tem permissão para realizar essa ação. Entre em contato com um administrador.'
+        throw createApiError(
+          'Seu perfil não tem permissão para realizar essa ação. Entre em contato com um administrador.',
+          403,
+          error
         );
-        apiError.statusCode = 403;
-        apiError.details = error;
-        throw apiError;
       }
 
       const errorMessage = error.message || error.error || 'Erro na requisição';
-      const apiError: any = new Error(errorMessage);
-      apiError.statusCode = response.status;
-      apiError.details = error;
-      throw apiError;
+      throw createApiError(errorMessage, response.status, error);
     }
 
     return response.blob();

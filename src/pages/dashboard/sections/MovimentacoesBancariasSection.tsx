@@ -33,8 +33,9 @@ export const MovimentacoesBancariasSection: React.FC = () => {
       setLoading(true);
       const data = await movimentacaoBancariaService.findAll();
       setMovimentacoes(data);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar movimentações');
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || 'Erro ao carregar movimentações');
     } finally {
       setLoading(false);
     }
@@ -126,8 +127,9 @@ export const MovimentacoesBancariasSection: React.FC = () => {
       // Recarregar movimentações
       await loadMovimentacoes();
       setSelectedIds(new Set());
-    } catch (err: any) {
-      setError(err.message || 'Erro ao conciliar movimentações');
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || 'Erro ao conciliar movimentações');
     } finally {
       setConciliandoLoading(false);
     }
@@ -157,8 +159,9 @@ export const MovimentacoesBancariasSection: React.FC = () => {
       // Recarregar movimentações
       await loadMovimentacoes();
       setSelectedIds(new Set());
-    } catch (err: any) {
-      setError(err.message || 'Erro ao desconciliar movimentações');
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || 'Erro ao desconciliar movimentações');
     } finally {
       setConciliandoLoading(false);
     }

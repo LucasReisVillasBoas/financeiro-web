@@ -75,7 +75,7 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
           filiaisMap.set(empresa.id, filiais);
         }
         setEmpresasComFiliais(filiaisMap);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao carregar dados:', err);
         setError('Erro ao carregar empresas, filiais e perfis');
       } finally {
@@ -218,7 +218,7 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
 
     try {
       const novoUsuario = await usuarioService.create(dto);
-      const associacoes: Promise<any>[] = [];
+      const associacoes: Promise<unknown>[] = [];
 
       for (const empresaId of selectedEmpresas) {
         associacoes.push(usuarioService.associarEmpresaFilial(novoUsuario.id, { empresaId }));
@@ -255,9 +255,10 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
       setTimeout(() => {
         onNavigate('usuarios-listar');
       }, 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { message?: string };
       console.error('Erro ao cadastrar usuário:', err);
-      setError(err.message || 'Erro ao cadastrar usuário');
+      setError(error.message || 'Erro ao cadastrar usuário');
     } finally {
       setLoading(false);
     }
@@ -465,12 +466,12 @@ export const NovoUsuarioSection: React.FC<NovoUsuarioSectionProps> = ({ onNaviga
                   </label>
 
                   {empresasComFiliais.get(empresa.id) &&
-                    empresasComFiliais.get(empresa.id)!.length > 0 && (
+                    (empresasComFiliais.get(empresa.id) ?? []).length > 0 && (
                       <div className="ml-7 space-y-2 border-l-2 border-[var(--color-border)] pl-4">
                         <div className="text-sm font-medium text-[var(--color-text-secondary)]">
                           Filiais:
                         </div>
-                        {empresasComFiliais.get(empresa.id)!.map(filial => (
+                        {(empresasComFiliais.get(empresa.id) ?? []).map(filial => (
                           <div key={filial.id} className="space-y-2">
                             <label className="flex items-start gap-2 cursor-pointer">
                               <input

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   FiPlus,
   FiSearch,
@@ -42,17 +42,7 @@ export const PlanoContasSection: React.FC = () => {
   });
   const [formError, setFormError] = useState('');
 
-  useEffect(() => {
-    loadEmpresas();
-  }, []);
-
-  useEffect(() => {
-    if (empresaSelecionada) {
-      loadContas();
-    }
-  }, [empresaSelecionada]);
-
-  const loadEmpresas = async () => {
+  const loadEmpresas = useCallback(async () => {
     try {
       if (!user?.clienteId) return;
       const empresasData = await empresaService.findByCliente(user.clienteId);
@@ -60,22 +50,32 @@ export const PlanoContasSection: React.FC = () => {
       if (empresasData && empresasData.length > 0) {
         setEmpresaSelecionada(empresasData[0].id);
       }
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar empresas');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar empresas');
     }
-  };
+  }, [user?.clienteId]);
 
-  const loadContas = async () => {
+  const loadContas = useCallback(async () => {
     try {
       setLoading(true);
       const response = await planoContasService.findByEmpresa(empresaSelecionada);
       setContas(response.data || []);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar plano de contas');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar plano de contas');
     } finally {
       setLoading(false);
     }
-  };
+  }, [empresaSelecionada]);
+
+  useEffect(() => {
+    loadEmpresas();
+  }, [loadEmpresas]);
+
+  useEffect(() => {
+    if (empresaSelecionada) {
+      loadContas();
+    }
+  }, [empresaSelecionada, loadContas]);
 
   const handleNovaConta = () => {
     setEditingConta(null);
@@ -139,8 +139,8 @@ export const PlanoContasSection: React.FC = () => {
       }
       await loadContas();
       handleCloseForm();
-    } catch (err: any) {
-      setFormError(err.message || 'Erro ao salvar conta');
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Erro ao salvar conta');
     }
   };
 
@@ -148,8 +148,8 @@ export const PlanoContasSection: React.FC = () => {
     try {
       await planoContasService.toggleStatus(id, !ativo);
       await loadContas();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao alterar status');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao alterar status');
     }
   };
 
@@ -167,8 +167,8 @@ export const PlanoContasSection: React.FC = () => {
 
       await planoContasService.delete(id);
       await loadContas();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao excluir conta');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao excluir conta');
     }
   };
 
@@ -183,8 +183,8 @@ export const PlanoContasSection: React.FC = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao exportar CSV');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao exportar CSV');
     }
   };
 

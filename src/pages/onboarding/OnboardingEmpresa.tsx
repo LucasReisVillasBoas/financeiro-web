@@ -264,13 +264,14 @@ export const OnboardingEmpresa: React.FC = () => {
       await onboardingService.createEmpresa(payload);
       await logout();
       navigate('/login');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro no onboarding:', err);
-      const errorMessages = err.details?.message;
+      const error = err as { details?: { message?: string[] }; message?: string };
+      const errorMessages = error.details?.message;
       if (Array.isArray(errorMessages)) {
         setErrors(errorMessages);
       } else {
-        setErrors([err.message || 'Erro ao cadastrar empresa']);
+        setErrors([error.message || 'Erro ao cadastrar empresa']);
       }
       scrollToTop();
     } finally {

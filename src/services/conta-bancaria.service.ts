@@ -9,7 +9,10 @@ import type {
 class ContaBancariaService {
   async create(dto: CreateContaBancariaDto): Promise<ContaBancaria> {
     const response: ApiResponse<ContaBancaria> = await apiService.post('/contas-bancarias', dto);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao criar conta bancária');
+    }
+    return response.data;
   }
 
   async findAll(): Promise<ContaBancaria[]> {
@@ -26,7 +29,10 @@ class ContaBancariaService {
 
   async findOne(id: string): Promise<ContaBancaria> {
     const response: ApiResponse<ContaBancaria> = await apiService.get(`/contas-bancarias/${id}`);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Conta bancária não encontrada');
+    }
+    return response.data;
   }
 
   async update(id: string, dto: UpdateContaBancariaDto): Promise<ContaBancaria> {
@@ -34,7 +40,10 @@ class ContaBancariaService {
       `/contas-bancarias/${id}`,
       dto
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao atualizar conta bancária');
+    }
+    return response.data;
   }
 
   async delete(id: string): Promise<void> {
@@ -46,7 +55,10 @@ class ContaBancariaService {
       `/contas-bancarias/${id}/toggle-status`,
       id
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao alterar status da conta bancária');
+    }
+    return response.data;
   }
 }
 

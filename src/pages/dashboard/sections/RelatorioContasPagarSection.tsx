@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   FiDownload,
   FiFilter,
@@ -19,7 +19,7 @@ import { PaginationControls } from '../../../components/reports/PaginationContro
 import { SortableTableHeader } from '../../../components/reports/SortableTableHeader';
 
 // Configure pdfMake fonts
-(pdfMake as any).vfs = pdfFonts;
+(pdfMake as unknown as { vfs: typeof pdfFonts }).vfs = pdfFonts;
 
 interface FiltroContasPagar {
   dataInicio: string;
@@ -73,10 +73,53 @@ export const RelatorioContasPagarSection: React.FC = () => {
     parcial: 0,
   });
 
+  const carregarFornecedores = useCallback(async () => {
+    try {
+      const data = await pessoaService.findAll();
+      setFornecedores(data.filter(p => p.ativo));
+    } catch (err) {
+      console.error('Erro ao carregar fornecedores:', err);
+    }
+  }, []);
+
+  const calcularTotalizadores = useCallback((dados: ContaPagar[]) => {
+    const total = dados.length;
+    const saldoTotal = dados.reduce((acc, c) => acc + c.saldo, 0);
+    const valorTotal = dados.reduce((acc, c) => acc + c.valor_total, 0);
+
+    const emAberto = dados.filter(c => c.status === StatusContaPagar.PENDENTE).length;
+    const vencidas = dados.filter(c => c.status === StatusContaPagar.VENCIDA).length;
+    const pagas = dados.filter(c => c.status === StatusContaPagar.PAGA).length;
+    const parcial = dados.filter(c => c.status === StatusContaPagar.PARCIALMENTE_PAGA).length;
+
+    setTotalizadores({
+      total,
+      saldoTotal,
+      valorTotal,
+      emAberto,
+      vencidas,
+      pagas,
+      parcial,
+    });
+  }, []);
+
+  const carregarDados = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await contaPagarService.findAll();
+      setContas(data);
+      calcularTotalizadores(data);
+    } catch (err) {
+      console.error('Erro ao carregar contas:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [calcularTotalizadores]);
+
   useEffect(() => {
     carregarDados();
     carregarFornecedores();
-  }, []);
+  }, [carregarDados, carregarFornecedores]);
 
   // Update filtered data and totals when filters or source data changes
   useEffect(() => {
@@ -129,7 +172,7 @@ export const RelatorioContasPagarSection: React.FC = () => {
 
     setContasFiltradas(dadosFiltrados);
     calcularTotalizadores(dadosFiltrados);
-  }, [contas, filtros]);
+  }, [contas, filtros, calcularTotalizadores]);
 
   // Use report filters hook for sorting and pagination
   const {
@@ -147,49 +190,6 @@ export const RelatorioContasPagarSection: React.FC = () => {
     data: contasFiltradas,
     initialItemsPerPage: 25,
   });
-
-  const carregarFornecedores = async () => {
-    try {
-      const data = await pessoaService.findAll();
-      setFornecedores(data.filter(p => p.ativo));
-    } catch (err) {
-      console.error('Erro ao carregar fornecedores:', err);
-    }
-  };
-
-  const carregarDados = async () => {
-    setLoading(true);
-    try {
-      const data = await contaPagarService.findAll();
-      setContas(data);
-      calcularTotalizadores(data);
-    } catch (err) {
-      console.error('Erro ao carregar contas:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const calcularTotalizadores = (dados: ContaPagar[]) => {
-    const total = dados.length;
-    const saldoTotal = dados.reduce((acc, c) => acc + c.saldo, 0);
-    const valorTotal = dados.reduce((acc, c) => acc + c.valor_total, 0);
-
-    const emAberto = dados.filter(c => c.status === StatusContaPagar.PENDENTE).length;
-    const vencidas = dados.filter(c => c.status === StatusContaPagar.VENCIDA).length;
-    const pagas = dados.filter(c => c.status === StatusContaPagar.PAGA).length;
-    const parcial = dados.filter(c => c.status === StatusContaPagar.PARCIALMENTE_PAGA).length;
-
-    setTotalizadores({
-      total,
-      saldoTotal,
-      valorTotal,
-      emAberto,
-      vencidas,
-      pagas,
-      parcial,
-    });
-  };
 
   const agruparPorFornecedorFunc = (dados: ContaPagar[]): TotalizadorPorFornecedor[] => {
     const grupos = dados.reduce(
@@ -325,6 +325,7 @@ export const RelatorioContasPagarSection: React.FC = () => {
       c.status,
     ]);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const content: any[] = [
       { text: 'Relatório de Contas a Pagar', style: 'header', margin: [0, 0, 0, 10] },
       {
@@ -411,6 +412,7 @@ export const RelatorioContasPagarSection: React.FC = () => {
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const docDefinition: any = {
       pageSize: 'A4',
       pageOrientation: 'landscape',
@@ -446,6 +448,7 @@ export const RelatorioContasPagarSection: React.FC = () => {
       },
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (pdfMake as any)
       .createPdf(docDefinition)
       .download(`relatorio-contas-pagar-${new Date().toISOString().split('T')[0]}.pdf`);
@@ -596,7 +599,9 @@ export const RelatorioContasPagarSection: React.FC = () => {
               </label>
               <select
                 value={filtros.status}
-                onChange={e => setFiltros(prev => ({ ...prev, status: e.target.value as any }))}
+                onChange={e =>
+                  setFiltros(prev => ({ ...prev, status: e.target.value as StatusContaPagar | '' }))
+                }
                 className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
               >
                 <option value="">Todos os Status</option>
@@ -615,7 +620,12 @@ export const RelatorioContasPagarSection: React.FC = () => {
               </label>
               <select
                 value={filtros.tipoData}
-                onChange={e => setFiltros(prev => ({ ...prev, tipoData: e.target.value as any }))}
+                onChange={e =>
+                  setFiltros(prev => ({
+                    ...prev,
+                    tipoData: e.target.value as 'vencimento' | 'emissao' | 'liquidacao',
+                  }))
+                }
                 className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
               >
                 <option value="vencimento">Vencimento</option>

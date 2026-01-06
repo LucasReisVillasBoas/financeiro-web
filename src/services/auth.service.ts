@@ -5,14 +5,21 @@ class AuthService {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const response: ApiResponse<LoginResponse> = await apiService.post('/auth/login', credentials);
 
-    const result = (response as any).token ? (response as any) : response.data!;
+    const responseWithToken = response as ApiResponse<LoginResponse> & {
+      token?: string;
+      permissoes?: Permissoes;
+    };
+    const result = responseWithToken.token ? responseWithToken : response.data;
+    if (!result) {
+      throw new Error('Resposta inválida da API de login');
+    }
     const token = result.token;
     const permissoes = result.permissoes;
 
     if (token) {
       localStorage.setItem('token', token);
     } else {
-      console.log('Nenhum token recebido da API');
+      console.warn('Nenhum token recebido da API');
     }
 
     if (permissoes) {

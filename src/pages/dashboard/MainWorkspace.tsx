@@ -67,7 +67,7 @@ const sectionTitles: Record<string, string> = {
 
 export const MainWorkspace: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>('dashboard');
-  const [sectionParams, setSectionParams] = useState<Record<string, any>>({});
+  const [sectionParams, setSectionParams] = useState<Record<string, unknown>>({});
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -88,7 +88,7 @@ export const MainWorkspace: React.FC = () => {
     }
   }, [activeSection, logout, navigate, isLoggingOut]);
 
-  const handleNavigate = (section: string, params?: Record<string, any>) => {
+  const handleNavigate = (section: string, params?: Record<string, unknown>) => {
     setActiveSection(section);
     if (params) {
       setSectionParams(params);

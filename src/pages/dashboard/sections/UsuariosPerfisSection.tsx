@@ -7,7 +7,7 @@ import {
 import { useAuth } from '../../../context/AuthContext';
 
 interface UsuariosPerfisSectionProps {
-  onNavigate: (section: string, params?: Record<string, any>) => void;
+  onNavigate: (section: string, params?: Record<string, unknown>) => void;
 }
 
 export const UsuariosPerfisSection: React.FC<UsuariosPerfisSectionProps> = ({ onNavigate }) => {

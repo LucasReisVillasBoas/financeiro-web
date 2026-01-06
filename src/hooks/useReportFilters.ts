@@ -78,8 +78,8 @@ export function useReportFilters<T>({
       }
 
       // Try to compare as dates if they're date strings
-      const aDate = new Date(aValue as any);
-      const bDate = new Date(bValue as any);
+      const aDate = new Date(aValue as string | number);
+      const bDate = new Date(bValue as string | number);
       if (!isNaN(aDate.getTime()) && !isNaN(bDate.getTime())) {
         return sortConfig.direction === 'asc'
           ? aDate.getTime() - bDate.getTime()
@@ -162,6 +162,8 @@ export function useReportFilters<T>({
 }
 
 // Helper function to get nested property values (e.g., "pessoa.nome")
-function getNestedValue(obj: any, path: string): any {
-  return path.split('.').reduce((current, key) => current?.[key], obj);
+function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+  return path
+    .split('.')
+    .reduce((current, key) => (current as Record<string, unknown>)?.[key], obj as unknown);
 }

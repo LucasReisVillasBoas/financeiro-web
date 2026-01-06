@@ -47,7 +47,10 @@ export interface UsuarioUpdateDto {
 class UsuarioService {
   async create(dto: UsuarioCreateDto): Promise<User> {
     const response: ApiResponse<User> = await apiService.post('/usuario/cadastro', dto);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao criar usuário');
+    }
+    return response.data;
   }
 
   async getById(): Promise<User | null> {
@@ -67,7 +70,10 @@ class UsuarioService {
 
   async update(id: string, dto: UsuarioUpdateDto): Promise<User> {
     const response: ApiResponse<User> = await apiService.patch(`/usuario/${id}`, dto);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao atualizar usuário');
+    }
+    return response.data;
   }
 
   async delete(id: string): Promise<void> {
@@ -82,7 +88,10 @@ class UsuarioService {
       `/usuario/${usuarioId}/empresas`,
       dto
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao associar empresa/filial ao usuário');
+    }
+    return response.data;
   }
 
   async listarAssociacoes(usuarioId: string): Promise<UsuarioEmpresaFilial[]> {

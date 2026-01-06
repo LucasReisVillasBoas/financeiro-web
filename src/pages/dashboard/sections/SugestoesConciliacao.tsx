@@ -51,25 +51,30 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({ contasBanca
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  useEffect(() => {
-    if (contaBancariaId) {
-      loadExtratosPendentes();
-    }
-  }, [contaBancariaId]);
-
-  const loadExtratosPendentes = async () => {
+  const loadExtratosPendentes = React.useCallback(async () => {
     setLoading(true);
     setError('');
 
     try {
       const response = await extratoBancarioService.findPendentes(contaBancariaId);
       setExtratos(response.data || []);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao carregar extratos');
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+            'Erro ao carregar extratos';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+  }, [contaBancariaId]);
+
+  useEffect(() => {
+    if (contaBancariaId) {
+      loadExtratosPendentes();
+    }
+  }, [contaBancariaId, loadExtratosPendentes]);
 
   const handleAceitarSugestao = async (itemId: string) => {
     setActionLoading(true);
@@ -77,8 +82,13 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({ contasBanca
       await extratoBancarioService.aceitarSugestao(itemId);
       await loadExtratosPendentes();
       setDetailsOpen(false);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao aceitar sugestão');
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+            'Erro ao aceitar sugestão';
+      setError(errorMessage);
     } finally {
       setActionLoading(false);
     }
@@ -90,8 +100,13 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({ contasBanca
       await extratoBancarioService.rejeitarSugestao(itemId);
       await loadExtratosPendentes();
       setDetailsOpen(false);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao rejeitar sugestão');
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+            'Erro ao rejeitar sugestão';
+      setError(errorMessage);
     } finally {
       setActionLoading(false);
     }
@@ -103,8 +118,13 @@ const SugestoesConciliacao: React.FC<SugestoesConciliacaoProps> = ({ contasBanca
       await extratoBancarioService.ignorarItem(itemId);
       await loadExtratosPendentes();
       setDetailsOpen(false);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao ignorar item');
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+            'Erro ao ignorar item';
+      setError(errorMessage);
     } finally {
       setActionLoading(false);
     }

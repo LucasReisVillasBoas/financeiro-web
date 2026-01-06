@@ -95,7 +95,7 @@ export const EditarPerfilSection: React.FC<EditarPerfilSectionProps> = ({
           });
         }
         setPermissoesPorModulo(niveis);
-      } catch (err) {
+      } catch {
         setError('Erro ao buscar dados do perfil');
       } finally {
         setLoadingData(false);
@@ -183,8 +183,8 @@ export const EditarPerfilSection: React.FC<EditarPerfilSectionProps> = ({
       setTimeout(() => {
         onNavigate('usuarios-perfis');
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao atualizar perfil');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar perfil');
     } finally {
       setLoading(false);
     }

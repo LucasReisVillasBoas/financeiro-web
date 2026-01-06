@@ -95,7 +95,7 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
           uf: data.uf || '',
           ibge: data.codigo_ibge || '',
         });
-      } catch (error) {
+      } catch {
         setError('Erro ao buscar dados da empresa');
       }
     };
@@ -150,8 +150,8 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
 
       setSuccess('Empresa atualizada com sucesso!');
       onNavigate('empresas-listar');
-    } catch (err: any) {
-      setError(err.message || 'Erro ao atualizar empresa');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar empresa');
     } finally {
       setLoading(false);
     }

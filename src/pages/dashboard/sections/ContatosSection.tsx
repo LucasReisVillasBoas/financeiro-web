@@ -4,7 +4,7 @@ import type { Contato } from '../../../types/api.types';
 import { contatoService } from '../../../services/contato.service';
 
 interface ContatosSectionProps {
-  onNavigate: (section: string, params?: Record<string, any>) => void;
+  onNavigate: (section: string, params?: Record<string, unknown>) => void;
 }
 
 export const ContatosSection: React.FC<ContatosSectionProps> = ({ onNavigate }) => {
@@ -51,8 +51,9 @@ export const ContatosSection: React.FC<ContatosSectionProps> = ({ onNavigate }) 
       await contatoService.delete(contatoParaExcluir.id);
       setContatos(contatos.filter(c => c.id !== contatoParaExcluir.id));
       setContatoParaExcluir(null);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao excluir contato');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao excluir contato';
+      setError(message);
       console.error('Erro ao deletar contato:', err);
     } finally {
       setLoading(false);

@@ -103,8 +103,9 @@ export const ContasPagarSection: React.FC = () => {
       setError('');
       const data = await contaPagarService.findAll();
       setContas(data);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar contas a pagar');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao carregar contas a pagar';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -181,8 +182,9 @@ export const ContasPagarSection: React.FC = () => {
       await contaPagarService.create(formData);
       await loadContas();
       handleCloseForm();
-    } catch (err: any) {
-      setFormError(err.message || 'Erro ao criar conta a pagar');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao criar conta a pagar';
+      setFormError(message);
     }
   };
 
@@ -223,8 +225,9 @@ export const ContasPagarSection: React.FC = () => {
       setShowBaixaModal(false);
       setContaSelecionada(null);
       setError('');
-    } catch (err: any) {
-      setError(err.message || 'Erro ao registrar baixa');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao registrar baixa';
+      setError(message);
     }
   };
 
@@ -240,8 +243,9 @@ export const ContasPagarSection: React.FC = () => {
     try {
       await contaPagarService.estornarBaixa(conta.id);
       await loadContas();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao estornar baixa');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao estornar baixa';
+      setError(message);
     }
   };
 
@@ -266,8 +270,9 @@ export const ContasPagarSection: React.FC = () => {
       setContaSelecionada(null);
       setJustificativaCancelamento('');
       setError('');
-    } catch (err: any) {
-      setError(err.message || 'Erro ao cancelar conta');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao cancelar conta';
+      setError(message);
     }
   };
 
@@ -283,8 +288,9 @@ export const ContasPagarSection: React.FC = () => {
     try {
       await contaPagarService.delete(conta.id);
       await loadContas();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao excluir conta');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao excluir conta';
+      setError(message);
     }
   };
 

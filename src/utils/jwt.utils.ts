@@ -3,7 +3,9 @@ interface JwtPayload {
   email?: string;
   clienteId?: string;
   cliente?: string;
-  [key: string]: any;
+  username?: string;
+  name?: string;
+  [key: string]: string | undefined;
 }
 
 export function decodeJWT(token: string): JwtPayload | null {

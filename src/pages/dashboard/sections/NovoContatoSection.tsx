@@ -68,9 +68,10 @@ export const NovoContatoSection: React.FC<NovoContatoSectionProps> = ({ onNaviga
       setTimeout(() => {
         onNavigate('auxiliares-contatos');
       }, 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { message?: string };
       console.error('Erro ao cadastrar contato:', err);
-      setError(err.message || 'Erro ao cadastrar contato');
+      setError(error.message || 'Erro ao cadastrar contato');
     } finally {
       setLoading(false);
     }

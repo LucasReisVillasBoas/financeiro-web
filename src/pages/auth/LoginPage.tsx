@@ -24,8 +24,10 @@ export default function LoginPage() {
     try {
       await login(email, password);
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Erro ao fazer login. Verifique suas credenciais.');
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Erro ao fazer login. Verifique suas credenciais.';
+      setError(message);
     } finally {
       setLoading(false);
     }

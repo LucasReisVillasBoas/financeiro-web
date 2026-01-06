@@ -3,8 +3,11 @@ import { AuthProvider } from './context/AuthContext';
 import './index.css';
 import { AppRoutes } from './routes/AppRoutes';
 
-createRoot(document.getElementById('root')!).render(
-  <AuthProvider>
-    <AppRoutes />
-  </AuthProvider>
-);
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  createRoot(rootElement).render(
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   FiDownload,
   FiFilter,
@@ -11,6 +11,7 @@ import { RiBuilding4Line } from 'react-icons/ri';
 import * as XLSX from 'xlsx';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
+import type { TDocumentDefinitions } from 'pdfmake/interfaces';
 import type { DreResponse, DreFiltros, DreItemLinha, Empresa } from '../../../types/api.types';
 import { dreRelatorioService } from '../../../services/dre-relatorio.service';
 import { empresaService } from '../../../services';
@@ -20,7 +21,7 @@ import { PaginationControls } from '../../../components/reports/PaginationContro
 import { SortableTableHeader } from '../../../components/reports/SortableTableHeader';
 
 // Configure pdfMake fonts
-(pdfMake as any).vfs = pdfFonts;
+(pdfMake as unknown as { vfs: typeof pdfFonts }).vfs = pdfFonts;
 
 export const DreRelatorioSection: React.FC = () => {
   const { user } = useAuth();
@@ -56,17 +57,7 @@ export const DreRelatorioSection: React.FC = () => {
     dataFim: ultimoDiaMes.toISOString().split('T')[0],
   });
 
-  useEffect(() => {
-    carregarEmpresas();
-  }, []);
-
-  useEffect(() => {
-    if (filtros.dataInicio && filtros.dataFim) {
-      buscarDados();
-    }
-  }, [filtros]);
-
-  const carregarEmpresas = async () => {
+  const carregarEmpresas = useCallback(async () => {
     try {
       if (user?.clienteId) {
         const data = await empresaService.findByCliente(user.clienteId);
@@ -83,7 +74,7 @@ export const DreRelatorioSection: React.FC = () => {
     } catch (error) {
       console.error('Erro ao carregar empresas:', error);
     }
-  };
+  }, [user?.clienteId, filtros.empresaId]);
 
   // Função para construir hierarquia a partir de lista plana
   const construirHierarquia = (itens: DreItemLinha[]): DreItemLinha[] => {
@@ -122,7 +113,7 @@ export const DreRelatorioSection: React.FC = () => {
     return roots;
   };
 
-  const buscarDados = async () => {
+  const buscarDados = useCallback(async () => {
     if (!filtros.dataInicio || !filtros.dataFim || !filtros.empresaId) {
       return;
     }
@@ -147,7 +138,17 @@ export const DreRelatorioSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtros]);
+
+  useEffect(() => {
+    carregarEmpresas();
+  }, [carregarEmpresas]);
+
+  useEffect(() => {
+    if (filtros.dataInicio && filtros.dataFim) {
+      buscarDados();
+    }
+  }, [filtros, buscarDados]);
 
   const limparFiltros = () => {
     setFiltros({
@@ -236,11 +237,11 @@ export const DreRelatorioSection: React.FC = () => {
       return;
     }
 
-    const worksheetData: any[][] = [
-      ['DRE - Demonstrativo de Resultado do Exerc�cio'],
-      [`Per�odo: ${formatarData(filtros.dataInicio)} a ${formatarData(filtros.dataFim)}`],
+    const worksheetData: (string | number)[][] = [
+      ['DRE - Demonstrativo de Resultado do Exercicio'],
+      [`Periodo: ${formatarData(filtros.dataInicio)} a ${formatarData(filtros.dataFim)}`],
       [],
-      ['Código', 'Descrição', 'Valor', 'Percentual'],
+      ['Codigo', 'Descricao', 'Valor', 'Percentual'],
     ];
 
     const processarItens = (itens: DreItemLinha[], nivel: number = 0) => {
@@ -297,7 +298,7 @@ export const DreRelatorioSection: React.FC = () => {
       return;
     }
 
-    const tableBody: any[] = [
+    const tableBody: (string | { text: string; style?: string; alignment?: string })[][] = [
       [
         { text: 'Código', style: 'tableHeader' },
         { text: 'Descrição', style: 'tableHeader' },
@@ -324,7 +325,7 @@ export const DreRelatorioSection: React.FC = () => {
 
     processarItens(dados.itens);
 
-    const documentDefinition: any = {
+    const documentDefinition: TDocumentDefinitions = {
       pageOrientation: 'portrait',
       content: [
         {
@@ -471,7 +472,7 @@ export const DreRelatorioSection: React.FC = () => {
             {item.percentual ? formatarPercentual(item.percentual) : '-'}
           </td>
         </tr>
-        {hasChildren && isExpanded && item.filhos!.map(filho => renderItem(filho, nivel + 1))}
+        {hasChildren && isExpanded && item.filhos?.map(filho => renderItem(filho, nivel + 1))}
       </React.Fragment>
     );
   };

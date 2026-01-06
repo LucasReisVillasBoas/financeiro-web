@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { empresaService, dreService } from '../../../services';
 import {
   type Empresa,
@@ -36,11 +36,7 @@ export const DreSection: React.FC = () => {
   const [periodo2Fim, setPeriodo2Fim] = useState('');
   const [dreComparativoData, setDreComparativoData] = useState<DreComparativoDto | null>(null);
 
-  useEffect(() => {
-    carregarEmpresas();
-  }, []);
-
-  const carregarEmpresas = async () => {
+  const carregarEmpresas = useCallback(async () => {
     try {
       if (!user?.clienteId) return;
       const data = await empresaService.findByCliente(user.clienteId);
@@ -52,7 +48,11 @@ export const DreSection: React.FC = () => {
     } catch (err) {
       console.error('Erro ao carregar empresas:', err);
     }
-  };
+  }, [user?.clienteId, empresaId]);
+
+  useEffect(() => {
+    carregarEmpresas();
+  }, [carregarEmpresas]);
 
   const handleGerarDreSimples = async () => {
     if (!empresaId || !dataInicio || !dataFim) {
@@ -73,8 +73,11 @@ export const DreSection: React.FC = () => {
       if (response.data) {
         setDreData(response.data);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao gerar DRE');
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        'Erro ao gerar DRE';
+      setError(errorMessage);
       console.error('Erro ao gerar DRE:', err);
     } finally {
       setLoading(false);
@@ -100,8 +103,11 @@ export const DreSection: React.FC = () => {
       if (response.data) {
         setDreConsolidadoData(response.data);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao gerar DRE consolidado');
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        'Erro ao gerar DRE consolidado';
+      setError(errorMessage);
       console.error('Erro ao gerar DRE consolidado:', err);
     } finally {
       setLoading(false);
@@ -129,8 +135,11 @@ export const DreSection: React.FC = () => {
       if (response.data) {
         setDreComparativoData(response.data);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao gerar DRE comparativo');
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        'Erro ao gerar DRE comparativo';
+      setError(errorMessage);
       console.error('Erro ao gerar DRE comparativo:', err);
     } finally {
       setLoading(false);

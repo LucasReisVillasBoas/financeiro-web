@@ -29,7 +29,7 @@ export const EditarUsuarioSection: React.FC<EditarUsuarioSectionProps> = ({
         if (data?.telefone) {
           setTelefone(formatPhone(data.telefone));
         }
-      } catch (error) {
+      } catch {
         setError('Erro ao buscar dados do usuário');
       }
     };
@@ -73,8 +73,8 @@ export const EditarUsuarioSection: React.FC<EditarUsuarioSectionProps> = ({
       setTimeout(() => {
         onNavigate('usuarios-listar');
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao atualizar usuário');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar usuário');
     } finally {
       setLoading(false);
     }

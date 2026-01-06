@@ -16,6 +16,7 @@ export const FiliaisSection: React.FC<FiliaisSectionProps> = ({ empresaId }) => 
     if (empresaId) {
       loadFiliais();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [empresaId]);
 
   const loadFiliais = async () => {
@@ -23,8 +24,8 @@ export const FiliaisSection: React.FC<FiliaisSectionProps> = ({ empresaId }) => 
       setLoading(true);
       const data = await empresaService.listFiliais(empresaId);
       setFiliais(data);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar filiais');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar filiais');
     } finally {
       setLoading(false);
     }
@@ -36,8 +37,8 @@ export const FiliaisSection: React.FC<FiliaisSectionProps> = ({ empresaId }) => 
     try {
       await empresaService.deleteFilial(filialId);
       setFiliais(filiais.filter(f => f.id !== filialId));
-    } catch (err: any) {
-      alert(err.message || 'Erro ao excluir filial');
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Erro ao excluir filial');
     }
   };
 

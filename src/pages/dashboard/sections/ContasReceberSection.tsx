@@ -99,8 +99,9 @@ export const ContasReceberSection: React.FC = () => {
       setLoading(true);
       const data = await contaReceberService.findAll();
       setContas(data);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar contas bancárias');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao carregar contas bancárias';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -131,8 +132,9 @@ export const ContasReceberSection: React.FC = () => {
       await baixaRecebimentoService.create(baixaData);
       await loadContasReceber();
       setShowBaixaModal(false);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao processar baixa');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao processar baixa';
+      setError(message);
     }
   };
 
@@ -226,8 +228,9 @@ export const ContasReceberSection: React.FC = () => {
       await contaReceberService.create(dataToSubmit);
       await loadContasReceber();
       handleCloseForm();
-    } catch (err: any) {
-      setFormError(err.message || 'Erro ao criar conta a receber');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao criar conta a receber';
+      setFormError(message);
     }
   };
 
@@ -296,8 +299,9 @@ export const ContasReceberSection: React.FC = () => {
       await contaReceberService.createParcelado(parceladoData);
       await loadContasReceber();
       handleCloseParceladoForm();
-    } catch (err: any) {
-      setFormError(err.message || 'Erro ao criar contas parceladas');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao criar contas parceladas';
+      setFormError(message);
     }
   };
 
@@ -315,8 +319,9 @@ export const ContasReceberSection: React.FC = () => {
       setShowCancelarModal(false);
       setContaParaCancelar(null);
       setCancelarData({ justificativa: '' });
-    } catch (err: any) {
-      setError(err.message || 'Erro ao cancelar conta');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao cancelar conta';
+      setError(message);
     }
   };
 

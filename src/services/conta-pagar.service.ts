@@ -12,7 +12,10 @@ import type {
 class ContaPagarService {
   async create(dto: CreateContaPagarDto): Promise<ContaPagar> {
     const response: ApiResponse<ContaPagar> = await apiService.post('/contas-pagar', dto);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao criar conta a pagar');
+    }
+    return response.data;
   }
 
   async findAll(): Promise<ContaPagar[]> {
@@ -29,12 +32,18 @@ class ContaPagarService {
 
   async findOne(id: string): Promise<ContaPagar> {
     const response: ApiResponse<ContaPagar> = await apiService.get(`/contas-pagar/${id}`);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Conta a pagar não encontrada');
+    }
+    return response.data;
   }
 
   async update(id: string, dto: UpdateContaPagarDto): Promise<ContaPagar> {
     const response: ApiResponse<ContaPagar> = await apiService.put(`/contas-pagar/${id}`, dto);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao atualizar conta a pagar');
+    }
+    return response.data;
   }
 
   async registrarBaixa(id: string, dto: RegistrarBaixaDto): Promise<ContaPagar> {
@@ -42,7 +51,10 @@ class ContaPagarService {
       `/contas-pagar/${id}/registrar-baixa`,
       dto
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao registrar baixa');
+    }
+    return response.data;
   }
 
   async estornarBaixa(id: string): Promise<ContaPagar> {
@@ -50,7 +62,10 @@ class ContaPagarService {
       `/contas-pagar/${id}/estornar-baixa`,
       {}
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao estornar baixa');
+    }
+    return response.data;
   }
 
   async cancelar(id: string, dto: CancelarContaPagarDto): Promise<ContaPagar> {
@@ -58,7 +73,10 @@ class ContaPagarService {
       `/contas-pagar/${id}/cancelar`,
       dto
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao cancelar conta a pagar');
+    }
+    return response.data;
   }
 
   async gerarParcelas(dto: GerarParcelasDto): Promise<ContaPagar[]> {
@@ -66,7 +84,10 @@ class ContaPagarService {
       '/contas-pagar/gerar-parcelas',
       dto
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao gerar parcelas');
+    }
+    return response.data;
   }
 
   async delete(id: string): Promise<void> {

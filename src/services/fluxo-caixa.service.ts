@@ -28,7 +28,10 @@ class FluxoCaixaService {
       `/relatorios/fluxo-caixa?${params.toString()}`
     );
 
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao buscar relatório de fluxo de caixa');
+    }
+    return response.data;
   }
 
   /**

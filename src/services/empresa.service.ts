@@ -12,7 +12,10 @@ import type {
 class EmpresaService {
   async create(dto: CreateEmpresaDto): Promise<Empresa> {
     const response: ApiResponse<Empresa> = await apiService.post('/empresas', dto);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao criar empresa');
+    }
+    return response.data;
   }
 
   async findByCliente(clienteId: string): Promise<Empresa[]> {
@@ -22,17 +25,26 @@ class EmpresaService {
 
   async findOne(id: string): Promise<Empresa> {
     const response: ApiResponse<Empresa> = await apiService.get(`/empresas/${id}`);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Empresa não encontrada');
+    }
+    return response.data;
   }
 
   async findByDocument(cnpj: string): Promise<Empresa> {
     const response: ApiResponse<Empresa> = await apiService.get(`/empresas/document/${cnpj}`);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Empresa não encontrada');
+    }
+    return response.data;
   }
 
   async update(id: string, dto: UpdateEmpresaDto): Promise<Empresa> {
     const response: ApiResponse<Empresa> = await apiService.put(`/empresas/${id}`, dto);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao atualizar empresa');
+    }
+    return response.data;
   }
 
   async delete(id: string): Promise<void> {
@@ -45,7 +57,10 @@ class EmpresaService {
       `/empresas/${empresaId}/filiais`,
       dto
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao criar filial');
+    }
+    return response.data;
   }
 
   async listFiliais(empresaId: string): Promise<Filial[]> {
@@ -58,7 +73,10 @@ class EmpresaService {
       `/empresas/filiais/${filialId}`,
       dto
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao atualizar filial');
+    }
+    return response.data;
   }
 
   async deleteFilial(filialId: string): Promise<void> {

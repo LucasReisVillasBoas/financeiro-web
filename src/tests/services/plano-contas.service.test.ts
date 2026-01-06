@@ -185,13 +185,14 @@ describe('planoContasService', () => {
 
       const criadoResponse = await planoContasService.create(createDto);
       expect(criadoResponse.data?.id).toBeDefined();
+      const contaId = criadoResponse.data?.id as string;
 
       // Inativar
-      const inativadoResponse = await planoContasService.inativar(criadoResponse.data!.id);
+      const inativadoResponse = await planoContasService.inativar(contaId);
       expect(inativadoResponse.data?.ativo).toBe(false);
 
       // Reativar
-      const reativadoResponse = await planoContasService.reativar(criadoResponse.data!.id);
+      const reativadoResponse = await planoContasService.reativar(contaId);
       expect(reativadoResponse.data?.ativo).toBe(true);
     });
 

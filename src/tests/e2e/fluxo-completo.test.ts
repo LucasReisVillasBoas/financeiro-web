@@ -170,11 +170,13 @@ describe('E2E - Fluxos Completos do Sistema Financeiro', () => {
       expect(novaConta.data?.id).toBeDefined();
 
       // 3. Verificar se conta está em uso
-      const uso = await planoContasService.verificarUso(novaConta.data!.id);
+      const contaId = novaConta.data?.id;
+      expect(contaId).toBeDefined();
+      const uso = await planoContasService.verificarUso(contaId as string);
       expect(uso.data?.emUso).toBe(false);
 
       // 4. Inativar conta não utilizada
-      const contaInativada = await planoContasService.inativar(novaConta.data!.id);
+      const contaInativada = await planoContasService.inativar(contaId as string);
       expect(contaInativada.data?.ativo).toBe(false);
 
       // 5. Listar contas ativas

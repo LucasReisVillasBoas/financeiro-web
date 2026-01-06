@@ -63,8 +63,9 @@ export const ContasBancariasSection: React.FC = () => {
       setLoading(true);
       const data = await contaBancariaService.findAll();
       setContas(data);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar contas bancárias');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao carregar contas bancárias';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -113,7 +114,7 @@ export const ContasBancariasSection: React.FC = () => {
         const variacao = ((saldoMesAtual - saldoMesAnterior) / Math.abs(saldoMesAnterior)) * 100;
         setVariacaoMensal(variacao);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao calcular variação mensal:', err);
       setVariacaoMensal(null);
     }
@@ -185,8 +186,9 @@ export const ContasBancariasSection: React.FC = () => {
       await contaBancariaService.update(contaSelecionadaConfig.id, configData);
       await loadContas();
       handleCloseConfigurar();
-    } catch (err: any) {
-      setConfigError(err.message || 'Erro ao atualizar conta bancária');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao atualizar conta bancária';
+      setConfigError(message);
     }
   };
 
@@ -233,16 +235,6 @@ export const ContasBancariasSection: React.FC = () => {
     }).format(valor);
   };
 
-  const desformatarMoeda = (valorFormatado: string): number => {
-    // Remove tudo exceto números e vírgula
-    const apenasNumeros = valorFormatado.replace(/[^\d,]/g, '');
-    // Substitui vírgula por ponto
-    const valorComPonto = apenasNumeros.replace(',', '.');
-    // Converte para número
-    const numero = parseFloat(valorComPonto) || 0;
-    return numero;
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -284,8 +276,9 @@ export const ContasBancariasSection: React.FC = () => {
       await contaBancariaService.create(formData);
       await loadContas();
       handleCloseForm();
-    } catch (err: any) {
-      setFormError(err.message || 'Erro ao criar conta bancária');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao criar conta bancária';
+      setFormError(message);
     }
   };
 

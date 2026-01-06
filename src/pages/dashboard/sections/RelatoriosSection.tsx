@@ -6,7 +6,8 @@ import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 import { TipoRelatorio, FormatoExportacao, TipoPessoa } from '../../../types/api.types';
 
 // Configure pdfMake fonts
-(pdfMake as any).vfs = pdfFonts;
+
+(pdfMake as { vfs: typeof pdfFonts }).vfs = pdfFonts;
 import type { FiltroRelatorio, TotaisRelatorio, Pessoa } from '../../../types/api.types';
 import {
   pessoaService,
@@ -20,8 +21,8 @@ export const RelatoriosSection: React.FC = () => {
   const [tipoRelatorio, setTipoRelatorio] = useState<TipoRelatorio>(TipoRelatorio.PESSOAS);
   const [showFiltros, setShowFiltros] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [dados, setDados] = useState<any[]>([]);
-  const [dadosFiltrados, setDadosFiltrados] = useState<any[]>([]);
+  const [dados, setDados] = useState<Record<string, unknown>[]>([]);
+  const [dadosFiltrados, setDadosFiltrados] = useState<Record<string, unknown>[]>([]);
   const [totais, setTotais] = useState<TotaisRelatorio>({ total: 0, ativos: 0, inativos: 0 });
 
   const [filtros, setFiltros] = useState<FiltroRelatorio>({
@@ -34,74 +35,10 @@ export const RelatoriosSection: React.FC = () => {
     tipo: '',
   });
 
-  useEffect(() => {
-    carregarDados();
-  }, [tipoRelatorio]);
-
-  // Update filtered data when dados or filtros change
-  useEffect(() => {
-    let filtered = [...dados];
-
-    if (filtros.nome) {
-      filtered = filtered.filter(item => {
-        const nome = item.razaoNome || item.nome || item.descricao || item.razao_social || '';
-        return nome.toLowerCase().includes(filtros.nome!.toLowerCase());
-      });
-    }
-
-    if (filtros.documento) {
-      filtered = filtered.filter(item => {
-        const doc = item.documento || item.cnpj_cpf || '';
-        return doc.includes(filtros.documento!);
-      });
-    }
-
-    if (filtros.ativo !== undefined) {
-      filtered = filtered.filter(item => {
-        if ('ativo' in item) return item.ativo === filtros.ativo;
-        if ('status' in item) {
-          return filtros.ativo ? item.status !== 'CANCELADO' : item.status === 'CANCELADO';
-        }
-        return true;
-      });
-    }
-
-    if (filtros.situacao) {
-      filtered = filtered.filter(item => {
-        if ('situacao' in item) return item.situacao === filtros.situacao;
-        if ('status' in item) return item.status === filtros.situacao;
-        return true;
-      });
-    }
-
-    if (filtros.tipo && tipoRelatorio === TipoRelatorio.PESSOAS) {
-      filtered = filtered.filter((item: Pessoa) => {
-        return item.tipos?.some(t => t.tipo === filtros.tipo);
-      });
-    }
-
-    if (filtros.dataInicio) {
-      filtered = filtered.filter(item => {
-        const data = new Date(item.criadoEm || item.created_at || item.dataEmissao);
-        return data >= new Date(filtros.dataInicio!);
-      });
-    }
-
-    if (filtros.dataFim) {
-      filtered = filtered.filter(item => {
-        const data = new Date(item.criadoEm || item.created_at || item.dataEmissao);
-        return data <= new Date(filtros.dataFim!);
-      });
-    }
-
-    setDadosFiltrados(filtered);
-    calcularTotais(filtered);
-  }, [dados, filtros, tipoRelatorio]);
-
-  const carregarDados = async () => {
+  const carregarDados = React.useCallback(async () => {
     setLoading(true);
     try {
-      let dadosCarregados: any[] = [];
+      let dadosCarregados: Record<string, unknown>[] = [];
 
       switch (tipoRelatorio) {
         case TipoRelatorio.PESSOAS:
@@ -130,9 +67,79 @@ export const RelatoriosSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tipoRelatorio]);
 
-  const calcularTotais = (dados: any[]) => {
+  useEffect(() => {
+    carregarDados();
+  }, [carregarDados]);
+
+  // Update filtered data when dados or filtros change
+  useEffect(() => {
+    let filtered = [...dados];
+
+    if (filtros.nome) {
+      const nomeFilter = filtros.nome.toLowerCase();
+      filtered = filtered.filter(item => {
+        const nome = String(
+          item.razaoNome || item.nome || item.descricao || item.razao_social || ''
+        );
+        return nome.toLowerCase().includes(nomeFilter);
+      });
+    }
+
+    if (filtros.documento) {
+      const docFilter = filtros.documento;
+      filtered = filtered.filter(item => {
+        const doc = String(item.documento || item.cnpj_cpf || '');
+        return doc.includes(docFilter);
+      });
+    }
+
+    if (filtros.ativo !== undefined) {
+      filtered = filtered.filter(item => {
+        if ('ativo' in item) return item.ativo === filtros.ativo;
+        if ('status' in item) {
+          return filtros.ativo ? item.status !== 'CANCELADO' : item.status === 'CANCELADO';
+        }
+        return true;
+      });
+    }
+
+    if (filtros.situacao) {
+      filtered = filtered.filter(item => {
+        if ('situacao' in item) return item.situacao === filtros.situacao;
+        if ('status' in item) return item.status === filtros.situacao;
+        return true;
+      });
+    }
+
+    if (filtros.tipo && tipoRelatorio === TipoRelatorio.PESSOAS) {
+      filtered = filtered.filter((item: Pessoa) => {
+        return item.tipos?.some(t => t.tipo === filtros.tipo);
+      });
+    }
+
+    if (filtros.dataInicio) {
+      const dataInicioFilter = new Date(filtros.dataInicio);
+      filtered = filtered.filter(item => {
+        const data = new Date(String(item.criadoEm || item.created_at || item.dataEmissao));
+        return data >= dataInicioFilter;
+      });
+    }
+
+    if (filtros.dataFim) {
+      const dataFimFilter = new Date(filtros.dataFim);
+      filtered = filtered.filter(item => {
+        const data = new Date(String(item.criadoEm || item.created_at || item.dataEmissao));
+        return data <= dataFimFilter;
+      });
+    }
+
+    setDadosFiltrados(filtered);
+    calcularTotais(filtered);
+  }, [dados, filtros, tipoRelatorio]);
+
+  const calcularTotais = (dados: Record<string, unknown>[]) => {
     const total = dados.length;
     const ativos = dados.filter(item => {
       if ('ativo' in item) return item.ativo;
@@ -158,7 +165,7 @@ export const RelatoriosSection: React.FC = () => {
     }
   };
 
-  const exportarCSV = (dados: any[]) => {
+  const exportarCSV = (dados: Record<string, unknown>[]) => {
     if (dados.length === 0) return;
 
     const headers = Object.keys(dados[0]);
@@ -183,7 +190,7 @@ export const RelatoriosSection: React.FC = () => {
     link.click();
   };
 
-  const exportarXLSX = (dados: any[]) => {
+  const exportarXLSX = (dados: Record<string, unknown>[]) => {
     if (dados.length === 0) {
       alert('Não há dados para exportar');
       return;
@@ -196,7 +203,9 @@ export const RelatoriosSection: React.FC = () => {
           return {
             Nome: item.razaoNome || item.fantasiaApelido,
             Documento: item.documento || 'N/A',
-            Tipos: item.tipos?.map((t: any) => t.tipo).join(', ') || 'N/A',
+            Tipos:
+              (item.tipos as Array<{ tipo: string }> | undefined)?.map(t => t.tipo).join(', ') ||
+              'N/A',
             Email: item.email || 'N/A',
             Telefone: item.telefone || 'N/A',
             Situação: item.ativo ? 'Ativo' : 'Inativo',
@@ -269,7 +278,7 @@ export const RelatoriosSection: React.FC = () => {
     XLSX.writeFile(workbook, fileName);
   };
 
-  const exportarPDF = (dados: any[]) => {
+  const exportarPDF = (dados: Record<string, unknown>[]) => {
     if (dados.length === 0) {
       alert('Não há dados para exportar');
       return;
@@ -277,16 +286,16 @@ export const RelatoriosSection: React.FC = () => {
 
     // Definir cabeçalhos e corpo da tabela baseado no tipo de relatório
     let headers: string[] = [];
-    let body: any[][] = [];
+    let body: (string | number | boolean | null | undefined)[][] = [];
 
     switch (tipoRelatorio) {
       case TipoRelatorio.PESSOAS:
         headers = ['Nome', 'Documento', 'Tipos', 'Email', 'Situação'];
         body = dados.map(item => [
-          item.razaoNome || item.fantasiaApelido,
-          item.documento || 'N/A',
-          item.tipos?.map((t: any) => t.tipo).join(', ') || 'N/A',
-          item.email || 'N/A',
+          String(item.razaoNome || item.fantasiaApelido || ''),
+          String(item.documento || 'N/A'),
+          (item.tipos as Array<{ tipo: string }> | undefined)?.map(t => t.tipo).join(', ') || 'N/A',
+          String(item.email || 'N/A'),
           item.ativo ? 'Ativo' : 'Inativo',
         ]);
         break;
@@ -360,7 +369,7 @@ export const RelatoriosSection: React.FC = () => {
     };
 
     // Definir documento PDF
-    const docDefinition: any = {
+    const docDefinition: pdfMake.TDocumentDefinitions = {
       pageSize: 'A4',
       pageOrientation: headers.length > 5 ? 'landscape' : 'portrait',
       pageMargins: [40, 60, 40, 60],
@@ -423,7 +432,7 @@ export const RelatoriosSection: React.FC = () => {
 
     // Gerar e baixar PDF
     const fileName = `relatorio-${tipoRelatorio}-${new Date().toISOString().split('T')[0]}.pdf`;
-    (pdfMake as any).createPdf(docDefinition).download(fileName);
+    pdfMake.createPdf(docDefinition).download(fileName);
   };
 
   const limparFiltros = () => {
@@ -732,7 +741,7 @@ export const RelatoriosSection: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {dadosExibidos.map((item: any, index: number) => (
+                {dadosExibidos.map((item, index) => (
                   <tr
                     key={item.id || index}
                     className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]"
@@ -742,9 +751,13 @@ export const RelatoriosSection: React.FC = () => {
                         <td className="p-4 text-[var(--color-text)]">
                           {item.razaoNome || item.fantasiaApelido}
                         </td>
-                        <td className="p-4 text-[var(--color-text)]">{item.documento || 'N/A'}</td>
                         <td className="p-4 text-[var(--color-text)]">
-                          {item.tipos?.map((t: any) => t.tipo).join(', ') || 'N/A'}
+                          {String(item.documento || 'N/A')}
+                        </td>
+                        <td className="p-4 text-[var(--color-text)]">
+                          {(item.tipos as Array<{ tipo: string }> | undefined)
+                            ?.map(t => t.tipo)
+                            .join(', ') || 'N/A'}
                         </td>
                         <td className="p-4 text-[var(--color-text)]">{item.email || 'N/A'}</td>
                         <td className="p-4">

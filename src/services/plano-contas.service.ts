@@ -139,8 +139,8 @@ class PlanoContasService {
     return response.blob();
   }
 
-  async exportExcel(empresaId: string): Promise<ApiResponse<any[]>> {
-    return apiService.get<any[]>(`${this.baseUrl}/empresa/${empresaId}/export/excel`);
+  async exportExcel(empresaId: string): Promise<ApiResponse<PlanoContas[]>> {
+    return apiService.get<PlanoContas[]>(`${this.baseUrl}/empresa/${empresaId}/export/excel`);
   }
 
   // Importação

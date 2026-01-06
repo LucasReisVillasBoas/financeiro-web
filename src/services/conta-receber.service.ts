@@ -11,7 +11,10 @@ import type {
 class ContaReceberService {
   async create(dto: CreateContaReceberDto): Promise<ContaReceber> {
     const response: ApiResponse<ContaReceber> = await apiService.post('/contas-receber', dto);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao criar conta a receber');
+    }
+    return response.data;
   }
 
   async createParcelado(dto: CreateContaReceberParceladaDto): Promise<ContaReceber[]> {
@@ -19,7 +22,10 @@ class ContaReceberService {
       '/contas-receber/parcelado',
       dto
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao criar contas parceladas');
+    }
+    return response.data;
   }
 
   async findAll(): Promise<ContaReceber[]> {
@@ -43,12 +49,18 @@ class ContaReceberService {
 
   async findOne(id: string): Promise<ContaReceber> {
     const response: ApiResponse<ContaReceber> = await apiService.get(`/contas-receber/${id}`);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Conta a receber não encontrada');
+    }
+    return response.data;
   }
 
   async update(id: string, dto: UpdateContaReceberDto): Promise<ContaReceber> {
     const response: ApiResponse<ContaReceber> = await apiService.put(`/contas-receber/${id}`, dto);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao atualizar conta a receber');
+    }
+    return response.data;
   }
 
   async cancelar(id: string, dto: CancelarContaReceberDto): Promise<ContaReceber> {
@@ -56,7 +68,10 @@ class ContaReceberService {
       `/contas-receber/${id}/cancelar`,
       dto
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao cancelar conta a receber');
+    }
+    return response.data;
   }
 
   async delete(id: string): Promise<void> {

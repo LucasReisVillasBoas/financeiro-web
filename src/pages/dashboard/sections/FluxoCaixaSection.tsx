@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FiDownload, FiFilter, FiX, FiCalendar, FiDollarSign, FiCreditCard } from 'react-icons/fi';
 import { RiBuilding4Line } from 'react-icons/ri';
 import * as XLSX from 'xlsx';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
+import type { TDocumentDefinitions } from 'pdfmake/interfaces';
 import type {
   ContaBancaria,
   Empresa,
@@ -17,7 +18,7 @@ import { empresaService } from '../../../services';
 import { useAuth } from '../../../context/AuthContext';
 
 // Configure pdfMake fonts
-(pdfMake as any).vfs = pdfFonts;
+(pdfMake as unknown as { vfs: typeof pdfFonts }).vfs = pdfFonts;
 
 type TipoVisualizacao = 'realizado' | 'previsto' | 'ambos';
 
@@ -43,27 +44,16 @@ export const FluxoCaixaSection: React.FC = () => {
     consolidado: false,
   });
 
-  useEffect(() => {
-    carregarContasBancarias();
-    carregarEmpresas();
-  }, []);
-
-  useEffect(() => {
-    if (filtros.dataInicio && filtros.dataFim) {
-      buscarDados();
-    }
-  }, [filtros]);
-
-  const carregarContasBancarias = async () => {
+  const carregarContasBancarias = useCallback(async () => {
     try {
       const data = await contaBancariaService.findAll();
       setContasBancarias(data);
     } catch (error) {
       console.error('Erro ao carregar contas bancárias:', error);
     }
-  };
+  }, []);
 
-  const carregarEmpresas = async () => {
+  const carregarEmpresas = useCallback(async () => {
     try {
       if (user?.clienteId) {
         const data = await empresaService.findByCliente(user.clienteId);
@@ -72,9 +62,9 @@ export const FluxoCaixaSection: React.FC = () => {
     } catch (error) {
       console.error('Erro ao carregar empresas:', error);
     }
-  };
+  }, [user?.clienteId]);
 
-  const buscarDados = async () => {
+  const buscarDados = useCallback(async () => {
     if (!filtros.dataInicio || !filtros.dataFim) {
       return;
     }
@@ -88,7 +78,18 @@ export const FluxoCaixaSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtros]);
+
+  useEffect(() => {
+    carregarContasBancarias();
+    carregarEmpresas();
+  }, [carregarContasBancarias, carregarEmpresas]);
+
+  useEffect(() => {
+    if (filtros.dataInicio && filtros.dataFim) {
+      buscarDados();
+    }
+  }, [filtros, buscarDados]);
 
   const limparFiltros = () => {
     setFiltros({
@@ -219,7 +220,7 @@ export const FluxoCaixaSection: React.FC = () => {
       return;
     }
 
-    const documentDefinition: any = {
+    const documentDefinition: TDocumentDefinitions = {
       pageOrientation: 'landscape',
       content: [
         {

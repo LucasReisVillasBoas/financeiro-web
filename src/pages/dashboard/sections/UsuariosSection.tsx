@@ -5,7 +5,7 @@ import type { User } from '../../../types/api.types';
 import { perfilService } from '../../../services/perfil.service';
 
 interface UsuariosSectionProps {
-  onNavigate: (section: string, params?: Record<string, any>) => void;
+  onNavigate: (section: string, params?: Record<string, unknown>) => void;
 }
 
 export const UsuariosSection: React.FC<UsuariosSectionProps> = ({ onNavigate }) => {

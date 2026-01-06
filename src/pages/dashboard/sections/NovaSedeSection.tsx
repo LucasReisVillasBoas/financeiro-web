@@ -147,8 +147,9 @@ export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) =
       setTimeout(() => {
         onNavigate('empresas-listar');
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao cadastrar empresa');
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || 'Erro ao cadastrar empresa');
     } finally {
       setLoading(false);
     }

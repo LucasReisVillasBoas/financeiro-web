@@ -93,14 +93,17 @@ const ImportarExtrato: React.FC<ImportarExtratoProps> = ({ contasBancarias, onIm
     try {
       const response = await extratoBancarioService.importar(contaBancariaId, formato, arquivo);
 
-      setResultado(response.data!);
-      setArquivo(null);
+      if (response.data) {
+        setResultado(response.data);
+        setArquivo(null);
 
-      if (onImportSuccess && response.data) {
-        onImportSuccess(response.data);
+        if (onImportSuccess) {
+          onImportSuccess(response.data);
+        }
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao importar extrato');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Erro ao importar extrato');
     } finally {
       setLoading(false);
     }

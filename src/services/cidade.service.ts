@@ -4,7 +4,10 @@ import type { Cidade, CreateCidadeDto, UpdateCidadeDto, ApiResponse } from '../t
 class CidadeService {
   async create(dto: CreateCidadeDto): Promise<Cidade> {
     const response: ApiResponse<Cidade> = await apiService.post('/cidades', dto);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao criar cidade');
+    }
+    return response.data;
   }
 
   async findAll(): Promise<Cidade[]> {
@@ -19,17 +22,26 @@ class CidadeService {
 
   async findByCodigoIbge(codigoIbge: string): Promise<Cidade> {
     const response: ApiResponse<Cidade> = await apiService.get(`/cidades/ibge/${codigoIbge}`);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Cidade não encontrada');
+    }
+    return response.data;
   }
 
   async findOne(id: string): Promise<Cidade> {
     const response: ApiResponse<Cidade> = await apiService.get(`/cidades/${id}`);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Cidade não encontrada');
+    }
+    return response.data;
   }
 
   async update(id: string, dto: UpdateCidadeDto): Promise<Cidade> {
     const response: ApiResponse<Cidade> = await apiService.patch(`/cidades/${id}`, dto);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao atualizar cidade');
+    }
+    return response.data;
   }
 
   async delete(id: string): Promise<void> {

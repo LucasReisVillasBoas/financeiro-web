@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FiUsers, FiPlus, FiEdit2, FiTrash2, FiSearch, FiX } from 'react-icons/fi';
 import type { Pessoa } from '../../../types/api.types';
 import { pessoaService } from '../../../services';
 import { useAuth } from '../../../context/AuthContext';
 
 interface PessoasSectionProps {
-  onNavigate: (section: string, params?: Record<string, any>) => void;
+  onNavigate: (section: string, params?: Record<string, unknown>) => void;
 }
 
 export const PessoasSection: React.FC<PessoasSectionProps> = ({ onNavigate }) => {
@@ -22,15 +22,7 @@ export const PessoasSection: React.FC<PessoasSectionProps> = ({ onNavigate }) =>
   const [modalMessage, setModalMessage] = useState('');
   const [isAlertModal, setIsAlertModal] = useState(false);
 
-  useEffect(() => {
-    loadPessoas();
-  }, []);
-
-  useEffect(() => {
-    filtrarPessoas();
-  }, [pessoas, searchTerm, filtroTipo, filtroStatus]);
-
-  const mapPessoaFromApi = (pessoa: Pessoa): Pessoa => {
+  const mapPessoaFromApi = useCallback((pessoa: Pessoa): Pessoa => {
     const documentoLength = pessoa.documento?.replace(/\D/g, '').length || 0;
     const tipo =
       documentoLength === 11 ? 'Física' : documentoLength === 14 ? 'Jurídica' : undefined;
@@ -43,9 +35,9 @@ export const PessoasSection: React.FC<PessoasSectionProps> = ({ onNavigate }) =>
       cidade: pessoa.endereco?.cidade,
       uf: pessoa.endereco?.uf,
     };
-  };
+  }, []);
 
-  const loadPessoas = async () => {
+  const loadPessoas = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -54,16 +46,16 @@ export const PessoasSection: React.FC<PessoasSectionProps> = ({ onNavigate }) =>
         const pessoasMapeadas = Array.isArray(data) ? data.map(mapPessoaFromApi) : [];
         setPessoas(pessoasMapeadas);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao carregar pessoas:', err);
-      setError(err.message || 'Erro ao carregar pessoas');
+      setError(err instanceof Error ? err.message : 'Erro ao carregar pessoas');
       setPessoas([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.clienteId, mapPessoaFromApi]);
 
-  const filtrarPessoas = () => {
+  const filtrarPessoas = useCallback(() => {
     if (!Array.isArray(pessoas)) {
       setPessoasFiltradas([]);
       return;
@@ -97,7 +89,15 @@ export const PessoasSection: React.FC<PessoasSectionProps> = ({ onNavigate }) =>
     }
 
     setPessoasFiltradas(resultado);
-  };
+  }, [pessoas, searchTerm, filtroTipo, filtroStatus]);
+
+  useEffect(() => {
+    loadPessoas();
+  }, [loadPessoas]);
+
+  useEffect(() => {
+    filtrarPessoas();
+  }, [filtrarPessoas]);
 
   const handleDelete = async (id: string) => {
     const pessoa = pessoas.find(e => e.id === id);
@@ -114,8 +114,8 @@ export const PessoasSection: React.FC<PessoasSectionProps> = ({ onNavigate }) =>
     try {
       await pessoaService.update(pessoa.id, { ativo: !pessoa.ativo });
       await loadPessoas();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao atualizar status');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar status');
     }
   };
 
@@ -158,9 +158,9 @@ export const PessoasSection: React.FC<PessoasSectionProps> = ({ onNavigate }) =>
 
       await loadPessoas();
       setPessoaParaExcluir(null);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao excluir pessoa:', err);
-      const errorMessage = err.message || 'Erro ao excluir pessoa';
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao excluir pessoa';
       setModalMessage(errorMessage);
       setIsAlertModal(true);
       setShowConfirmModal(true);
@@ -261,7 +261,7 @@ export const PessoasSection: React.FC<PessoasSectionProps> = ({ onNavigate }) =>
             <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Tipo</label>
             <select
               value={filtroTipo}
-              onChange={e => setFiltroTipo(e.target.value as any)}
+              onChange={e => setFiltroTipo(e.target.value as 'Todos' | 'Física' | 'Jurídica')}
               className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
             >
               <option value="Todos">Todos</option>
@@ -277,7 +277,7 @@ export const PessoasSection: React.FC<PessoasSectionProps> = ({ onNavigate }) =>
             </label>
             <select
               value={filtroStatus}
-              onChange={e => setFiltroStatus(e.target.value as any)}
+              onChange={e => setFiltroStatus(e.target.value as 'Todos' | 'Ativos' | 'Inativos')}
               className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
             >
               <option value="Todos">Todos</option>

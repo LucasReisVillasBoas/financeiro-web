@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FiArrowLeft, FiSave, FiUser } from 'react-icons/fi';
 import type { CreatePessoaDto, Empresa } from '../../../types/api.types';
 import { TipoPessoa, TipoContribuinte } from '../../../types/api.types';
@@ -8,7 +8,7 @@ import { CepField } from '../../../components/CepField';
 import type { CepData } from '../../../services/cep.service';
 
 interface NovaPessoaSectionProps {
-  onNavigate: (section: string, params?: Record<string, any>) => void;
+  onNavigate: (section: string, params?: Record<string, unknown>) => void;
 }
 
 export const NovaPessoaSection: React.FC<NovaPessoaSectionProps> = ({ onNavigate }) => {
@@ -43,6 +43,7 @@ export const NovaPessoaSection: React.FC<NovaPessoaSectionProps> = ({ onNavigate
 
   useEffect(() => {
     loadEmpresas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadEmpresas = async () => {
@@ -132,9 +133,8 @@ export const NovaPessoaSection: React.FC<NovaPessoaSectionProps> = ({ onNavigate
     setFormData(prev => ({ ...prev, cpf_cnpj: formatted }));
   };
 
-  const handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const formatted = formatCep(value);
+  const _handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCep(e.target.value);
     setFormData(prev => ({ ...prev, cep: formatted }));
   };
 
@@ -161,7 +161,7 @@ export const NovaPessoaSection: React.FC<NovaPessoaSectionProps> = ({ onNavigate
     setSuccess(false);
 
     try {
-      const payload: any = {
+      const payload: CreatePessoaDto & { aniversario?: string } = {
         clienteId: user?.clienteId || '',
         tipos: [TipoPessoa.CLIENTE],
         tipo: formData.tipo,
@@ -192,9 +192,10 @@ export const NovaPessoaSection: React.FC<NovaPessoaSectionProps> = ({ onNavigate
       setTimeout(() => {
         onNavigate('pessoas-listar');
       }, 1500);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { message?: string };
       console.error('Erro ao cadastrar pessoa:', err);
-      setError(err.message || 'Erro ao cadastrar pessoa');
+      setError(error.message || 'Erro ao cadastrar pessoa');
     } finally {
       setLoading(false);
     }

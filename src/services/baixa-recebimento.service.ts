@@ -7,7 +7,10 @@ class BaixaRecebimentoService {
       '/baixas-recebimento',
       dto
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao criar baixa de recebimento');
+    }
+    return response.data;
   }
 
   async findAll(): Promise<BaixaRecebimento[]> {
@@ -26,14 +29,20 @@ class BaixaRecebimentoService {
     const response: ApiResponse<BaixaRecebimento> = await apiService.get(
       `/baixas-recebimento/${id}`
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Baixa de recebimento não encontrada');
+    }
+    return response.data;
   }
 
   async estornar(id: string): Promise<BaixaRecebimento> {
     const response: ApiResponse<BaixaRecebimento> = await apiService.delete(
       `/baixas-recebimento/${id}/estornar`
     );
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao estornar baixa de recebimento');
+    }
+    return response.data;
   }
 }
 

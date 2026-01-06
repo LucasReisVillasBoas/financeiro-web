@@ -26,7 +26,10 @@ class DreRelatorioService {
       `/relatorios/dre?${params.toString()}`
     );
 
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao buscar relatório DRE');
+    }
+    return response.data;
   }
 
   /**

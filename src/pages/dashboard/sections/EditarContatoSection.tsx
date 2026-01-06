@@ -33,7 +33,7 @@ export const EditarContatoSection: React.FC<EditarContatoSectionProps> = ({
         if (data.celular) {
           setCelular(formatPhone(data.celular));
         }
-      } catch (error) {
+      } catch {
         setError('Erro ao buscar dados do contato');
       }
     };
@@ -84,8 +84,8 @@ export const EditarContatoSection: React.FC<EditarContatoSectionProps> = ({
       setTimeout(() => {
         onNavigate('auxiliares-contatos');
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao atualizar contato');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar contato');
     } finally {
       setLoading(false);
     }

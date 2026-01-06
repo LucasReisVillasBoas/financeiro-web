@@ -40,7 +40,10 @@ export interface CreateUsuarioPerfilDto {
 class UsuarioPerfilService {
   async create(dto: CreateUsuarioPerfilDto): Promise<UsuarioPerfil> {
     const response: ApiResponse<UsuarioPerfil> = await apiService.post('/usuario-perfil', dto);
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Erro ao criar associação de usuário-perfil');
+    }
+    return response.data;
   }
 
   async findByUsuario(usuarioId: string): Promise<UsuarioPerfil[]> {
