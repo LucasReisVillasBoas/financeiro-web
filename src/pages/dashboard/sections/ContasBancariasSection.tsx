@@ -130,7 +130,7 @@ export const ContasBancariasSection: React.FC = () => {
     try {
       const movimentacoesData = await movimentacaoBancariaService.findByConta(id);
       const movimentacoesOrdenadas = movimentacoesData.sort((a, b) => {
-        return new Date(b.data).getTime() - new Date(a.data).getTime();
+        return new Date(b.dataMovimento).getTime() - new Date(a.dataMovimento).getTime();
       });
       setMovimentacoes(movimentacoesOrdenadas);
     } catch (err) {
@@ -603,12 +603,12 @@ export const ContasBancariasSection: React.FC = () => {
                         <div className="flex items-center gap-4 flex-1">
                           <div
                             className={`p-2 rounded-full ${
-                              mov.tipo === 'Entrada'
+                              mov.tipoMovimento === 'Entrada'
                                 ? 'bg-green-100 dark:bg-green-900/30'
                                 : 'bg-red-100 dark:bg-red-900/30'
                             }`}
                           >
-                            {mov.tipo === 'Entrada' ? (
+                            {mov.tipoMovimento === 'Entrada' ? (
                               <FiArrowDown
                                 className="text-green-600 dark:text-green-400"
                                 size={20}
@@ -620,19 +620,19 @@ export const ContasBancariasSection: React.FC = () => {
                           <div className="flex-1">
                             <p className="text-[var(--color-text)] font-medium">{mov.descricao}</p>
                             <p className="text-sm text-[var(--color-text-secondary)]">
-                              {new Date(mov.data).toLocaleDateString('pt-BR')}
+                              {new Date(mov.dataMovimento).toLocaleDateString('pt-BR')}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
                           <p
                             className={`font-bold text-lg ${
-                              mov.tipo === 'Entrada'
+                              mov.tipoMovimento === 'Entrada'
                                 ? 'text-green-600 dark:text-green-400'
                                 : 'text-red-600 dark:text-red-400'
                             }`}
                           >
-                            {mov.tipo === 'Entrada' ? '+' : '-'} {formatarMoeda(mov.valor)}
+                            {mov.tipoMovimento === 'Entrada' ? '+' : '-'} {formatarMoeda(mov.valor)}
                           </p>
                         </div>
                       </div>
@@ -688,7 +688,7 @@ export const ContasBancariasSection: React.FC = () => {
                   Tipo de Conta
                 </label>
                 <select
-                  name="tipoConta"
+                  name="tipo"
                   value={configData.tipo}
                   onChange={handleConfigInputChange}
                   required
