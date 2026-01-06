@@ -22,7 +22,11 @@ const NIVEIS_PERMISSAO = [
   { value: 'visualizar', label: 'Visualizar', acoes: ['visualizar', 'listar'] },
   { value: 'editar', label: 'Editar', acoes: ['visualizar', 'listar', 'editar'] },
   { value: 'criar', label: 'Criar', acoes: ['visualizar', 'listar', 'editar', 'criar'] },
-  { value: 'excluir', label: 'Excluir', acoes: ['visualizar', 'listar', 'editar', 'criar', 'excluir'] },
+  {
+    value: 'excluir',
+    label: 'Excluir',
+    acoes: ['visualizar', 'listar', 'editar', 'criar', 'excluir'],
+  },
   {
     value: 'completa',
     label: 'Completa',
