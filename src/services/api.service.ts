@@ -11,6 +11,12 @@ class ApiService {
     return localStorage.getItem('token');
   }
 
+  private clearAuthData(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('permissoes');
+  }
+
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const token = this.getAuthToken();
     const headers: Record<string, string> = {
@@ -31,6 +37,16 @@ class ApiService {
       const error = await response.json().catch(() => ({
         message: 'Erro ao processar requisição',
       }));
+
+      // Tratamento especial para erro 401 (Unauthorized) - token expirado/inválido
+      if (response.status === 401) {
+        this.clearAuthData();
+        window.location.href = '/login';
+        const apiError: any = new Error('Sessão expirada. Faça login novamente.');
+        apiError.statusCode = 401;
+        apiError.details = error;
+        throw apiError;
+      }
 
       // Tratamento especial para erro 403 (Forbidden)
       if (response.status === 403) {
@@ -102,6 +118,16 @@ class ApiService {
         message: 'Erro ao processar requisição',
       }));
 
+      // Tratamento especial para erro 401 (Unauthorized) - token expirado/inválido
+      if (response.status === 401) {
+        this.clearAuthData();
+        window.location.href = '/login';
+        const apiError: any = new Error('Sessão expirada. Faça login novamente.');
+        apiError.statusCode = 401;
+        apiError.details = error;
+        throw apiError;
+      }
+
       // Tratamento especial para erro 403 (Forbidden)
       if (response.status === 403) {
         const apiError: any = new Error(
@@ -139,6 +165,16 @@ class ApiService {
       const error = await response.json().catch(() => ({
         message: 'Erro ao processar requisição',
       }));
+
+      // Tratamento especial para erro 401 (Unauthorized) - token expirado/inválido
+      if (response.status === 401) {
+        this.clearAuthData();
+        window.location.href = '/login';
+        const apiError: any = new Error('Sessão expirada. Faça login novamente.');
+        apiError.statusCode = 401;
+        apiError.details = error;
+        throw apiError;
+      }
 
       // Tratamento especial para erro 403 (Forbidden)
       if (response.status === 403) {
