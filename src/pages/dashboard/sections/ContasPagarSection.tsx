@@ -67,6 +67,8 @@ export const ContasPagarSection: React.FC = () => {
   });
   const [showCancelarModal, setShowCancelarModal] = useState(false);
   const [justificativaCancelamento, setJustificativaCancelamento] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [contaParaExcluir, setContaParaExcluir] = useState<ContaPagar | null>(null);
   const [planosContas, setPlanosContas] = useState<PlanoContas[]>([]);
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
 
@@ -276,22 +278,28 @@ export const ContasPagarSection: React.FC = () => {
     }
   };
 
-  const handleDelete = async (conta: ContaPagar) => {
-    if (
-      !window.confirm(
-        `Deseja realmente excluir esta conta?\n\nDocumento: ${conta.documento}\nDescrição: ${conta.descricao}\n\nEsta ação não pode ser desfeita.`
-      )
-    ) {
-      return;
-    }
+  const handleDelete = (conta: ContaPagar) => {
+    setContaParaExcluir(conta);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmarExclusao = async () => {
+    if (!contaParaExcluir) return;
 
     try {
-      await contaPagarService.delete(conta.id);
+      await contaPagarService.delete(contaParaExcluir.id);
       await loadContas();
+      setShowDeleteModal(false);
+      setContaParaExcluir(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro ao excluir conta';
       setError(message);
     }
+  };
+
+  const handleCancelarExclusao = () => {
+    setShowDeleteModal(false);
+    setContaParaExcluir(null);
   };
 
   const calcularValorTotal = () => {
@@ -534,6 +542,51 @@ export const ContasPagarSection: React.FC = () => {
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
               >
                 Confirmar Cancelamento
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && contaParaExcluir && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--color-surface)] rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center p-6 border-b border-[var(--color-border)]">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Confirmação</h2>
+              <button
+                onClick={handleCancelarExclusao}
+                className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-[var(--color-text)]">Deseja realmente excluir esta conta?</p>
+              <div>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Documento</p>
+                <p className="text-[var(--color-text)] font-medium">{contaParaExcluir.documento}</p>
+              </div>
+              <div>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Descrição</p>
+                <p className="text-[var(--color-text)]">{contaParaExcluir.descricao}</p>
+              </div>
+              <p className="text-sm text-red-500 font-medium">Esta ação não pode ser desfeita.</p>
+            </div>
+
+            <div className="flex justify-end gap-3 p-6 border-t border-[var(--color-border)]">
+              <button
+                onClick={handleCancelarExclusao}
+                className="px-4 py-2 bg-[var(--color-bg)] text-[var(--color-text)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface)] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmarExclusao}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Excluir
               </button>
             </div>
           </div>
