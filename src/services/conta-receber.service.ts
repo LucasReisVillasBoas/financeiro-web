@@ -64,7 +64,7 @@ class ContaReceberService {
   }
 
   async cancelar(id: string, dto: CancelarContaReceberDto): Promise<ContaReceber> {
-    const response: ApiResponse<ContaReceber> = await apiService.post(
+    const response: ApiResponse<ContaReceber> = await apiService.patch(
       `/contas-receber/${id}/cancelar`,
       dto
     );
