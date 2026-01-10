@@ -249,14 +249,14 @@ export const MovimentacoesBancariasSection: React.FC = () => {
 
       {/* Mensagem de sucesso */}
       {successMessage && (
-        <div className="p-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-md">
+        <div className="p-4 bg-green-600 dark:bg-green-700 text-white rounded-md font-medium">
           {successMessage}
         </div>
       )}
 
       {/* Mensagem de erro */}
       {error && (
-        <div className="p-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-md">
+        <div className="p-4 bg-red-600 dark:bg-red-700 text-white rounded-md font-medium">
           {error}
         </div>
       )}
@@ -416,7 +416,7 @@ export const MovimentacoesBancariasSection: React.FC = () => {
                         {mov.conta}
                       </td>
                       <td className="py-4 px-4">
-                        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 whitespace-nowrap">
                           {mov.categoria}
                         </span>
                       </td>
