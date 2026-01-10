@@ -41,6 +41,8 @@ export const PlanoContasSection: React.FC = () => {
     ativo: true,
   });
   const [formError, setFormError] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [contaParaExcluir, setContaParaExcluir] = useState<PlanoContas | null>(null);
 
   const loadEmpresas = useCallback(async () => {
     try {
@@ -153,23 +155,37 @@ export const PlanoContasSection: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta conta?')) return;
+  const handleDelete = (conta: PlanoContas) => {
+    setContaParaExcluir(conta);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmarExclusao = async () => {
+    if (!contaParaExcluir) return;
 
     try {
-      const usoResponse = await planoContasService.verificarUso(id);
+      const usoResponse = await planoContasService.verificarUso(contaParaExcluir.id);
       if (usoResponse.data?.emUso) {
-        alert(
+        setError(
           `Esta conta não pode ser excluída pois está em uso em ${usoResponse.data.total} lançamento(s).`
         );
+        setShowDeleteModal(false);
+        setContaParaExcluir(null);
         return;
       }
 
-      await planoContasService.delete(id);
+      await planoContasService.delete(contaParaExcluir.id);
       await loadContas();
+      setShowDeleteModal(false);
+      setContaParaExcluir(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao excluir conta');
     }
+  };
+
+  const handleCancelarExclusao = () => {
+    setShowDeleteModal(false);
+    setContaParaExcluir(null);
   };
 
   const handleExportCSV = async () => {
@@ -318,6 +334,51 @@ export const PlanoContasSection: React.FC = () => {
       {error && (
         <div className="p-4 bg-red-600 dark:bg-red-700 text-white rounded-md font-medium border border-red-700 dark:border-red-800">
           {error}
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && contaParaExcluir && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--color-surface)] rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center p-6 border-b border-[var(--color-border)]">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Confirmação</h2>
+              <button
+                onClick={handleCancelarExclusao}
+                className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-[var(--color-text)]">Tem certeza que deseja excluir esta conta?</p>
+              <div>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Código</p>
+                <p className="text-[var(--color-text)] font-medium">{contaParaExcluir.codigo}</p>
+              </div>
+              <div>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Descrição</p>
+                <p className="text-[var(--color-text)]">{contaParaExcluir.descricao}</p>
+              </div>
+              <p className="text-sm text-red-500 font-medium">Esta ação não pode ser desfeita.</p>
+            </div>
+
+            <div className="flex justify-end gap-3 p-6 border-t border-[var(--color-border)]">
+              <button
+                onClick={handleCancelarExclusao}
+                className="px-4 py-2 bg-[var(--color-bg)] text-[var(--color-text)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface)] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmarExclusao}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -560,7 +621,7 @@ export const PlanoContasSection: React.FC = () => {
                         <FiCheck size={18} />
                       </button>
                       <button
-                        onClick={() => handleDelete(conta.id)}
+                        onClick={() => handleDelete(conta)}
                         className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
                         title="Excluir"
                       >
