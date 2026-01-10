@@ -67,6 +67,7 @@ export const ContasReceberSection: React.FC = () => {
     serie: '1',
     tipo: TipoContaReceber.DUPLICATA,
     dataEmissao: new Date().toISOString().split('T')[0],
+    dataLancamento: new Date().toISOString().split('T')[0],
     primeiroVencimento: '',
     descricao: '',
     valorTotal: 0,
@@ -79,6 +80,8 @@ export const ContasReceberSection: React.FC = () => {
   const [cancelarData, setCancelarData] = useState<CancelarContaReceberDto>({
     justificativa: '',
   });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [contaParaExcluir, setContaParaExcluir] = useState<ContaReceber | null>(null);
 
   useEffect(() => {
     loadPessoas();
@@ -270,6 +273,7 @@ export const ContasReceberSection: React.FC = () => {
       serie: '1',
       tipo: TipoContaReceber.DUPLICATA,
       dataEmissao: new Date().toISOString().split('T')[0],
+      dataLancamento: new Date().toISOString().split('T')[0],
       primeiroVencimento: '',
       descricao: '',
       valorTotal: 0,
@@ -329,6 +333,30 @@ export const ContasReceberSection: React.FC = () => {
     setShowCancelarModal(false);
     setContaParaCancelar(null);
     setCancelarData({ justificativa: '' });
+  };
+
+  const handleDelete = (conta: ContaReceber) => {
+    setContaParaExcluir(conta);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmarExclusao = async () => {
+    if (!contaParaExcluir) return;
+
+    try {
+      await contaReceberService.delete(contaParaExcluir.id);
+      await loadContasReceber();
+      setShowDeleteModal(false);
+      setContaParaExcluir(null);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao excluir conta';
+      setError(message);
+    }
+  };
+
+  const handleCancelarExclusao = () => {
+    setShowDeleteModal(false);
+    setContaParaExcluir(null);
   };
 
   const totalAReceber = contas
@@ -1077,16 +1105,17 @@ export const ContasReceberSection: React.FC = () => {
             </div>
 
             <div className="p-6 space-y-4">
-              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
-                <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                  Você está prestes a cancelar a conta:
-                </p>
-                <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-200 mt-2">
+              <div>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Documento</p>
+                <p className="text-[var(--color-text)] font-medium">
                   {contaParaCancelar.documento}/{contaParaCancelar.serie} - Parcela{' '}
                   {contaParaCancelar.parcela}
                 </p>
-                <p className="text-sm text-yellow-800 dark:text-yellow-300 mt-1">
-                  Valor: R${' '}
+              </div>
+              <div>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Valor</p>
+                <p className="text-[var(--color-text)] font-medium">
+                  R${' '}
                   {contaParaCancelar.valorTotal.toLocaleString('pt-BR', {
                     minimumFractionDigits: 2,
                   })}
@@ -1127,6 +1156,54 @@ export const ContasReceberSection: React.FC = () => {
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Confirmar Cancelamento
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && contaParaExcluir && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--color-surface)] rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center p-6 border-b border-[var(--color-border)]">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Confirmação</h2>
+              <button
+                onClick={handleCancelarExclusao}
+                className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-[var(--color-text)]">Deseja realmente excluir esta conta?</p>
+              <div>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Documento</p>
+                <p className="text-[var(--color-text)] font-medium">
+                  {contaParaExcluir.documento}/{contaParaExcluir.serie} - Parcela{' '}
+                  {contaParaExcluir.parcela}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Descrição</p>
+                <p className="text-[var(--color-text)]">{contaParaExcluir.descricao}</p>
+              </div>
+              <p className="text-sm text-red-500 font-medium">Esta ação não pode ser desfeita.</p>
+            </div>
+
+            <div className="flex justify-end gap-3 p-6 border-t border-[var(--color-border)]">
+              <button
+                onClick={handleCancelarExclusao}
+                className="px-4 py-2 bg-[var(--color-bg)] text-[var(--color-text)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface)] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmarExclusao}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Excluir
               </button>
             </div>
           </div>
@@ -1219,7 +1296,7 @@ export const ContasReceberSection: React.FC = () => {
                   </td>
                   <td className="p-4 text-[var(--color-text)]">{conta.descricao}</td>
                   <td className="p-4 text-[var(--color-text)]">
-                    {conta.pessoa.fantasiaApelido || 'N/A'}
+                    {conta.pessoa.fantasiaApelido || conta.pessoa.razaoNome || 'N/A'}
                   </td>
                   <td className="p-4 text-[var(--color-text)]">
                     R$ {conta.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -1251,6 +1328,14 @@ export const ContasReceberSection: React.FC = () => {
                             Cancelar
                           </button>
                         </>
+                      )}
+                      {conta.status === StatusContaReceber.CANCELADO && (
+                        <button
+                          className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                          onClick={() => handleDelete(conta)}
+                        >
+                          Excluir
+                        </button>
                       )}
                     </div>
                   </td>

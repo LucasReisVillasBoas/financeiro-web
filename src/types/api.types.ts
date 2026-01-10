@@ -664,6 +664,7 @@ export interface CreateContaReceberParceladaDto {
   serie: string;
   tipo: TipoContaReceber;
   dataEmissao: string;
+  dataLancamento: string;
   primeiroVencimento: string;
   descricao: string;
   valorTotal: number;
