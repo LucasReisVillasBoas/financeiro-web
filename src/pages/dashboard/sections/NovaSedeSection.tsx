@@ -20,7 +20,7 @@ export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) =
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [bacen, setBacen] = useState('');
-  const { getClienteId } = useAuth();
+  const { getClienteId, user } = useAuth();
 
   // Estado para campos de endereço
   const [endereco, setEndereco] = useState({
@@ -135,9 +135,11 @@ export const NovaSedeSection: React.FC<NovaSedeSecionProps> = ({ onNavigate }) =
         codigoBacen: bacen || '',
       });
 
-      await usuarioService.associarEmpresaFilial(clienteId, {
-        empresaId: empresa.id,
-      });
+      if (user?.id) {
+        await usuarioService.associarEmpresaFilial(user.id, {
+          empresaId: empresa.id,
+        });
+      }
 
       setSuccess('Empresa (sede) cadastrada com sucesso!');
       setBacen('');

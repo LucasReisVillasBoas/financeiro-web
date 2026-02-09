@@ -5,7 +5,6 @@ import { CepField } from '../../../components/CepField';
 import { empresaService } from '../../../services/empresa.service';
 import type { CreateFilialDto, Empresa } from '../../../types/api.types';
 import { useAuth } from '../../../context/AuthContext';
-import { usuarioService } from '../../../services/usuario.service';
 import { perfilService } from '../../../services/perfil.service';
 import type { CepData } from '../../../services/cep.service';
 
@@ -147,6 +146,14 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
     const nomeFantasia = formData.get('nome-fantasia') as string;
     const emailValue = formData.get('email') as string;
 
+    // Validação de campos obrigatórios
+    const razaoSocial = formData.get('razao-social') as string;
+    if (!razaoSocial || !nomeFantasia || !cnpj || !emailValue) {
+      setError('Por favor, preencha todos os campos obrigatórios.');
+      setLoading(false);
+      return;
+    }
+
     const inscricaoEstadual = formData.get('inscricao-estadual') as string;
     const numeroValue = formData.get('numero') as string;
     const complementoValue = formData.get('complemento') as string;
@@ -169,16 +176,14 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
       data_abertura: dataAbertura ? new Date(dataAbertura) : undefined,
     };
 
-    // Adiciona contato apenas se tiver dados
-    if (nomeFantasia) {
-      dto.contato = {
-        nome: nomeFantasia,
-        email: emailValue || undefined,
-        telefone: telefone.replace(/\D/g, '') || undefined,
-        celular: celular.replace(/\D/g, '') || undefined,
-        funcao: 'Contato Principal',
-      };
-    }
+    // Adiciona contato com dados obrigatórios
+    dto.contato = {
+      nome: nomeFantasia,
+      email: emailValue,
+      telefone: telefone.replace(/\D/g, '') || undefined,
+      celular: celular.replace(/\D/g, '') || undefined,
+      funcao: 'Contato Principal',
+    };
 
     try {
       const perfil = await perfilService.findAll(clienteId);
@@ -198,16 +203,13 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
           },
         });
       }
-      const empresa = await empresaService.createFilial(sede.id, dto);
-      await usuarioService.associarEmpresaFilial(clienteId, {
-        filialId: empresa.id,
-      });
+      await empresaService.createFilial(sede.id, dto);
       setSuccess('Filial cadastrada com sucesso!');
-      setCnpj('');
-      setTelefone('');
-      setCelular('');
-      setEndereco({ cep: '', logradouro: '', bairro: '', cidade: '', uf: '', ibge: '' });
-      form.reset();
+
+      // Volta para listagem após 1 segundo
+      setTimeout(() => {
+        onNavigate('empresas-listar');
+      }, 1000);
     } catch (err: unknown) {
       const error = err as { message?: string };
       setError(error.message || 'Erro ao cadastrar filial');
@@ -250,12 +252,14 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
               label="Razão Social"
               type="text"
               placeholder="Digite a razão social"
+              required
             />
             <InputField
               id="nome-fantasia"
               label="Nome Fantasia"
               type="text"
               placeholder="Digite o nome fantasia"
+              required
             />
             <InputField
               id="cnpj"
@@ -264,6 +268,7 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
               placeholder="00.000.000/0000-00"
               value={cnpj}
               onChange={handleCnpjChange}
+              required
             />
             <InputField
               id="inscricao-estadual"
@@ -352,7 +357,7 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
                 value={celular}
                 onChange={handleCelularChange}
               />
-              <InputField id="email" label="E-mail" type="email" placeholder="empresa@email.com" />
+              <InputField id="email" label="E-mail" type="email" placeholder="empresa@email.com" required />
             </div>
           </div>
 

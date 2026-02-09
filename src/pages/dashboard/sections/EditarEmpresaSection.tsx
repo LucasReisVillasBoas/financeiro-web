@@ -3,26 +3,31 @@ import { InputField } from '../../../components/InputField';
 import { SelectField, ESTADOS_BRASIL } from '../../../components/SelectField';
 import { CepField } from '../../../components/CepField';
 import { empresaService } from '../../../services/empresa.service';
-import type { Empresa } from '../../../types/api.types';
+import type { Empresa, Filial, FilialContato } from '../../../types/api.types';
 import { useAuth } from '../../../context/AuthContext';
 import type { CepData } from '../../../services/cep.service';
 
 interface EditarEmpresaSectionProps {
   empresaId: string;
+  tipo?: 'sede' | 'filial';
+  sedeId?: string;
   onNavigate: (section: string) => void;
 }
 
 export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
   empresaId,
+  tipo = 'sede',
+  sedeId,
   onNavigate,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [bacen, setBacen] = useState('');
   const [telefone, setTelefone] = useState('');
   const [celular, setCelular] = useState('');
   const [empresaData, setEmpresaData] = useState<Empresa | null>(null);
+  const [filialData, setFilialData] = useState<Filial | null>(null);
   const { getClienteId } = useAuth();
 
   // Estado para campos editáveis
@@ -30,19 +35,26 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
     razao_social: '',
     nome_fantasia: '',
     inscricao_estadual: '',
+    inscricao_municipal: '',
     data_abertura: '',
-    cnpj_cpf: '', // Apenas para exibição formatada
+    cnpj_cpf: '',
+    email: '',
   });
 
   // Estado para campos de endereço
   const [endereco, setEndereco] = useState({
     cep: '',
     logradouro: '',
+    numero: '',
+    complemento: '',
     bairro: '',
     cidade: '',
     uf: '',
     ibge: '',
   });
+
+  // Estado para contatos (filial)
+  const [contatos, setContatos] = useState<FilialContato[]>([]);
 
   const formatCep = (value: string) => {
     const numbers = value.replace(/\D/g, '');
@@ -52,118 +64,15 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
   const formatCnpjCpf = (value: string) => {
     const numbers = value.replace(/\D/g, '');
     if (numbers.length === 11) {
-      // CPF: 000.000.000-00
       return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
     } else if (numbers.length === 14) {
-      // CNPJ: 00.000.000/0000-00
       return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
     }
     return value;
   };
 
-  useEffect(() => {
-    const fetchEmpresaData = async () => {
-      if (!empresaId) return;
-
-      try {
-        const data = await empresaService.findOne(empresaId);
-        setEmpresaData(data);
-
-        // Preencher dados da empresa
-        setDadosEmpresa({
-          razao_social: data.razao_social || '',
-          nome_fantasia: data.nome_fantasia || '',
-          inscricao_estadual: data.inscricao_estadual || '',
-          data_abertura: data.data_abertura
-            ? new Date(data.data_abertura).toISOString().split('T')[0]
-            : '',
-          cnpj_cpf: data.cnpj_cpf ? formatCnpjCpf(data.cnpj_cpf) : '',
-        });
-
-        if (data.telefone) {
-          setTelefone(formatPhone(data.telefone));
-        }
-        if (data.celular) {
-          setCelular(formatPhone(data.celular));
-        }
-        // Preencher estado do endereço
-        setEndereco({
-          cep: data.cep ? formatCep(data.cep) : '',
-          logradouro: data.logradouro || '',
-          bairro: data.bairro || '',
-          cidade: data.cidade || '',
-          uf: data.uf || '',
-          ibge: data.codigo_ibge || '',
-        });
-      } catch {
-        setError('Erro ao buscar dados da empresa');
-      }
-    };
-
-    fetchEmpresaData();
-  }, [empresaId]);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    setLoading(true);
-
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-
-    const clienteId = getClienteId();
-    if (!clienteId) {
-      setError('Erro ao obter informações do usuário. Faça login novamente.');
-      setLoading(false);
-      return;
-    }
-
-    if (!empresaId) {
-      setError('ID da empresa não encontrado.');
-      setLoading(false);
-      return;
-    }
-
-    const dto = {
-      cliente_id: clienteId,
-      razao_social: dadosEmpresa.razao_social,
-      nome_fantasia: dadosEmpresa.nome_fantasia,
-      cnpj_cpf: empresaData?.cnpj_cpf || '', // Mantém o original sem formatação
-      inscricao_estadual: dadosEmpresa.inscricao_estadual || undefined,
-      cep: endereco.cep.replace(/\D/g, '') || undefined,
-      logradouro: endereco.logradouro || undefined,
-      numero: (formData.get('numero') as string) || undefined,
-      complemento: (formData.get('complemento') as string) || undefined,
-      bairro: endereco.bairro || undefined,
-      cidade: endereco.cidade || undefined,
-      uf: endereco.uf || undefined,
-      telefone: telefone.replace(/\D/g, '') || undefined,
-      celular: celular.replace(/\D/g, '') || undefined,
-      email: (formData.get('email') as string) || undefined,
-      codigo_ibge: endereco.ibge || undefined,
-      data_abertura: dadosEmpresa.data_abertura ? new Date(dadosEmpresa.data_abertura) : undefined,
-    };
-
-    try {
-      await empresaService.update(empresaId, dto);
-
-      setSuccess('Empresa atualizada com sucesso!');
-      onNavigate('empresas-listar');
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Erro ao atualizar empresa');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    onNavigate('empresas-listar');
-  };
-
   const formatPhone = (value: string): string => {
     const cleaned = value.replace(/\D/g, '');
-
     if (cleaned.length <= 10) {
       return cleaned.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d)/, '$1-$2');
     } else {
@@ -174,18 +83,161 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
     }
   };
 
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!empresaId) return;
+
+      try {
+        setLoadingData(true);
+
+        if (tipo === 'filial' && sedeId) {
+          // Buscar filial
+          const filiais = await empresaService.listFiliais(sedeId);
+          const filial = filiais.find(f => f.id === empresaId);
+
+          if (filial) {
+            setFilialData(filial);
+
+            setDadosEmpresa({
+              razao_social: filial.razao_social || '',
+              nome_fantasia: filial.nome_fantasia || '',
+              inscricao_estadual: filial.inscricao_estadual || '',
+              inscricao_municipal: filial.inscricao_municipal || '',
+              data_abertura: filial.data_abertura
+                ? new Date(filial.data_abertura).toISOString().split('T')[0]
+                : '',
+              cnpj_cpf: filial.cnpj_cpf ? formatCnpjCpf(filial.cnpj_cpf) : '',
+              email: filial.email || '',
+            });
+
+            if (filial.telefone) setTelefone(formatPhone(filial.telefone));
+            if (filial.celular) setCelular(formatPhone(filial.celular));
+
+            setEndereco({
+              cep: filial.cep ? formatCep(filial.cep) : '',
+              logradouro: filial.logradouro || '',
+              numero: filial.numero || '',
+              complemento: filial.complemento || '',
+              bairro: filial.bairro || '',
+              cidade: filial.cidade || '',
+              uf: filial.uf || '',
+              ibge: filial.codigo_ibge || '',
+            });
+
+            if (filial.contatos) {
+              setContatos(filial.contatos);
+            }
+          }
+        } else {
+          // Buscar empresa/sede
+          const data = await empresaService.findOne(empresaId);
+          setEmpresaData(data);
+
+          setDadosEmpresa({
+            razao_social: data.razao_social || '',
+            nome_fantasia: data.nome_fantasia || '',
+            inscricao_estadual: data.inscricao_estadual || '',
+            inscricao_municipal: data.inscricao_municipal || '',
+            data_abertura: data.data_abertura
+              ? new Date(data.data_abertura).toISOString().split('T')[0]
+              : '',
+            cnpj_cpf: data.cnpj_cpf ? formatCnpjCpf(data.cnpj_cpf) : '',
+            email: data.email || '',
+          });
+
+          if (data.telefone) setTelefone(formatPhone(data.telefone));
+          if (data.celular) setCelular(formatPhone(data.celular));
+
+          setEndereco({
+            cep: data.cep ? formatCep(data.cep) : '',
+            logradouro: data.logradouro || '',
+            numero: data.numero || '',
+            complemento: data.complemento || '',
+            bairro: data.bairro || '',
+            cidade: data.cidade || '',
+            uf: data.uf || '',
+            ibge: data.codigo_ibge || '',
+          });
+        }
+      } catch {
+        setError('Erro ao buscar dados');
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchData();
+  }, [empresaId, tipo, sedeId]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    const clienteId = getClienteId();
+    if (!clienteId) {
+      setError('Erro ao obter informações do usuário. Faça login novamente.');
+      setLoading(false);
+      return;
+    }
+
+    if (!empresaId) {
+      setError('ID não encontrado.');
+      setLoading(false);
+      return;
+    }
+
+    const dto = {
+      cliente_id: clienteId,
+      razao_social: dadosEmpresa.razao_social,
+      nome_fantasia: dadosEmpresa.nome_fantasia,
+      cnpj_cpf: (tipo === 'filial' ? filialData?.cnpj_cpf : empresaData?.cnpj_cpf) || '',
+      inscricao_estadual: dadosEmpresa.inscricao_estadual || undefined,
+      inscricao_municipal: dadosEmpresa.inscricao_municipal || undefined,
+      cep: endereco.cep.replace(/\D/g, '') || undefined,
+      logradouro: endereco.logradouro || undefined,
+      numero: endereco.numero || undefined,
+      complemento: endereco.complemento || undefined,
+      bairro: endereco.bairro || undefined,
+      cidade: endereco.cidade || undefined,
+      uf: endereco.uf || undefined,
+      telefone: telefone.replace(/\D/g, '') || undefined,
+      celular: celular.replace(/\D/g, '') || undefined,
+      email: dadosEmpresa.email || undefined,
+      codigo_ibge: endereco.ibge || undefined,
+      data_abertura: dadosEmpresa.data_abertura ? new Date(dadosEmpresa.data_abertura) : undefined,
+    };
+
+    try {
+      if (tipo === 'filial') {
+        await empresaService.updateFilial(empresaId, dto);
+        setSuccess('Filial atualizada com sucesso!');
+      } else {
+        await empresaService.update(empresaId, dto);
+        setSuccess('Empresa atualizada com sucesso!');
+      }
+
+      setTimeout(() => {
+        onNavigate('empresas-listar');
+      }, 1500);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    onNavigate('empresas-listar');
+  };
+
   const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhone(e.target.value);
-    setTelefone(formatted);
+    setTelefone(formatPhone(e.target.value));
   };
 
   const handleCelularChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhone(e.target.value);
-    setCelular(formatted);
-  };
-
-  const handleBacenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setBacen(e.target.value);
+    setCelular(formatPhone(e.target.value));
   };
 
   const handleDadosEmpresaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,7 +246,9 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
       'razao-social': 'razao_social',
       'nome-fantasia': 'nome_fantasia',
       'inscricao-estadual': 'inscricao_estadual',
+      'inscricao-municipal': 'inscricao_municipal',
       'data-abertura': 'data_abertura',
+      'email': 'email',
     };
     const fieldName = fieldMap[id] || id;
     setDadosEmpresa(prev => ({ ...prev, [fieldName]: value }));
@@ -220,6 +274,16 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
     }));
   };
 
+  if (loadingData) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center py-8 text-[var(--color-text-secondary)]">
+          Carregando dados...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
       {error && <div className="mb-4 p-3 bg-red-100/30 text-red-800 rounded-md">{error}</div>}
@@ -228,10 +292,20 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
         <div className="mb-4 p-3 bg-green-100/30 text-green-800 rounded-md">{success}</div>
       )}
 
+      {/* Badge indicando tipo */}
+      <div className="mb-4">
+        <span className={`px-3 py-1 rounded text-sm font-medium ${
+          tipo === 'sede' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+        }`}>
+          Editando {tipo === 'sede' ? 'Sede' : 'Filial'}
+        </span>
+      </div>
+
       <form
         onSubmit={handleSubmit}
         className="space-y-6 bg-[var(--color-surface)] p-6 rounded-md shadow"
       >
+        {/* Dados Gerais */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <InputField
             id="razao-social"
@@ -240,6 +314,7 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
             placeholder="Digite a razão social"
             value={dadosEmpresa.razao_social}
             onChange={handleDadosEmpresaChange}
+            required
           />
           <InputField
             id="nome-fantasia"
@@ -248,6 +323,7 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
             placeholder="Digite o nome fantasia"
             value={dadosEmpresa.nome_fantasia}
             onChange={handleDadosEmpresaChange}
+            required
           />
           <InputField
             id="cnpj"
@@ -266,6 +342,14 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
             onChange={handleDadosEmpresaChange}
           />
           <InputField
+            id="inscricao-municipal"
+            label="Inscrição Municipal"
+            type="text"
+            placeholder="Digite a IM"
+            value={dadosEmpresa.inscricao_municipal}
+            onChange={handleDadosEmpresaChange}
+          />
+          <InputField
             id="data-abertura"
             label="Data de Abertura"
             type="date"
@@ -275,6 +359,7 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
           />
         </div>
 
+        {/* Endereço */}
         <div className="border-t border-[var(--color-border)] pt-6">
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Endereço</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -296,14 +381,16 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
               label="Número"
               type="text"
               placeholder="Nº"
-              defaultValue={empresaData?.numero || ''}
+              value={endereco.numero}
+              onChange={handleEnderecoChange}
             />
             <InputField
               id="complemento"
               label="Complemento"
               type="text"
               placeholder="Apto, Sala..."
-              defaultValue={empresaData?.complemento || ''}
+              value={endereco.complemento}
+              onChange={handleEnderecoChange}
             />
             <InputField
               id="bairro"
@@ -336,18 +423,14 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
               value={endereco.ibge}
               onChange={handleEnderecoChange}
             />
-            <InputField
-              id="codigo-bacen"
-              label="Código BACEN"
-              placeholder="Digite o código BACEN"
-              value={bacen}
-              onChange={handleBacenChange}
-            />
           </div>
         </div>
 
+        {/* Contato da Empresa */}
         <div className="border-t border-[var(--color-border)] pt-6">
-          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Contato</h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
+            Contato da {tipo === 'sede' ? 'Empresa' : 'Filial'}
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <InputField
               id="telefone"
@@ -370,11 +453,52 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
               label="E-mail"
               type="email"
               placeholder="empresa@email.com"
-              defaultValue={empresaData?.email || ''}
+              value={dadosEmpresa.email}
+              onChange={handleDadosEmpresaChange}
             />
           </div>
         </div>
 
+        {/* Pessoas de Contato (somente filial) */}
+        {tipo === 'filial' && contatos.length > 0 && (
+          <div className="border-t border-[var(--color-border)] pt-6">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
+              Pessoas de Contato
+            </h3>
+            <div className="space-y-4">
+              {contatos.map((contato, index) => (
+                <div key={contato.id} className="bg-[var(--color-bg)] p-4 rounded-md">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="font-medium text-[var(--color-text-primary)]">
+                      {contato.nome}
+                    </span>
+                    {contato.funcao && (
+                      <span className="px-2 py-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded text-xs">
+                        {contato.funcao}
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="text-[var(--color-text-secondary)]">E-mail:</span>{' '}
+                      <span className="text-[var(--color-text)]">{contato.email || 'Não informado'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[var(--color-text-secondary)]">Telefone:</span>{' '}
+                      <span className="text-[var(--color-text)]">{contato.telefone || 'Não informado'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[var(--color-text-secondary)]">Celular:</span>{' '}
+                      <span className="text-[var(--color-text)]">{contato.celular || 'Não informado'}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Botões */}
         <div className="flex justify-end gap-4 pt-6">
           <button
             type="button"

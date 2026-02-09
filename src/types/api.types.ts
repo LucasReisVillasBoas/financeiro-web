@@ -75,23 +75,44 @@ export interface CreateEmpresaDto {
 
 export interface UpdateEmpresaDto extends Partial<CreateEmpresaDto> {}
 
+export interface FilialContato {
+  id: string;
+  nome: string;
+  funcao?: string;
+  email?: string;
+  telefone?: string;
+  celular?: string;
+  criadoEm?: string;
+  atualizadoEm?: string;
+}
+
 export interface Filial {
   id: string;
-  empresa_id: string;
+  cliente_id?: string;
+  empresa_id?: string;
+  sede?: string;
   razao_social: string;
   nome_fantasia: string;
   cnpj_cpf: string;
   inscricao_estadual?: string;
+  inscricao_municipal?: string;
   cep?: string;
   logradouro?: string;
   numero?: string;
   bairro?: string;
   complemento?: string;
   cidade?: string;
+  codigo_ibge?: string;
   uf?: string;
   telefone?: string;
+  celular?: string;
   email?: string;
+  data_abertura?: string;
+  data_inclusao?: string;
+  ativo?: boolean;
   deleted_at?: string;
+  deletadoEm?: string;
+  contatos?: FilialContato[];
 }
 
 export interface CreateFilialContatoDto {

@@ -1,9 +1,10 @@
 import React from 'react';
-import type { Empresa } from '../../../types/api.types';
+import type { Empresa, Filial } from '../../../types/api.types';
 import { FiX } from 'react-icons/fi';
 
 interface EmpresaViewModalProps {
-  empresa: Empresa;
+  data: Empresa | Filial;
+  tipo: 'sede' | 'filial';
   onClose: () => void;
 }
 
@@ -19,8 +20,9 @@ const DetailItem: React.FC<{ label: string; value: string | number | null | unde
   </div>
 );
 
-const getStatus = (empresa: Empresa) => {
-  return empresa.deleted_at ? 'Inativa' : 'Ativa';
+const getStatus = (data: Empresa | Filial) => {
+  const deletedAt = 'deleted_at' in data ? data.deleted_at : ('deletadoEm' in data ? data.deletadoEm : null);
+  return deletedAt ? 'Inativa' : 'Ativa';
 };
 
 // Funções de formatação
@@ -57,17 +59,20 @@ const formatPhone = (value: string | null | undefined): string => {
   return value;
 };
 
-export const EmpresaViewModal: React.FC<EmpresaViewModalProps> = ({ empresa, onClose }) => {
+export const EmpresaViewModal: React.FC<EmpresaViewModalProps> = ({ data, tipo, onClose }) => {
   const fullAddress = [
-    empresa.logradouro,
-    empresa.numero,
-    empresa.complemento,
-    empresa.bairro,
-    `${empresa.cidade} - ${empresa.uf}`,
-    empresa.cep,
+    data.logradouro,
+    data.numero,
+    data.complemento,
+    data.bairro,
+    `${data.cidade || ''} - ${data.uf || ''}`,
+    data.cep,
   ]
-    .filter(part => part && part.trim() !== '')
+    .filter(part => part && part.trim() !== '' && part !== ' - ')
     .join(', ');
+
+  // Verificar se é filial com contatos
+  const contatos = 'contatos' in data ? data.contatos : undefined;
 
   return (
     <div
@@ -80,7 +85,7 @@ export const EmpresaViewModal: React.FC<EmpresaViewModalProps> = ({ empresa, onC
       >
         <div className="flex justify-between items-center border-b border-[var(--color-border)] p-5 sticky top-0 bg-[var(--color-surface)] z-10">
           <h3 className="text-2xl font-bold text-[var(--color-text-primary)]">
-            Detalhes da Empresa
+            Detalhes da {tipo === 'sede' ? 'Empresa' : 'Filial'}
           </h3>
           <button
             className="p-1 rounded-full hover:bg-[var(--color-primary-hover)] transition-colors"
@@ -96,36 +101,36 @@ export const EmpresaViewModal: React.FC<EmpresaViewModalProps> = ({ empresa, onC
             <h4 className="text-lg font-semibold text-[var(--color-primary)] border-b border-[var(--color-primary)] pb-1 mb-3">
               Informações Gerais
             </h4>
-            <DetailItem label="Razão Social" value={empresa.razao_social} />
-            <DetailItem label="Nome Fantasia" value={empresa.nome_fantasia} />
+            <DetailItem label="Razão Social" value={data.razao_social} />
+            <DetailItem label="Nome Fantasia" value={data.nome_fantasia} />
 
             <div className="flex justify-between items-start border-b border-[var(--color-border)] py-2 last:border-b-0">
               <p className="text-sm font-semibold text-[var(--color-text-secondary)] w-1/3">
-                Status/Sede:
+                Status/Tipo:
               </p>
               <div className="w-2/3 text-right flex justify-end items-center gap-2">
                 <span
                   className={`px-3 py-1 rounded text-xs font-medium ${
-                    getStatus(empresa) === 'Ativa'
+                    getStatus(data) === 'Ativa'
                       ? 'bg-green-100 text-green-800'
                       : 'bg-gray-100 text-gray-800'
                   }`}
                 >
-                  {getStatus(empresa)}
+                  {getStatus(data)}
                 </span>
-                {!empresa.sede && (
-                  <span className="px-3 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                    Sede
-                  </span>
-                )}
+                <span className={`px-3 py-1 rounded text-xs font-medium ${
+                  tipo === 'sede' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                }`}>
+                  {tipo === 'sede' ? 'Sede' : 'Filial'}
+                </span>
               </div>
             </div>
 
             <DetailItem
               label="Data Abertura"
               value={
-                empresa.data_abertura
-                  ? new Date(empresa.data_abertura).toLocaleDateString('pt-BR')
+                data.data_abertura
+                  ? new Date(data.data_abertura).toLocaleDateString('pt-BR')
                   : 'Não informado'
               }
             />
@@ -135,19 +140,45 @@ export const EmpresaViewModal: React.FC<EmpresaViewModalProps> = ({ empresa, onC
             <h4 className="text-lg font-semibold text-[var(--color-primary)] border-b border-[var(--color-primary)] pb-1 mb-3">
               Documentos
             </h4>
-            <DetailItem label="CNPJ/CPF" value={formatCnpjCpf(empresa.cnpj_cpf)} />
-            <DetailItem label="Inscrição Estadual" value={empresa.inscricao_estadual} />
-            <DetailItem label="Inscrição Municipal" value={empresa.inscricao_municipal} />
+            <DetailItem label="CNPJ/CPF" value={formatCnpjCpf(data.cnpj_cpf)} />
+            <DetailItem label="Inscrição Estadual" value={data.inscricao_estadual} />
+            <DetailItem label="Inscrição Municipal" value={data.inscricao_municipal} />
           </div>
 
           <div className="space-y-3">
             <h4 className="text-lg font-semibold text-[var(--color-primary)] border-b border-[var(--color-primary)] pb-1 mb-3">
-              Contatos
+              Contatos da Empresa
             </h4>
-            <DetailItem label="E-mail" value={empresa.email} />
-            <DetailItem label="Telefone" value={formatPhone(empresa.telefone)} />
-            <DetailItem label="Celular" value={formatPhone(empresa.celular)} />
+            <DetailItem label="E-mail" value={data.email} />
+            <DetailItem label="Telefone" value={formatPhone(data.telefone)} />
+            <DetailItem label="Celular" value={formatPhone(data.celular)} />
           </div>
+
+          {/* Contatos da Filial */}
+          {contatos && contatos.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-lg font-semibold text-[var(--color-primary)] border-b border-[var(--color-primary)] pb-1 mb-3">
+                Pessoas de Contato
+              </h4>
+              {contatos.map((contato, index) => (
+                <div key={contato.id} className="bg-[var(--color-bg)] p-4 rounded-md space-y-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium text-[var(--color-text-primary)]">
+                      {contato.nome}
+                    </span>
+                    {contato.funcao && (
+                      <span className="px-2 py-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded text-xs">
+                        {contato.funcao}
+                      </span>
+                    )}
+                  </div>
+                  <DetailItem label="E-mail" value={contato.email} />
+                  <DetailItem label="Telefone" value={formatPhone(contato.telefone)} />
+                  <DetailItem label="Celular" value={formatPhone(contato.celular)} />
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="space-y-3">
             <h4 className="text-lg font-semibold text-[var(--color-primary)] border-b border-[var(--color-primary)] pb-1 mb-3">
@@ -163,12 +194,13 @@ export const EmpresaViewModal: React.FC<EmpresaViewModalProps> = ({ empresa, onC
               </p>
             </div>
 
-            <DetailItem label="CEP" value={formatCep(empresa.cep)} />
-            <DetailItem label="Logradouro" value={empresa.logradouro} />
-            <DetailItem label="Número" value={empresa.numero} />
-            <DetailItem label="Complemento" value={empresa.complemento} />
-            <DetailItem label="Bairro" value={empresa.bairro} />
-            <DetailItem label="Cidade/UF" value={`${empresa.cidade || ''} - ${empresa.uf || ''}`} />
+            <DetailItem label="CEP" value={formatCep(data.cep)} />
+            <DetailItem label="Logradouro" value={data.logradouro} />
+            <DetailItem label="Número" value={data.numero} />
+            <DetailItem label="Complemento" value={data.complemento} />
+            <DetailItem label="Bairro" value={data.bairro} />
+            <DetailItem label="Cidade/UF" value={`${data.cidade || ''} - ${data.uf || ''}`} />
+            <DetailItem label="Código IBGE" value={data.codigo_ibge} />
           </div>
         </div>
 
