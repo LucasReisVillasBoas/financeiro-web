@@ -21,7 +21,8 @@ const DetailItem: React.FC<{ label: string; value: string | number | null | unde
 );
 
 const getStatus = (data: Empresa | Filial) => {
-  const deletedAt = 'deleted_at' in data ? data.deleted_at : ('deletadoEm' in data ? data.deletadoEm : null);
+  const deletedAt =
+    'deleted_at' in data ? data.deleted_at : 'deletadoEm' in data ? data.deletadoEm : null;
   return deletedAt ? 'Inativa' : 'Ativa';
 };
 
@@ -118,9 +119,11 @@ export const EmpresaViewModal: React.FC<EmpresaViewModalProps> = ({ data, tipo, 
                 >
                   {getStatus(data)}
                 </span>
-                <span className={`px-3 py-1 rounded text-xs font-medium ${
-                  tipo === 'sede' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                }`}>
+                <span
+                  className={`px-3 py-1 rounded text-xs font-medium ${
+                    tipo === 'sede' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                  }`}
+                >
                   {tipo === 'sede' ? 'Sede' : 'Filial'}
                 </span>
               </div>
