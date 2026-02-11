@@ -357,7 +357,13 @@ export const NovaFilialSection: React.FC<NovaFilialSectionProps> = ({ onNavigate
                 value={celular}
                 onChange={handleCelularChange}
               />
-              <InputField id="email" label="E-mail" type="email" placeholder="empresa@email.com" required />
+              <InputField
+                id="email"
+                label="E-mail"
+                type="email"
+                placeholder="empresa@email.com"
+                required
+              />
             </div>
           </div>
 

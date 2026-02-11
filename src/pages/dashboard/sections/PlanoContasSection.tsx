@@ -9,6 +9,7 @@ import {
   FiGrid,
   FiCheck,
   FiAlertCircle,
+  FiUpload,
 } from 'react-icons/fi';
 import { planoContasService, empresaService } from '../../../services';
 import { useAuth } from '../../../context/AuthContext';
@@ -30,6 +31,14 @@ export const PlanoContasSection: React.FC = () => {
   const [empresaSelecionada, setEmpresaSelecionada] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoFiltro, setTipoFiltro] = useState<string>('');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importOptions, setImportOptions] = useState({
+    sobrescrever: false,
+    dryRun: true, // Começa com dry run ativo para segurança
+  });
+  const [importLoading, setImportLoading] = useState(false);
+  const [importResult, setImportResult] = useState<any>(null);
 
   const [formData, setFormData] = useState<CreatePlanoContasDto>({
     empresaId: '',
@@ -204,6 +213,104 @@ export const PlanoContasSection: React.FC = () => {
     }
   };
 
+  const handleImportCSV = () => {
+    setShowImportModal(true);
+    setImportFile(null);
+    setImportResult(null);
+    setImportOptions({
+      sobrescrever: false,
+      dryRun: true,
+    });
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Valida se é um arquivo CSV
+      if (!file.name.endsWith('.csv')) {
+        setError('Por favor, selecione um arquivo CSV válido');
+        return;
+      }
+      setImportFile(file);
+      setImportResult(null);
+    }
+  };
+
+  // CÓDIGO DE DEBUG - Adicione isto temporariamente na função handleConfirmarImport
+
+  const handleConfirmarImport = async () => {
+    if (!importFile) {
+      setError('Selecione um arquivo para importar');
+      return;
+    }
+
+    try {
+      setImportLoading(true);
+      setError('');
+
+      const response = await planoContasService.importCSV(
+        empresaSelecionada,
+        importFile,
+        importOptions.sobrescrever,
+        importOptions.dryRun
+      );
+
+      console.log('Resposta do servidor:', response);
+
+      setImportResult(response.data);
+
+      if (!importOptions.dryRun) {
+        await loadContas();
+        setTimeout(() => {
+          setShowImportModal(false);
+          setImportFile(null);
+          setImportResult(null);
+        }, 3000);
+      }
+    } catch (err) {
+      console.error('Erro completo:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao importar CSV');
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const handleExecutarImportReal = async () => {
+    if (!importFile) return;
+
+    try {
+      setImportLoading(true);
+      setError('');
+
+      const response = await planoContasService.importCSV(
+        empresaSelecionada,
+        importFile,
+        importOptions.sobrescrever,
+        false // Executa importação real
+      );
+
+      setImportResult(response.data);
+      await loadContas();
+
+      setTimeout(() => {
+        setShowImportModal(false);
+        setImportFile(null);
+        setImportResult(null);
+      }, 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao importar CSV');
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const handleCancelarImport = () => {
+    setShowImportModal(false);
+    setImportFile(null);
+    setImportResult(null);
+    setError('');
+  };
+
   const contasFiltradas = contas.filter(conta => {
     const matchSearch =
       !searchTerm ||
@@ -230,6 +337,14 @@ export const PlanoContasSection: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={handleImportCSV}
+            disabled={!empresaSelecionada}
+            className="px-4 py-2 bg-[var(--color-surface)] text-[var(--color-text)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-bg)] transition-colors flex items-center gap-2"
+          >
+            <FiUpload size={18} />
+            Importar
+          </button>
           <button
             onClick={handleExportCSV}
             disabled={!empresaSelecionada}
@@ -513,6 +628,267 @@ export const PlanoContasSection: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Importação CSV */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--color-surface)] rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b border-[var(--color-border)]">
+              <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                Importar Plano de Contas
+              </h2>
+              <button
+                onClick={handleCancelarImport}
+                className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Informações sobre formato */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                <h3 className="font-semibold text-black-900 dark:text-black-300 mb-2">
+                  Formato do arquivo CSV
+                </h3>
+                <p className="text-sm text-black-800 dark:text-black-400 mb-2">
+                  O arquivo deve conter as seguintes colunas:
+                </p>
+                <code className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-300 p-2 rounded block">
+                  codigo,descricao,tipo,nivel,permite_lancamento,ativo
+                </code>
+              </div>
+
+              {/* Seleção de arquivo */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                  Selecionar arquivo CSV *
+                </label>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileSelect}
+                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                />
+                {importFile && (
+                  <p className="text-sm text-green-600 dark:text-green-400 mt-2 flex items-center gap-2">
+                    <FiCheck size={16} />
+                    Arquivo selecionado: {importFile.name}
+                  </p>
+                )}
+              </div>
+
+              {/* Opções de importação */}
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 p-3 bg-[var(--color-bg)] rounded-md border border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-surface)]">
+                  <input
+                    type="checkbox"
+                    checked={importOptions.sobrescrever}
+                    onChange={e =>
+                      setImportOptions(prev => ({ ...prev, sobrescrever: e.target.checked }))
+                    }
+                    className="w-4 h-4"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-[var(--color-text)]">
+                      Sobrescrever contas existentes
+                    </span>
+                    <p className="text-xs text-[var(--color-text-secondary)] mt-1">
+                      Atualiza contas com mesmo código. Se desmarcado, ignora duplicatas.
+                    </p>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-3 p-3 bg-[var(--color-bg)] rounded-md border border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-surface)]">
+                  <input
+                    type="checkbox"
+                    checked={importOptions.dryRun}
+                    onChange={e =>
+                      setImportOptions(prev => ({ ...prev, dryRun: e.target.checked }))
+                    }
+                    className="w-4 h-4"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-[var(--color-text)]">
+                      Simulação (Dry Run)
+                    </span>
+                    <p className="text-xs text-[var(--color-text-secondary)] mt-1">
+                      Valida o arquivo sem salvar no banco de dados
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              {/* Resultado da importação */}
+              {importResult && (
+                <div
+                  className={`p-4 rounded-md border ${
+                    importResult.sucesso
+                      ? 'bg-green-100 dark:bg-green-900 border-green-200'
+                      : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                  }`}
+                >
+                  <h3
+                    className={`font-semibold mb-3 ${
+                      importResult.sucesso
+                        ? 'text-green-800 dark:text-green-300'
+                        : 'text-red-900 dark:text-red-300'
+                    }`}
+                  >
+                    {importOptions.dryRun ? 'Resultado da Simulação' : 'Resultado da Importação'}
+                  </h3>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span
+                        className={
+                          importResult.sucesso
+                            ? 'text-green-800 dark:text-green-300'
+                            : 'text-red-800 dark:text-red-400'
+                        }
+                      >
+                        Total de linhas:
+                      </span>
+                      <span
+                        className={
+                          importResult.sucesso
+                            ? 'text-green-800 dark:text-green-300'
+                            : 'text-red-900 dark:text-red-300 font-medium'
+                        }
+                      >
+                        {importResult.totalLinhas}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span
+                        className={
+                          importResult.sucesso
+                            ? 'text-green-800 dark:text-green-300'
+                            : 'text-red-800 dark:text-red-400'
+                        }
+                      >
+                        Importados com sucesso:
+                      </span>
+                      <span className="text-green-600 dark:text-green-400 font-medium">
+                        {importResult.importadas}
+                      </span>
+                    </div>
+
+                    {importResult.atualizados > 0 && (
+                      <div className="flex justify-between">
+                        <span
+                          className={
+                            importResult.sucesso
+                              ? 'text-green-800 dark:text-green-400'
+                              : 'text-red-800 dark:text-red-400'
+                          }
+                        >
+                          Atualizados:
+                        </span>
+                        <span className="text-blue-600 dark:text-blue-400 font-medium">
+                          {importResult.atualizados}
+                        </span>
+                      </div>
+                    )}
+
+                    {importResult.ignorados > 0 && (
+                      <div className="flex justify-between">
+                        <span
+                          className={
+                            importResult.sucesso
+                              ? 'text-green-800 dark:text-green-400'
+                              : 'text-red-800 dark:text-red-400'
+                          }
+                        >
+                          Ignorados:
+                        </span>
+                        <span className="text-yellow-600 dark:text-yellow-400 font-medium">
+                          {importResult.ignorados}
+                        </span>
+                      </div>
+                    )}
+
+                    {importResult.erros > 0 && (
+                      <div className="flex justify-between">
+                        <span
+                          className={
+                            importResult.sucesso
+                              ? 'text-green-800 dark:text-green-400'
+                              : 'text-red-800 dark:text-red-400'
+                          }
+                        >
+                          Com erro:
+                        </span>
+                        <span className="text-red-600 dark:text-red-400 font-medium">
+                          {importResult.erros}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mensagens de erro detalhadas */}
+                  {importResult.mensagens && importResult.mensagens.length > 0 && (
+                    <div className="mt-4 space-y-1 max-h-40 overflow-y-auto">
+                      <p className="text-xs font-semibold text-[var(--color-text-secondary)] mb-2">
+                        Detalhes:
+                      </p>
+                      {importResult.mensagens.map((msg: string, idx: number) => (
+                        <p key={idx} className="text-xs text-[var(--color-text-secondary)]">
+                          • {msg}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Botão para executar importação real após dry run bem-sucedido */}
+                  {importOptions.dryRun && importResult.sucesso && importResult.importados > 0 && (
+                    <div className="mt-4 pt-4 border-t border-green-200 dark:border-green-800">
+                      <p className="text-sm text-green-800 dark:text-green-400 mb-3">
+                        A simulação foi bem-sucedida! Deseja executar a importação real?
+                      </p>
+                      <button
+                        onClick={handleExecutarImportReal}
+                        disabled={importLoading}
+                        className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {importLoading ? 'Importando...' : 'Executar Importação Real'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 p-6 border-t border-[var(--color-border)]">
+              <button
+                onClick={handleCancelarImport}
+                disabled={importLoading}
+                className="px-4 py-2 bg-[var(--color-bg)] text-[var(--color-text)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmarImport}
+                disabled={!importFile || importLoading}
+                className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-md hover:bg-[var(--color-primary-hover)] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {importLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <FiUpload size={18} />
+                    {importOptions.dryRun ? 'Simular Importação' : 'Importar'}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

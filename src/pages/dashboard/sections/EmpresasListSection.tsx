@@ -224,7 +224,7 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
     onNavigate('empresas-editar', {
       empresaId: item.id,
       tipo: item.tipo,
-      sedeId: item.sedeId
+      sedeId: item.sedeId,
     });
   };
 
@@ -346,7 +346,9 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
                         {item.tipo === 'sede' ? 'Sede' : '↳ Filial'}
                       </span>
                     </td>
-                    <td className={`p-4 text-[var(--color-text)] ${item.tipo === 'filial' ? 'pl-8' : ''}`}>
+                    <td
+                      className={`p-4 text-[var(--color-text)] ${item.tipo === 'filial' ? 'pl-8' : ''}`}
+                    >
                       {item.razao_social}
                     </td>
                     <td className="p-4 text-[var(--color-text)]">{item.nome_fantasia}</td>
@@ -400,11 +402,7 @@ export const EmpresasListSection: React.FC<EmpresasListSectionProps> = ({ onNavi
         </div>
       )}
       {showModal && selectedItem && (
-        <EmpresaViewModal
-          data={selectedItem}
-          tipo={selectedItemTipo}
-          onClose={handleCloseModal}
-        />
+        <EmpresaViewModal data={selectedItem} tipo={selectedItemTipo} onClose={handleCloseModal} />
       )}
     </div>
   );

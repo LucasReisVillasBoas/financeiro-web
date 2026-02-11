@@ -248,7 +248,7 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
       'inscricao-estadual': 'inscricao_estadual',
       'inscricao-municipal': 'inscricao_municipal',
       'data-abertura': 'data_abertura',
-      'email': 'email',
+      email: 'email',
     };
     const fieldName = fieldMap[id] || id;
     setDadosEmpresa(prev => ({ ...prev, [fieldName]: value }));
@@ -294,9 +294,11 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
 
       {/* Badge indicando tipo */}
       <div className="mb-4">
-        <span className={`px-3 py-1 rounded text-sm font-medium ${
-          tipo === 'sede' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-        }`}>
+        <span
+          className={`px-3 py-1 rounded text-sm font-medium ${
+            tipo === 'sede' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+          }`}
+        >
           Editando {tipo === 'sede' ? 'Sede' : 'Filial'}
         </span>
       </div>
@@ -481,15 +483,21 @@ export const EditarEmpresaSection: React.FC<EditarEmpresaSectionProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div>
                       <span className="text-[var(--color-text-secondary)]">E-mail:</span>{' '}
-                      <span className="text-[var(--color-text)]">{contato.email || 'Não informado'}</span>
+                      <span className="text-[var(--color-text)]">
+                        {contato.email || 'Não informado'}
+                      </span>
                     </div>
                     <div>
                       <span className="text-[var(--color-text-secondary)]">Telefone:</span>{' '}
-                      <span className="text-[var(--color-text)]">{contato.telefone || 'Não informado'}</span>
+                      <span className="text-[var(--color-text)]">
+                        {contato.telefone || 'Não informado'}
+                      </span>
                     </div>
                     <div>
                       <span className="text-[var(--color-text-secondary)]">Celular:</span>{' '}
-                      <span className="text-[var(--color-text)]">{contato.celular || 'Não informado'}</span>
+                      <span className="text-[var(--color-text)]">
+                        {contato.celular || 'Não informado'}
+                      </span>
                     </div>
                   </div>
                 </div>
