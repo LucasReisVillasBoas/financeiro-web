@@ -39,6 +39,7 @@ export const ContasBancariasSection: React.FC = () => {
     empresaId: '',
     cliente_id: '',
     data_referencia_saldo: '',
+    saldo_atual: 0,
   });
   const [formError, setFormError] = useState('');
   const [saldoFormatado, setSaldoFormatado] = useState('R$ 0,00');
@@ -95,11 +96,21 @@ export const ContasBancariasSection: React.FC = () => {
       ]);
 
       const saldoMesAtual = movimentacoesMesAtual.reduce((acc, mov) => {
-        return acc + (mov.tipo === 'Entrada' ? mov.valor : -mov.valor);
+        return (
+          acc +
+          (mov.tipoMovimento === 'Entrada' || mov.tipoMovimento === 'Crédito'
+            ? mov.valor
+            : -mov.valor)
+        );
       }, 0);
 
       const saldoMesAnterior = movimentacoesMesAnterior.reduce((acc, mov) => {
-        return acc + (mov.tipo === 'Entrada' ? mov.valor : -mov.valor);
+        return (
+          acc +
+          (mov.tipoMovimento === 'Entrada' || mov.tipoMovimento === 'Crédito'
+            ? mov.valor
+            : -mov.valor)
+        );
       }, 0);
 
       if (saldoMesAnterior === 0) {
@@ -223,6 +234,7 @@ export const ContasBancariasSection: React.FC = () => {
       empresaId: '',
       cliente_id: '',
       data_referencia_saldo: '',
+      saldo_atual: 0,
     });
     setFormError('');
     setSaldoFormatado('R$ 0,00');
@@ -596,12 +608,12 @@ export const ContasBancariasSection: React.FC = () => {
                         <div className="flex items-center gap-4 flex-1">
                           <div
                             className={`p-2 rounded-full ${
-                              mov.tipoMovimento === 'Entrada'
+                              mov.tipoMovimento === 'Entrada' || mov.tipoMovimento === 'Crédito'
                                 ? 'bg-green-100 dark:bg-green-900/30'
                                 : 'bg-red-100 dark:bg-red-900/30'
                             }`}
                           >
-                            {mov.tipoMovimento === 'Entrada' ? (
+                            {mov.tipoMovimento === 'Entrada' || mov.tipoMovimento === 'Crédito' ? (
                               <FiArrowDown
                                 className="text-green-600 dark:text-green-400"
                                 size={20}
@@ -620,12 +632,15 @@ export const ContasBancariasSection: React.FC = () => {
                         <div className="text-right">
                           <p
                             className={`font-bold text-lg ${
-                              mov.tipoMovimento === 'Entrada'
+                              mov.tipoMovimento === 'Entrada' || mov.tipoMovimento === 'Crédito'
                                 ? 'text-green-600 dark:text-green-400'
                                 : 'text-red-600 dark:text-red-400'
                             }`}
                           >
-                            {mov.tipoMovimento === 'Entrada' ? '+' : '-'} {formatarMoeda(mov.valor)}
+                            {mov.tipoMovimento === 'Entrada' || mov.tipoMovimento === 'Crédito'
+                              ? '+'
+                              : '-'}{' '}
+                            {formatarMoeda(mov.valor)}
                           </p>
                         </div>
                       </div>

@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { FiDollarSign, FiCalendar, FiCheckCircle, FiCreditCard, FiPlus, FiX } from 'react-icons/fi';
+import {
+  FiDollarSign,
+  FiCalendar,
+  FiCheckCircle,
+  FiCreditCard,
+  FiPlus,
+  FiX,
+  FiRotateCcw,
+} from 'react-icons/fi';
 import { StatusContaReceber, TipoContaReceber } from '../../../types/api.types';
 import type {
   ContaReceber,
@@ -82,6 +90,9 @@ export const ContasReceberSection: React.FC = () => {
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [contaParaExcluir, setContaParaExcluir] = useState<ContaReceber | null>(null);
+
+  const [showEstornarModal, setShowEstornarModal] = useState(false);
+  const [contaParaEstornar, setContaParaEstornar] = useState<ContaReceber | null>(null);
 
   useEffect(() => {
     loadPessoas();
@@ -434,6 +445,33 @@ export const ContasReceberSection: React.FC = () => {
         {config.label}
       </span>
     );
+  };
+
+  const handleEstornar = (conta: ContaReceber) => {
+    setContaParaEstornar(conta);
+    setShowEstornarModal(true);
+  };
+
+  const handleConfirmarEstorno = async () => {
+    if (!contaParaEstornar) return;
+
+    const baixas = await baixaRecebimentoService.findByContaReceber(contaParaEstornar.id);
+    const ultimaBaixa = baixas[baixas.length - 1];
+
+    try {
+      await baixaRecebimentoService.estornar(ultimaBaixa.id);
+      await loadContasReceber();
+      setShowEstornarModal(false);
+      setContaParaEstornar(null);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao estornar baixa';
+      setError(message);
+    }
+  };
+
+  const handleCancelarEstorno = () => {
+    setShowEstornarModal(false);
+    setContaParaEstornar(null);
   };
 
   return (
@@ -1162,6 +1200,60 @@ export const ContasReceberSection: React.FC = () => {
         </div>
       )}
 
+      {showEstornarModal && contaParaEstornar && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--color-surface)] rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center p-6 border-b border-[var(--color-border)]">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Estornar Baixa</h2>
+              <button
+                onClick={handleCancelarEstorno}
+                className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-[var(--color-text)]">
+                Deseja realmente estornar a baixa desta conta?
+              </p>
+
+              <div>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Documento</p>
+                <p className="font-medium">
+                  {contaParaEstornar.documento}/{contaParaEstornar.serie} - Parcela{' '}
+                  {contaParaEstornar.parcela}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Valor Total</p>
+                <p className="font-medium">{formatarMoeda(contaParaEstornar.valorTotal)}</p>
+              </div>
+
+              <p className="text-sm text-orange-600 font-medium">
+                O valor será devolvido ao saldo da conta e ao saldo bancário.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 p-6 border-t border-[var(--color-border)]">
+              <button
+                onClick={handleCancelarEstorno}
+                className="px-4 py-2 bg-[var(--color-bg)] text-[var(--color-text)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface)] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmarEstorno}
+                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+              >
+                Confirmar Estorno
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Confirmação de Exclusão */}
       {showDeleteModal && contaParaExcluir && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -1335,6 +1427,16 @@ export const ContasReceberSection: React.FC = () => {
                           onClick={() => handleDelete(conta)}
                         >
                           Excluir
+                        </button>
+                      )}
+                      {(conta.status === StatusContaReceber.LIQUIDADO ||
+                        conta.status === StatusContaReceber.PARCIAL) && (
+                        <button
+                          onClick={() => handleEstornar(conta)}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)] transition-colors text-left"
+                        >
+                          <FiRotateCcw size={16} className="text-blue-600" />
+                          Estornar Baixa
                         </button>
                       )}
                     </div>

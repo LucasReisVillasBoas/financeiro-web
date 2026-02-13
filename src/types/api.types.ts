@@ -469,7 +469,7 @@ export interface MovimentacaoBancaria {
   conta: string;
   categoria: string;
   valor: number;
-  tipoMovimento: 'Entrada' | 'Saída';
+  tipoMovimento: 'Entrada' | 'Saída' | 'Crédito' | 'Débito';
   contaBancariaId: string;
   empresaId?: string;
   filialId?: string;

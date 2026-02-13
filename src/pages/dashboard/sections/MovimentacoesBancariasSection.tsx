@@ -57,16 +57,20 @@ export const MovimentacoesBancariasSection: React.FC = () => {
   };
 
   const totalEntradas = movimentacoes
-    .filter(m => m.tipoMovimento === 'Entrada')
+    .filter(m => m.tipoMovimento === 'Entrada' || m.tipoMovimento === 'Crédito')
     .reduce((acc, m) => acc + m.valor, 0);
 
   const totalSaidas = movimentacoes
-    .filter(m => m.tipoMovimento === 'Saída')
+    .filter(m => m.tipoMovimento === 'Saída' || m.tipoMovimento === 'Débito')
     .reduce((acc, m) => acc + m.valor, 0);
 
   const saldoPeriodo = totalEntradas - totalSaidas;
-  const qtdEntradas = movimentacoes.filter(m => m.tipoMovimento === 'Entrada').length;
-  const qtdSaidas = movimentacoes.filter(m => m.tipoMovimento === 'Saída').length;
+  const qtdEntradas = movimentacoes.filter(
+    m => m.tipoMovimento === 'Entrada' || m.tipoMovimento === 'Crédito'
+  ).length;
+  const qtdSaidas = movimentacoes.filter(
+    m => m.tipoMovimento === 'Saída' || m.tipoMovimento === 'Débito'
+  ).length;
   const qtdConciliadas = movimentacoes.filter(m => m.conciliado === 'S').length;
   const qtdNaoConciliadas = movimentacoes.filter(m => m.conciliado === 'N').length;
 
@@ -422,20 +426,25 @@ export const MovimentacoesBancariasSection: React.FC = () => {
                       </td>
                       <td
                         className={`py-4 px-4 text-sm font-semibold text-right ${
-                          mov.tipoMovimento === 'Entrada' ? 'text-green-500' : 'text-red-500'
+                          mov.tipoMovimento === 'Entrada' || mov.tipoMovimento === 'Crédito'
+                            ? 'text-green-500'
+                            : 'text-red-500'
                         }`}
                       >
-                        {mov.tipoMovimento === 'Entrada' ? '+' : '−'} {formatarMoeda(mov.valor)}
+                        {mov.tipoMovimento === 'Entrada' || mov.tipoMovimento === 'Crédito'
+                          ? '+'
+                          : '−'}{' '}
+                        {formatarMoeda(mov.valor)}
                       </td>
                       <td className="py-4 px-4 text-center">
                         <span
                           className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                            mov.tipoMovimento === 'Entrada'
+                            mov.tipoMovimento === 'Entrada' || mov.tipoMovimento === 'Crédito'
                               ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
                               : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
                           }`}
                         >
-                          {mov.tipoMovimento === 'Entrada' ? (
+                          {mov.tipoMovimento === 'Entrada' || mov.tipoMovimento === 'Crédito' ? (
                             <>
                               <FiArrowDownLeft size={12} />
                               Entrada
