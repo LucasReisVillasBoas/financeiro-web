@@ -182,6 +182,88 @@ export const mockFluxoCaixaResponse = {
   },
 };
 
+export const mockExtratoBancario = {
+  id: 'extrato-123',
+  contaBancaria: {
+    id: 'conta-bancaria-123',
+    descricao: 'Conta Corrente Principal',
+    banco: 'Banco do Brasil',
+  },
+  dataTransacao: '2024-06-15',
+  descricao: 'Pagamento de fornecedor',
+  documento: 'DOC-001',
+  valor: 1500.0,
+  tipoTransacao: 'debito',
+  status: 'sugestao',
+  movimentacaoSugerida: {
+    id: 'movimentacao-123',
+    descricao: 'Pagamento fornecedor ABC',
+    valor: 1500.0,
+    dataMovimento: '2024-06-15',
+  },
+  scoreMatch: 85,
+  formatoOrigem: 'OFX',
+  nomeArquivo: 'extrato_junho.ofx',
+  criadoEm: '2024-06-16T10:00:00.000Z',
+  sugestao: {
+    movimentacaoId: 'movimentacao-123',
+    score: 85,
+    razoes: ['Valor idêntico', 'Data próxima', 'Descrição similar'],
+    movimentacao: {
+      id: 'movimentacao-123',
+      data: '2024-06-15',
+      descricao: 'Pagamento fornecedor ABC',
+      valor: 1500.0,
+      tipo: 'debito',
+    },
+  },
+};
+
+export const mockExtratoPendente = {
+  id: 'extrato-456',
+  contaBancaria: {
+    id: 'conta-bancaria-123',
+    descricao: 'Conta Corrente Principal',
+    banco: 'Banco do Brasil',
+  },
+  dataTransacao: '2024-06-16',
+  descricao: 'Transferência recebida',
+  valor: 3000.0,
+  tipoTransacao: 'credito',
+  status: 'pendente',
+  formatoOrigem: 'OFX',
+  nomeArquivo: 'extrato_junho.ofx',
+  criadoEm: '2024-06-16T10:00:00.000Z',
+};
+
+export const mockResultadoImportacao = {
+  totalImportado: 10,
+  comSugestao: 7,
+  semSugestao: 3,
+  itens: [
+    {
+      id: 'item-1',
+      data: '2024-06-15',
+      descricao: 'Pagamento de fornecedor',
+      valor: 1500.0,
+      tipo: 'debito',
+      status: 'sugestao',
+      sugestao: {
+        movimentacaoId: 'movimentacao-123',
+        score: 85,
+        razoes: ['Valor idêntico', 'Data próxima'],
+        movimentacao: {
+          id: 'movimentacao-123',
+          data: '2024-06-15',
+          descricao: 'Pagamento fornecedor ABC',
+          valor: 1500.0,
+          tipo: 'debito',
+        },
+      },
+    },
+  ],
+};
+
 // HTTP Handlers
 export const handlers = [
   // Auth endpoints
@@ -660,6 +742,52 @@ export const handlers = [
       message: 'Success',
       statusCode: 200,
       data: mockFluxoCaixaResponse,
+    });
+  }),
+
+  // Extratos Bancários
+  http.post(`${API_BASE_URL}/extratos-bancarios/importar`, () => {
+    return HttpResponse.json({
+      message: 'Extrato importado com sucesso',
+      statusCode: 200,
+      data: mockResultadoImportacao,
+    });
+  }),
+
+  http.get(`${API_BASE_URL}/extratos-bancarios/pendentes`, () => {
+    return HttpResponse.json({
+      message: 'Success',
+      statusCode: 200,
+      data: [mockExtratoBancario, mockExtratoPendente],
+    });
+  }),
+
+  http.get(`${API_BASE_URL}/extratos-bancarios`, () => {
+    return HttpResponse.json({
+      message: 'Success',
+      statusCode: 200,
+      data: [mockExtratoBancario, mockExtratoPendente],
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/extratos-bancarios/:itemId/aceitar`, () => {
+    return HttpResponse.json({
+      message: 'Sugestão aceita com sucesso',
+      statusCode: 200,
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/extratos-bancarios/:itemId/rejeitar`, () => {
+    return HttpResponse.json({
+      message: 'Sugestão rejeitada com sucesso',
+      statusCode: 200,
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/extratos-bancarios/:itemId/ignorar`, () => {
+    return HttpResponse.json({
+      message: 'Item ignorado com sucesso',
+      statusCode: 200,
     });
   }),
 ];

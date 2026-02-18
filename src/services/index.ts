@@ -20,5 +20,7 @@ export { contaReceberService } from './conta-receber.service';
 export { baixaRecebimentoService } from './baixa-recebimento.service';
 export { movimentacaoBancariaService } from './movimentacao-bancaria.service';
 
+export { extratoBancarioService } from './extrato-bancario.service';
+
 export { default as planoContasService } from './plano-contas.service';
 export { default as dreService } from './dre.service';

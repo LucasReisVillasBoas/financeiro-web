@@ -32,6 +32,7 @@ import { RelatorioContasPagarSection } from './sections/RelatorioContasPagarSect
 import { FluxoCaixaSection } from './sections/FluxoCaixaSection';
 import { DreRelatorioSection } from './sections/DreRelatorioSection';
 import { DreFluxoComparativoSection } from './sections/DreFluxoComparativoSection';
+import { ConciliacaoBancariaSection } from './sections/ConciliacaoBancariaSection';
 
 const sectionTitles: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -55,6 +56,7 @@ const sectionTitles: Record<string, string> = {
   'financeiro-pagar': 'Contas a Pagar',
   'financeiro-receber': 'Contas a Receber',
   'financeiro-movimentacao': 'Movimentação Bancária',
+  'financeiro-conciliacao': 'Conciliação Bancária',
   'financeiro-plano-contas': 'Plano de Contas',
   'financeiro-dre': 'DRE - Demonstração do Resultado',
   relatorios: 'Relatórios',
@@ -65,9 +67,19 @@ const sectionTitles: Record<string, string> = {
   'relatorios-dre-fluxo-comparativo': 'Comparativo: DRE x Fluxo de Caixa',
 };
 
+type SectionParams = {
+  empresaId?: string;
+  tipo?: 'sede' | 'filial';
+  sedeId?: string;
+  usuarioId?: string;
+  perfilId?: string;
+  contatoId?: string;
+  pessoaId?: string;
+};
+
 export const MainWorkspace: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>('dashboard');
-  const [sectionParams, setSectionParams] = useState<Record<string, unknown>>({});
+  const [sectionParams, setSectionParams] = useState<SectionParams>({});
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -110,7 +122,7 @@ export const MainWorkspace: React.FC = () => {
       case 'empresas-editar':
         return (
           <EditarEmpresaSection
-            empresaId={sectionParams.empresaId}
+            empresaId={sectionParams.empresaId as string}
             tipo={sectionParams.tipo || 'sede'}
             sedeId={sectionParams.sedeId}
             onNavigate={handleNavigate}
@@ -126,12 +138,15 @@ export const MainWorkspace: React.FC = () => {
         return <NovoUsuarioSection onNavigate={handleNavigate} />;
       case 'usuarios-editar':
         return (
-          <EditarUsuarioSection usuarioId={sectionParams.usuarioId} onNavigate={handleNavigate} />
+          <EditarUsuarioSection
+            usuarioId={sectionParams.usuarioId as string}
+            onNavigate={handleNavigate}
+          />
         );
       case 'usuarios-resetar-senha':
         return (
           <ResetarSenhaUsuarioSection
-            usuarioId={sectionParams.usuarioId}
+            usuarioId={sectionParams.usuarioId as string}
             onNavigate={handleNavigate}
           />
         );
@@ -139,7 +154,10 @@ export const MainWorkspace: React.FC = () => {
         return <UsuariosPerfisSection onNavigate={handleNavigate} />;
       case 'usuarios-perfis-editar':
         return (
-          <EditarPerfilSection perfilId={sectionParams.perfilId} onNavigate={handleNavigate} />
+          <EditarPerfilSection
+            perfilId={sectionParams.perfilId as string}
+            onNavigate={handleNavigate}
+          />
         );
       case 'auxiliares-contatos':
         return <ContatosSection onNavigate={handleNavigate} />;
@@ -147,7 +165,10 @@ export const MainWorkspace: React.FC = () => {
         return <NovoContatoSection onNavigate={handleNavigate} />;
       case 'auxiliares-contatos-editar':
         return (
-          <EditarContatoSection contatoId={sectionParams.contatoId} onNavigate={handleNavigate} />
+          <EditarContatoSection
+            contatoId={sectionParams.contatoId as string}
+            onNavigate={handleNavigate}
+          />
         );
       case 'pessoas-listar':
         return <PessoasSection onNavigate={handleNavigate} />;
@@ -155,12 +176,17 @@ export const MainWorkspace: React.FC = () => {
         return <NovaPessoaSection onNavigate={handleNavigate} />;
       case 'pessoas-editar':
         return (
-          <EditarPessoaSection pessoaId={sectionParams.pessoaId} onNavigate={handleNavigate} />
+          <EditarPessoaSection
+            pessoaId={sectionParams.pessoaId as string}
+            onNavigate={handleNavigate}
+          />
         );
       case 'financeiro-bancos':
         return <ContasBancariasSection />;
       case 'financeiro-movimentacao':
         return <MovimentacoesBancariasSection />;
+      case 'financeiro-conciliacao':
+        return <ConciliacaoBancariaSection />;
       case 'financeiro-plano-contas':
         return <PlanoContasSection />;
       case 'financeiro-dre':

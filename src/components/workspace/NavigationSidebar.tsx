@@ -14,6 +14,7 @@ import {
   FiGrid,
   FiTrendingUp,
   FiBarChart2,
+  FiUploadCloud,
 } from 'react-icons/fi';
 import { GiMoneyStack, GiBank } from 'react-icons/gi';
 import { MdOutlineDashboard } from 'react-icons/md';
@@ -126,6 +127,11 @@ export const menuItems: MenuItem[] = [
         id: 'financeiro-movimentacao',
         label: 'Movimentação Bancária',
         icon: <FiRepeat size={14} />,
+      },
+      {
+        id: 'financeiro-conciliacao',
+        label: 'Conciliação Bancária',
+        icon: <FiUploadCloud size={14} />,
       },
       {
         id: 'financeiro-plano-contas',
